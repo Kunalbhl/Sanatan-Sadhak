@@ -1,0 +1,401 @@
+            "Timer" -> MeditationTimerView(isEng)
+            "KarmaLog" -> KarmaTrackerView(viewModel, isEng)
+            "Gratitude" -> GratitudeJournalView(viewModel, isEng)
+        }
+    }
+}
+
+@Composable
+fun MantraLibraryView(viewModel: SadhakViewModel, isEnglish: Boolean) {
+    val userRole by viewModel.userRole.collectAsState()
+    val favoriteMantras by viewModel.favoriteMantras.collectAsState()
+    val uriHandler = LocalUriHandler.current
+
+    var newTitle by remember { mutableStateOf("") }
+    var newContent by remember { mutableStateOf("") }
+    var newYoutubeUrl by remember { mutableStateOf("") }
+    var showAddCustomMantra by remember { mutableStateOf(false) }
+    
+    var activePlayingMantraId by remember { mutableStateOf<String?>(null) }
+    
+    if (activePlayingMantraId != null) {
+        val prayerData = com.example.ui.viewmodel.allPrayersList.find { it.id == activePlayingMantraId }
+        if (prayerData != null) {
+            
+            MantraDetailScreen(
+                prayerData = prayerData,
+                isEnglish = isEnglish,
+                onBack = { activePlayingMantraId = null },
+                onRelatedClick = { id -> activePlayingMantraId = id }
+            )
+        } else {
+            activePlayingMantraId = null
+        }
+        return
+    }
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        if (showAddCustomMantra) {
+            SacredCard(
+                backgroundColor = MaterialTheme.colorScheme.surface,
+                borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = if (isEnglish) "Add Personal Prayer" else "व्यक्तिगत प्रार्थना जोड़ें",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = newTitle,
+                        onValueChange = { newTitle = it },
+                        label = { Text(if (isEnglish) "Title" else "शीर्षक") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = newContent,
+                        onValueChange = { newContent = it },
+                        label = { Text(if (isEnglish) "Prayer Lyrics" else "प्रार्थना के बोल") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        ),
+                        minLines = 3
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = newYoutubeUrl,
+                        onValueChange = { newYoutubeUrl = it },
+                        label = { Text(if (isEnglish) "YouTube URL (Optional)" else "यूट्यूब URL (वैकल्पिक)") },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
+                        TextButton(onClick = { showAddCustomMantra = false }) {
+                            Text(if (isEnglish) "Cancel" else "रद्द करें", color = MaterialTheme.colorScheme.secondary)
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
+                            onClick = {
+                                if (userRole == "GUEST") {
+                                    viewModel.triggerGuestPromo()
+                                } else {
+                                    if (newTitle.isNotBlank() && newContent.isNotBlank()) {
+                                        viewModel.addFavoriteMantra(newTitle, newContent, newYoutubeUrl)
+                                        newTitle = ""
+                                        newContent = ""
+                                        newYoutubeUrl = ""
+                                        showAddCustomMantra = false
+                                    }
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                        ) {
+                            Text(if (isEnglish) "Save" else "सहेजें")
+                        }
+                    }
+                }
+            }
+        } else {
+            OutlinedButton(
+                onClick = { showAddCustomMantra = true },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.primary)
+            ) {
+                Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(if (isEnglish) "Add Personal Prayer" else "व्यक्तिगत प्रार्थना जोड़ें")
+            }
+        }
+
+        Text(
+            text = if (isEnglish) "Classical Scriptural Chants:" else "शास्त्रीय वेद मंत्र व आरती:",
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.secondary,
+            modifier = Modifier.padding(top = 12.dp)
+        )
+        
+        com.example.ui.viewmodel.allPrayersList.forEach { prayer ->
+            SacredCard(
+                modifier = Modifier.clickable {
+                    activePlayingMantraId = prayer.id
+                },
+                backgroundColor = MaterialTheme.colorScheme.surface,
+                borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = if (isEnglish) prayer.titleEn else prayer.titleHi,
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = if (isEnglish) prayer.descEn else prayer.descHi,
+                        style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    )
+                }
+            }
+        }
+
+        if (favoriteMantras.isNotEmpty()) {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = if (isEnglish) "My Personal Prayers:" else "मेरी व्यक्तिगत प्रार्थनाएं:",
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.secondary
+            )
+            favoriteMantras.forEach { fav ->
+                SacredCard(
+                    backgroundColor = MaterialTheme.colorScheme.surfaceVariant,
+                    borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                            Text(
+                                text = fav.title,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary),
+                                modifier = Modifier.weight(1f)
+                            )
+                            IconButton(onClick = { viewModel.deleteFavoriteMantra(fav.id) }) {
+                                Icon(imageVector = androidx.compose.material.icons.Icons.Default.Delete, contentDescription = "Delete", tint = MaterialTheme.colorScheme.error)
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(text = fav.content, style = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurfaceVariant))
+                        if (fav.youtubeUrl.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            TextButton(
+                                onClick = {
+                                    try {
+                                        uriHandler.openUri(fav.youtubeUrl)
+                                    } catch (e: Exception) {
+                                        // Ignore
+                                    }
+                                }
+                            ) {
+                                Text(if (isEnglish) "Listen on YouTube" else "यूट्यूब पर सुनें")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(32.dp))
+    }
+}
+
+@Composable
+fun MeditationTimerView(isEnglish: Boolean) {
+    var timerRunning by remember { mutableStateOf(false) }
+    var secondsLeft by remember { mutableStateOf(300) } // 5 Minutes Default
+    var selectedDuration by remember { mutableStateOf(300) }
+    var customDurationMins by remember { mutableStateOf(5f) }
+    var selectedSoundIndex by remember { mutableStateOf(1) } // Default to Temple Bells
+    var backgroundVolume by remember { mutableStateOf(0.7f) }
+    var breathingPhase by remember { mutableStateOf("Inhale") }
+
+    // Coroutine timer logic
+    LaunchedEffect(timerRunning, secondsLeft) {
+        if (timerRunning && secondsLeft > 0) {
+            kotlinx.coroutines.delay(1000)
+            secondsLeft -= 1
+            
+            // Sync breathing instruction (every 4 seconds)
+            breathingPhase = when ((secondsLeft % 12)) {
+                in 0..3 -> if (isEnglish) "Inhale Deeply (श्वास लें)" else "गहरी श्वास लें"
+                in 4..7 -> if (isEnglish) "Hold Calmly (कुंभक)" else "शांत रहकर श्वास रोकें"
+                else -> if (isEnglish) "Exhale Gently (श्वास छोड़ें)" else "धीरे से श्वास छोड़ें"
+            }
+        } else if (secondsLeft == 0) {
+            timerRunning = false
+            secondsLeft = selectedDuration
+        }
+    }
+
+    // Animation scale for breathing circle
+    val breatheScale by animateFloatAsState(
+        targetValue = if (timerRunning) {
+            when (breathingPhase) {
+                "Inhale Deeply (श्वास लें)", "गहरी श्वास लें" -> 1.4f
+                "Hold Calmly (कुंभक)", "शांत रहकर श्वास रोकें" -> 1.4f
+                else -> 0.9f
+            }
+        } else 1.0f,
+        animationSpec = tween(durationMillis = 4000)
+    )
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState()),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        SacredCard(
+            backgroundColor = MaterialTheme.colorScheme.surface,
+            borderColor = MaterialTheme.colorScheme.tertiary
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = if (isEnglish) "Dhyana & Breath Meditation" else "ध्यान एवं प्राणायाम",
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.secondary,
+                    style = MaterialTheme.typography.titleLarge
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Circular progress tracker and Breathing visualizer combined
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier.size(190.dp)
+                ) {
+                    androidx.compose.material3.CircularProgressIndicator(
+                        progress = secondsLeft.toFloat() / selectedDuration,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .testTag("timer_circular_progress"),
+                        color = MaterialTheme.colorScheme.primary,
+                        strokeWidth = 6.dp,
+                        trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .size(150.dp)
+                            .scale(breatheScale)
+                            .clip(CircleShape)
+                            .background(
+                                Brush.radialGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                                        Terracotta.copy(alpha = 0.4f),
+                                        Color.Transparent
+                                    )
+                                )
+                            )
+                            .border(2.dp, MaterialTheme.colorScheme.tertiary, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = if (timerRunning) breathingPhase else "🕉",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.secondary,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(horizontal = 12.dp)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            val mins = secondsLeft / 60
+                            val secs = secondsLeft % 60
+                            Text(
+                                text = String.format("%02d:%02d", mins, secs),
+                                style = MaterialTheme.typography.headlineMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.secondary
+                                )
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Dynamic visual frequency wave generator (equalizer)
+                if (timerRunning) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.height(50.dp).padding(vertical = 4.dp)
+                    ) {
+                        repeat(16) { index ->
+                            var scaleVal by remember { mutableStateOf(1f) }
+                            LaunchedEffect(timerRunning) {
+                                while (timerRunning) {
+                                    scaleVal = 0.2f + (kotlin.random.Random.nextFloat() * 1.3f)
+                                    kotlinx.coroutines.delay(kotlin.random.Random.nextLong(120, 280))
+                                }
+                            }
+                            Box(
+                                modifier = Modifier
+                                    .width(3.dp)
+                                    .height(36.dp * scaleVal)
+                                    .clip(RoundedCornerShape(1.5.dp))
+                                    .background(
+                                        Brush.verticalGradient(
+                                            colors = listOf(MaterialTheme.colorScheme.primary, Terracotta, MaterialTheme.colorScheme.tertiary)
+                                        )
+                                    )
+                            )
+                        }
+                    }
+
+                    val sounds = listOf(
+                        Pair("None (Silent)", "मौन"),
+                        Pair("Temple Bells 🔔", "मंदिर घंटियाँ 🔔"),
+                        Pair("Divine OM 🕉", "दिव्य ॐ ध्वनि 🕉"),
+                        Pair("Cosmic Flute 🪈", "बांसुरी धुन 🪈"),
+                        Pair("Ganga Flow 🌊", "गंगा प्रवाह 🌊")
+                    )
+                    val soundName = if (isEnglish) sounds[selectedSoundIndex].first else sounds[selectedSoundIndex].second
+                    Text(
+                        text = if (isEnglish) "Playing Ambient Sound: $soundName" else "पृष्ठभूमि ध्वनि सक्रिय: $soundName",
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 11.sp,
+                        fontStyle = FontStyle.Italic
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Duration Selector presets
+                if (!timerRunning) {
+                    Text(
+                        text = if (isEnglish) "Select Quick Duration Preset:" else "त्वरित समय अवधि चुनें:",
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontSize = 13.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        val durations = listOf(60, 300, 600, 1200)
+                        durations.forEach { dur ->
+                            val label = "${dur / 60} ${if (isEnglish) "Min" else "मिनट"}"
+                            OutlinedButton(
+                                onClick = {
+                                    selectedDuration = dur
+                                    secondsLeft = dur
+                                    customDurationMins = (dur / 60).toFloat()
+                                },
+                                border = ButtonDefaults.outlinedButtonBorder(enabled = selectedDuration == dur),
+                                colors = ButtonDefaults.outlinedButtonColors(
+                                    containerColor = if (selectedDuration == dur) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else Color.Transparent,
+                                    contentColor = MaterialTheme.colorScheme.secondary
+                                )
+                            ) {

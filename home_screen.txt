@@ -1,0 +1,201 @@
+129:fun HomeScreen(viewModel: SadhakViewModel) {
+130-    val isEng by viewModel.isEnglish.collectAsState()
+131-    
+132-    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+133-    DisposableEffect(lifecycleOwner) {
+134-        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+135-            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+136-                viewModel.loadDailyPanchangAndThought()
+137-            }
+138-        }
+139-        lifecycleOwner.lifecycle.addObserver(observer)
+140-        onDispose {
+141-            lifecycleOwner.lifecycle.removeObserver(observer)
+142-        }
+143-    }
+144-    
+145-    var showVerifiedPrompt by remember { mutableStateOf(true) }
+146-    val posts by viewModel.posts.collectAsState()
+147-    
+148-    val currentThought by viewModel.currentThought.collectAsState()
+149-    val currentTithi by viewModel.currentTithi.collectAsState()
+150-    val currentNakshatra by viewModel.currentNakshatra.collectAsState()
+151-    val currentYoga by viewModel.currentYoga.collectAsState()
+152-    val currentFestival by viewModel.currentFestival.collectAsState()
+153-    
+154-    val dayIndex = (System.currentTimeMillis() / (1000 * 60 * 60 * 24)).toInt()
+155-
+156-    // Featured deity rotates daily through Maa Annapurna, Balaji, Mahadev
+157-    val deitiesList = listOf("Maa Annapurna Maharani", "Sindari ke Balaji", "Mahadev")
+158-    val deityIndex = dayIndex % deitiesList.size
+159-    val currentDeity = deitiesList[deityIndex]
+160-
+161-    val deitySummary = when (deityIndex) {
+162-        0 -> if (isEng) "Giver of infinite nourishment and maternal warmth." else "अनंत पोषण और मातृत्व शक्ति की अधिष्ठात्री।"
+163-        1 -> if (isEng) "The protective, fearless defender of true devotees." else "भक्तों के संकट हरने वाले परम रक्षक और रक्षक।"
+164-        else -> if (isEng) "The cosmic silent Yogi, bestower of ultimate peace." else "परम शांत योगी, मोक्ष और आनंद के दाता।"
+165-    }
+166-
+167-    val deityColors = when (deityIndex) {
+168-        0 -> listOf(MaterialTheme.colorScheme.primary, Terracotta)
+169-        1 -> listOf(Terracotta, MaterialTheme.colorScheme.secondary)
+170-        else -> listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
+171-    }
+172-
+173-    LazyColumn(
+174-        modifier = Modifier
+175-            .fillMaxSize()
+176-            .testTag("home_screen_column")
+177-            .padding(16.dp),
+178-        verticalArrangement = Arrangement.spacedBy(16.dp)
+179-    ) {
+180-        // Announcement Banner if any
+181-        if (showVerifiedPrompt) {
+182-            item {
+183-                SacredCard(
+184-                    backgroundColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f),
+185-                    borderColor = MaterialTheme.colorScheme.tertiary
+186-                ) {
+187-                    Row(
+188-                        modifier = Modifier.padding(12.dp).fillMaxWidth(),
+189-                        verticalAlignment = Alignment.CenterVertically
+190-                    ) {
+191-                        Icon(
+192-                            imageVector = Icons.Default.Verified,
+193-                            contentDescription = "Verified Channel Update",
+194-                            tint = MaterialTheme.colorScheme.secondary,
+195-                            modifier = Modifier.size(24.dp)
+196-                        )
+197-                        Spacer(modifier = Modifier.width(8.dp))
+198-                        Text(
+199-                            text = if (isEng) "Verified Channel Update: Daily visual aarti from Maa Annapurna shrine added! Visit the Video Hub." else "चैनल अपडेट: माँ अन्नपूर्णा मंदिर से दैनिक आरती जोड़ी गई! वीडियो हब देखें।",
+200-                            style = MaterialTheme.typography.bodySmall.copy(
+201-                                fontWeight = FontWeight.Bold,
+202-                                color = MaterialTheme.colorScheme.secondary,
+203-                                fontSize = 12.sp
+204-                            ),
+205-                            modifier = Modifier.weight(1f)
+206-                        )
+207-                        IconButton(onClick = { showVerifiedPrompt = false }, modifier = Modifier.size(24.dp)) {
+208-                            Icon(
+209-                                imageVector = Icons.Default.Close,
+210-                                contentDescription = "Close",
+211-                                tint = MaterialTheme.colorScheme.secondary,
+212-                                modifier = Modifier.size(16.dp)
+213-                            )
+214-                        }
+215-                    }
+216-                }
+217-            }
+218-        }
+219-
+220-        // 1. Thought of the Day
+221-        item {
+222-            SacredCard(
+223-                backgroundColor = MaterialTheme.colorScheme.primaryContainer,
+224-                borderColor = Color(0xFFFFE4C4)
+225-            ) {
+226-                Column(
+227-                    modifier = Modifier
+228-                        .fillMaxWidth()
+229-                        .padding(16.dp)
+230-                ) {
+231-                    Row(
+232-                        verticalAlignment = Alignment.CenterVertically,
+233-                        modifier = Modifier.padding(bottom = 8.dp)
+234-                    ) {
+235-                        Icon(
+236-                            imageVector = Icons.Filled.AutoAwesome,
+237-                            contentDescription = "Star Sparkle",
+238-                            tint = MaterialTheme.colorScheme.primary,
+239-                            modifier = Modifier.size(16.dp)
+240-                        )
+241-                        Spacer(modifier = Modifier.width(6.dp))
+242-                        Text(
+243-                            text = if (isEng) "THOUGHT OF THE DAY" else "आज का सुविचार",
+244-                            style = MaterialTheme.typography.labelSmall.copy(
+245-                                fontWeight = FontWeight.Bold,
+246-                                color = BrassTan,
+247-                                letterSpacing = 1.sp,
+248-                                fontSize = 11.sp
+249-                            )
+250-                        )
+251-                    }
+252-                    
+253-                    val parts = currentThought.split("\n")
+254-                    if (parts.size > 1) {
+255-                        Text(
+256-                            text = parts[0].trim(),
+257-                            style = MaterialTheme.typography.bodyMedium.copy(
+258-                                fontWeight = FontWeight.Bold,
+259-                                fontStyle = FontStyle.Italic,
+260-                                fontSize = 14.sp,
+261-                                color = MaterialTheme.colorScheme.secondary,
+262-                                lineHeight = 20.sp,
+263-                                fontFamily = FontFamily.Serif
+264-                            ),
+265-                            modifier = Modifier.padding(bottom = 6.dp)
+266-                        )
+267-                        Text(
+268-                            text = parts.drop(1).joinToString("\n").trim(),
+269-                            style = MaterialTheme.typography.bodySmall.copy(
+270-                                fontSize = 12.sp,
+271-                                color = MaterialTheme.colorScheme.onSurface,
+272-                                lineHeight = 18.sp
+273-                            )
+274-                        )
+275-                    } else {
+276-                        Text(
+277-                            text = currentThought,
+278-                            style = MaterialTheme.typography.bodyMedium.copy(
+279-                                fontWeight = FontWeight.Medium,
+280-                                fontStyle = FontStyle.Italic,
+281-                                fontSize = 14.sp,
+282-                                color = MaterialTheme.colorScheme.secondary,
+283-                                lineHeight = 20.sp,
+284-                                fontFamily = FontFamily.Serif
+285-                            )
+286-                        )
+287-                    }
+288-                }
+289-            }
+290-        }
+291-
+292-        // 2. Today's Panchang
+293-        item {
+294-            val formattedDate = remember(isEng) {
+295-                val sdf = if (isEng) {
+296-                    java.text.SimpleDateFormat("EEEE, dd MMMM yyyy", java.util.Locale.ENGLISH)
+297-                } else {
+298-                    java.text.SimpleDateFormat("EEEE, dd MMMM yyyy", java.util.Locale("hi"))
+299-                }
+300-                sdf.format(System.currentTimeMillis())
+301-            }
+302-
+303-            Text(
+304-                text = if (isEng) "Today's Panchang" else "आज का पंचांग",
+305-                style = MaterialTheme.typography.titleMedium.copy(
+306-                    fontWeight = FontWeight.Bold,
+307-                    color = MaterialTheme.colorScheme.secondary
+308-                ),
+309-                modifier = Modifier.padding(bottom = 4.dp)
+310-            )
+311-
+312-            SacredCard(
+313-                backgroundColor = MaterialTheme.colorScheme.surface,
+314-                borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
+315-            ) {
+316-                Column(modifier = Modifier.padding(16.dp)) {
+317-                    // Current Date
+318-                    Row(
+319-                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+320-                        horizontalArrangement = Arrangement.Center,
+321-                        verticalAlignment = Alignment.CenterVertically
+322-                    ) {
+323-                        Icon(
+324-                            imageVector = Icons.Default.Star,
+325-                            contentDescription = "Date Icon",
+326-                            tint = MaterialTheme.colorScheme.primary,
+327-                            modifier = Modifier.size(16.dp)
+328-                        )
+329-                        Spacer(modifier = Modifier.width(6.dp))
