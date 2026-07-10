@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Sanatan Sadhak</string>
+    <string name="temple_finder_attribution_label">Temple Finder location service</string>
 </resources>

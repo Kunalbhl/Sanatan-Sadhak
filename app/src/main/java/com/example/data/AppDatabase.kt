@@ -23,6 +23,12 @@ interface KnowledgeArticleDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertArticles(articles: List<KnowledgeArticle>)
 
+    @Update
+    suspend fun updateArticle(article: KnowledgeArticle)
+
+    @Query("DELETE FROM knowledge_articles WHERE id = :id")
+    suspend fun deleteArticleById(id: Int)
+
     @Query("DELETE FROM knowledge_articles")
     suspend fun clearAllArticles()
 }
@@ -47,8 +53,17 @@ interface PostCommentDao {
     @Query("SELECT * FROM post_comments WHERE postId = :postId ORDER BY createdAt ASC")
     fun getCommentsForPost(postId: Int): Flow<List<PostComment>>
 
+    @Query("SELECT * FROM post_comments ORDER BY createdAt DESC")
+    fun getAllComments(): Flow<List<PostComment>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertComment(comment: PostComment)
+
+    @Update
+    suspend fun updateComment(comment: PostComment)
+
+    @Query("DELETE FROM post_comments WHERE id = :id")
+    suspend fun deleteCommentById(id: Int)
 }
 
 @Dao
@@ -61,6 +76,12 @@ interface BhaktiVideoDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertVideos(videos: List<BhaktiVideo>)
+
+    @Update
+    suspend fun updateVideo(video: BhaktiVideo)
+
+    @Query("DELETE FROM bhakti_videos WHERE id = :id")
+    suspend fun deleteVideoById(id: Int)
 
     @Query("DELETE FROM bhakti_videos WHERE isCustom = 0")
     suspend fun clearNonCustomVideos()
@@ -130,11 +151,67 @@ interface UserDao {
 
     @Query("UPDATE users SET fullName = :fullName, mobileNumber = :mobileNumber, city = :city, state = :state, avatar = :avatar, profileImageUri = :profileImageUri WHERE email = :email")
     suspend fun updateUserProfile(email: String, fullName: String, mobileNumber: String, city: String, state: String, avatar: Int, profileImageUri: String)
+
+    @Query("SELECT * FROM users ORDER BY fullName ASC")
+    fun getAllUsers(): Flow<List<User>>
+
+    @Query("UPDATE users SET canPost = :canPost WHERE email = :email")
+    suspend fun updateUserCanPost(email: String, canPost: Boolean)
+
+    @Query("UPDATE users SET role = :role WHERE email = :email")
+    suspend fun updateUserRole(email: String, role: String)
+}
+
+@Dao
+interface InstagramPostDao {
+    @Query("SELECT * FROM instagram_posts ORDER BY createdAt DESC")
+    fun getAllInstagramPosts(): Flow<List<InstagramPost>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertInstagramPost(post: InstagramPost)
+
+    @Update
+    suspend fun updateInstagramPost(post: InstagramPost)
+
+    @Query("DELETE FROM instagram_posts WHERE id = :id")
+    suspend fun deleteById(id: Int)
+}
+
+@Dao
+interface ThoughtQuoteDao {
+    @Query("SELECT * FROM thought_quotes ORDER BY createdAt DESC")
+    fun getAllThoughtQuotes(): Flow<List<ThoughtQuote>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertThoughtQuote(quote: ThoughtQuote)
+
+    @Update
+    suspend fun updateThoughtQuote(quote: ThoughtQuote)
+
+    @Query("DELETE FROM thought_quotes WHERE id = :id")
+    suspend fun deleteById(id: Int)
+}
+
+@Dao
+interface AnnouncementDao {
+    @Query("SELECT * FROM announcements ORDER BY createdAt DESC")
+    fun getAllAnnouncements(): Flow<List<Announcement>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertAnnouncement(announcement: Announcement)
+
+    @Update
+    suspend fun updateAnnouncement(announcement: Announcement)
+
+    @Query("DELETE FROM announcements WHERE id = :id")
+    suspend fun deleteById(id: Int)
 }
 
 @Database(
     entities = [
+        SankalpaLog::class,
         KnowledgeArticle::class,
+        BookmarkedArticle::class,
         CommunityPost::class,
         PostComment::class,
         BhaktiVideo::class,
@@ -143,9 +220,13 @@ interface UserDao {
         AppSetting::class,
         ChatMessage::class,
         FavoriteMantra::class,
-        User::class
+        User::class,
+        InstagramPost::class,
+        ThoughtQuote::class,
+        Announcement::class,
+        PanchangEntity::class
     ],
-    version = 4,
+    version = 14,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -157,6 +238,20 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun gratitudeLogDao(): GratitudeLogDao
     abstract fun appSettingDao(): AppSettingDao
     abstract fun chatMessageDao(): ChatMessageDao
+    abstract fun sankalpaDao(): SankalpaDao
     abstract fun favoriteMantraDao(): FavoriteMantraDao
     abstract fun userDao(): UserDao
+    abstract fun instagramPostDao(): InstagramPostDao
+    abstract fun thoughtQuoteDao(): ThoughtQuoteDao
+    abstract fun announcementDao(): AnnouncementDao
+    abstract fun panchangDao(): PanchangDao
+}
+
+@Dao
+interface SankalpaDao {
+    @Query("SELECT * FROM sankalpa_logs ORDER BY timestamp DESC")
+    fun getAllLogs(): kotlinx.coroutines.flow.Flow<List<SankalpaLog>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertLog(log: SankalpaLog)
 }

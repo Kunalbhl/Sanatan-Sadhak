@@ -49,6 +49,50 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
     var vibrateOnMala by remember { mutableStateOf(prefs.getBoolean("vibrate_on_mala", true)) }
     var showCelebrationDialog by remember { mutableStateOf(false) }
 
+    // Timer state variables
+    var modeSelected by remember { mutableStateOf("Counter") } // "Counter" or "Timer"
+    var timerRunning by remember { mutableStateOf(false) }
+    var timerType by remember { mutableStateOf("Duration") } // "Duration" or "Count"
+    var durationSecondsTotal by remember { mutableStateOf(300) } // 5 mins
+    var durationSecondsLeft by remember { mutableStateOf(300) }
+    var targetChantCount by remember { mutableStateOf(108) }
+    var currentChantCount by remember { mutableStateOf(0) }
+    var chantIntervalMs by remember { mutableStateOf(3000L) } // 3 seconds per chant
+
+    // Timer countdown/pacing logic
+    LaunchedEffect(timerRunning, timerType, durationSecondsLeft, currentChantCount) {
+        if (timerRunning) {
+            if (timerType == "Duration") {
+                if (durationSecondsLeft > 0) {
+                    kotlinx.coroutines.delay(1000)
+                    durationSecondsLeft -= 1
+                    
+                    // Auto-increment chant count based on pacing (e.g. every 3 seconds)
+                    if ((durationSecondsTotal - durationSecondsLeft) % (chantIntervalMs / 1000L).toInt() == 0) {
+                        currentChantCount += 1
+                    }
+                } else {
+                    // Completed!
+                    timerRunning = false
+                    com.example.ui.screens.AmbientSoundPlayer.playSound(1, 0.8f) // Ring Majestic Temple Bell!
+                    viewModel.logKarmaDeed("Completed Japa Timer of ${durationSecondsTotal / 60} mins: $currentChantCount chants")
+                    showCelebrationDialog = true
+                }
+            } else { // "Count" mode
+                if (currentChantCount < targetChantCount) {
+                    kotlinx.coroutines.delay(chantIntervalMs)
+                    currentChantCount += 1
+                } else {
+                    // Completed!
+                    timerRunning = false
+                    com.example.ui.screens.AmbientSoundPlayer.playSound(1, 0.8f) // Ring Majestic Temple Bell!
+                    viewModel.logKarmaDeed("Completed Japa Timer of $targetChantCount chants")
+                    showCelebrationDialog = true
+                }
+            }
+        }
+    }
+
     // Helper date strings
     val sdf = remember { java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()) }
     val todayStr = remember { sdf.format(java.util.Date()) }
@@ -179,6 +223,43 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
                 }
             }
 
+            // Japa Counter vs Japa Timer mode selector tab row
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .padding(4.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    val modes = listOf("Counter", "Timer")
+                    modes.forEach { mode ->
+                        val label = when (mode) {
+                            "Counter" -> if (isEng) "Japa Counter" else "जाप काउंटर"
+                            else -> if (isEng) "Japa Timer" else "जाप टाइमर"
+                        }
+                        val isSelected = modeSelected == mode
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
+                                .clickable { modeSelected = mode }
+                                .padding(vertical = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = label,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 13.sp
+                            )
+                        }
+                    }
+                }
+            }
+
             // 5. Options: Japa Customization Options (SHIFTED UPPER SIDE)
             item {
                 Text(
@@ -271,213 +352,481 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
                 }
             }
 
-            // 3. Circular Progress Ring & Tapping Target
-            item {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .padding(vertical = 12.dp)
-                        .size(240.dp)
-                ) {
-                    // Outer Glow ring via Canvas
-                    val primaryColor = MaterialTheme.colorScheme.primary
-                    val baseColor = MaterialTheme.colorScheme.outlineVariant
-                    Canvas(modifier = Modifier.size(220.dp)) {
-                        val strokeWidth = 14.dp.toPx()
-                        // track circle
-                        drawCircle(
-                            color = baseColor.copy(alpha = 0.4f),
-                            radius = size.width / 2 - strokeWidth / 2,
-                            style = Stroke(width = strokeWidth)
-                        )
-                        // active progress circle
-                        val sweep = if (dailyTargetChants > 0) {
-                            (count.toFloat() / dailyTargetChants.toFloat() * 360f).coerceAtMost(360f)
-                        } else 0f
-                        drawArc(
-                            color = primaryColor,
-                            startAngle = -90f,
-                            sweepAngle = sweep,
-                            useCenter = false,
-                            style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
-                        )
-                    }
-
-                    // Inner Interactive Circle Button
+            if (modeSelected == "Counter") {
+                // 3. Circular Progress Ring & Tapping Target
+                item {
                     Box(
+                        contentAlignment = Alignment.Center,
                         modifier = Modifier
-                            .size(180.dp)
-                            .clip(CircleShape)
-                            .background(
-                                Brush.radialGradient(
-                                    colors = listOf(
-                                        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f),
-                                        MaterialTheme.colorScheme.primaryContainer
+                            .padding(vertical = 12.dp)
+                            .size(240.dp)
+                    ) {
+                        // Outer Glow ring via Canvas
+                        val primaryColor = MaterialTheme.colorScheme.primary
+                        val baseColor = MaterialTheme.colorScheme.outlineVariant
+                        Canvas(modifier = Modifier.size(220.dp)) {
+                            val strokeWidth = 14.dp.toPx()
+                            // track circle
+                            drawCircle(
+                                color = baseColor.copy(alpha = 0.4f),
+                                radius = size.width / 2 - strokeWidth / 2,
+                                style = Stroke(width = strokeWidth)
+                            )
+                            // active progress circle
+                            val sweep = if (dailyTargetChants > 0) {
+                                (count.toFloat() / dailyTargetChants.toFloat() * 360f).coerceAtMost(360f)
+                            } else 0f
+                            drawArc(
+                                color = primaryColor,
+                                startAngle = -90f,
+                                sweepAngle = sweep,
+                                useCenter = false,
+                                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                            )
+                        }
+
+                        // Inner Interactive Circle Button
+                        Box(
+                            modifier = Modifier
+                                .size(180.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    Brush.radialGradient(
+                                        colors = listOf(
+                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f),
+                                            MaterialTheme.colorScheme.primaryContainer
+                                        )
                                     )
                                 )
-                            )
-                            .clickable { incrementCount() }
-                            .testTag("bead_tap_target"),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
+                                .clickable { incrementCount() }
+                                .testTag("bead_tap_target"),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Text(
-                                text = count.toString(),
-                                style = MaterialTheme.typography.displayLarge.copy(
-                                    fontSize = 48.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
-                            )
-                            
-                            // Mala Rounds Completed Subtitle
-                            val currentMalasCompleted = count / beadsPerMala
-                            Text(
-                                text = if (isEng) "Mala Completed: $currentMalasCompleted" else "माला पूर्ण: $currentMalasCompleted",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.secondary
-                            )
-
-                            Spacer(modifier = Modifier.height(4.dp))
-                            Text(
-                                text = if (isEng) "TAP TO COUNT" else "टैप करें",
-                                fontSize = 10.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = com.example.ui.theme.Terracotta,
-                                letterSpacing = 1.sp
-                            )
-                        }
-                    }
-                }
-            }
-
-            // 4. Reset & Quick Options Controls
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    // Reset Button
-                    OutlinedButton(
-                        onClick = { resetCurrentCount() },
-                        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(imageVector = Icons.Default.Refresh, contentDescription = "Reset")
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(text = if (isEng) "Reset Counter" else "काउंटर रीसेट करें", fontSize = 12.sp)
-                    }
-                }
-            }
-
-            // 7. Mala Size & Daily Target Selection Rows
-            item {
-                SacredCard(modifier = Modifier.fillMaxWidth()) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        // Beads per Mala Configuration
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = if (isEng) "Beads per Mala" else "माला के मनके (मनका)",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 13.sp,
-                                color = MaterialTheme.colorScheme.secondary
-                            )
-
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
                             ) {
-                                listOf(108, 54, 27, 1).forEach { countOpt ->
-                                    val activeOpt = beadsPerMala == countOpt
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(8.dp))
-                                            .background(if (activeOpt) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
-                                            .border(1.dp, if (activeOpt) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp))
-                                            .clickable {
-                                                beadsPerMala = countOpt
-                                                saveInt("beads_per_mala", countOpt)
-                                            }
-                                            .padding(horizontal = 10.dp, vertical = 6.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = countOpt.toString(),
-                                            color = if (activeOpt) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
-                                            fontSize = 11.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
-                                }
+                                Text(
+                                    text = count.toString(),
+                                    style = MaterialTheme.typography.displayLarge.copy(
+                                        fontSize = 48.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                )
+                                
+                                // Mala Rounds Completed Subtitle
+                                val currentMalasCompleted = count / beadsPerMala
+                                Text(
+                                    text = if (isEng) "Mala Completed: $currentMalasCompleted" else "माला पूर्ण: $currentMalasCompleted",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.secondary
+                                )
+
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = if (isEng) "TAP TO COUNT" else "टैप करें",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = com.example.ui.theme.Terracotta,
+                                    letterSpacing = 1.sp
+                                )
                             }
                         }
+                    }
+                }
 
-                        // Daily Target Mala Rounds configuration
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                // 4. Reset & Quick Options Controls
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        // Reset Button
+                        OutlinedButton(
+                            onClick = { resetCurrentCount() },
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                            shape = RoundedCornerShape(12.dp)
                         ) {
-                            Column {
+                            Icon(imageVector = Icons.Default.Refresh, contentDescription = "Reset")
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(text = if (isEng) "Reset Counter" else "काउंटर रीसेट करें", fontSize = 12.sp)
+                        }
+                    }
+                }
+
+                // 7. Mala Size & Daily Target Selection Rows
+                item {
+                    SacredCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            // Beads per Mala Configuration
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 Text(
-                                    text = if (isEng) "Daily Target Rounds" else "दैनिक जाप माला फेरे",
+                                    text = if (isEng) "Beads per Mala" else "माला के मनके (मनका)",
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 13.sp,
                                     color = MaterialTheme.colorScheme.secondary
                                 )
-                                Text(
-                                    text = if (isEng) "Goal: $dailyTargetChants total chants" else "कुल जाप लक्ष्य: $dailyTargetChants",
-                                    fontSize = 10.sp,
-                                    color = Color.Gray
-                                )
+
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    listOf(108, 54, 27, 1).forEach { countOpt ->
+                                        val activeOpt = beadsPerMala == countOpt
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(if (activeOpt) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
+                                                .border(1.dp, if (activeOpt) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp))
+                                                .clickable {
+                                                    beadsPerMala = countOpt
+                                                    saveInt("beads_per_mala", countOpt)
+                                                }
+                                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = countOpt.toString(),
+                                                color = if (activeOpt) Color.White else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                fontSize = 11.sp,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                        }
+                                    }
+                                }
                             }
 
+                            // Daily Target Mala Rounds configuration
                             Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                IconButton(
-                                    onClick = {
-                                        if (targetMalas > 1) {
-                                            targetMalas -= 1
-                                            saveInt("target_malas", targetMalas)
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
-                                ) {
-                                    Text(text = "-", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                Column {
+                                    Text(
+                                        text = if (isEng) "Daily Target Rounds" else "दैनिक जाप माला फेरे",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        color = MaterialTheme.colorScheme.secondary
+                                    )
+                                    Text(
+                                        text = if (isEng) "Goal: $dailyTargetChants total chants" else "कुल जाप लक्ष्य: $dailyTargetChants",
+                                        fontSize = 10.sp,
+                                        color = Color.Gray
+                                    )
                                 }
 
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    IconButton(
+                                        onClick = {
+                                            if (targetMalas > 1) {
+                                                targetMalas -= 1
+                                                saveInt("target_malas", targetMalas)
+                                            }
+                                        },
+                                        modifier = Modifier
+                                            .size(32.dp)
+                                            .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                                    ) {
+                                        Text(text = "-", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                    }
+
+                                    Text(
+                                        text = targetMalas.toString(),
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 16.sp,
+                                        color = MaterialTheme.colorScheme.secondary
+                                    )
+
+                                    IconButton(
+                                        onClick = {
+                                            targetMalas += 1
+                                            saveInt("target_malas", targetMalas)
+                                        },
+                                        modifier = Modifier
+                                            .size(32.dp)
+                                            .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                                    ) {
+                                        Text(text = "+", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Timer Progress Ring & Controls
+                item {
+                    val progressValue = if (timerType == "Duration") {
+                        if (durationSecondsTotal > 0) durationSecondsLeft.toFloat() / durationSecondsTotal.toFloat() else 0f
+                    } else {
+                        if (targetChantCount > 0) currentChantCount.toFloat() / targetChantCount.toFloat() else 0f
+                    }
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .padding(vertical = 12.dp)
+                            .size(240.dp)
+                    ) {
+                        // Progress ring canvas
+                        val primaryColor = MaterialTheme.colorScheme.primary
+                        val baseColor = MaterialTheme.colorScheme.outlineVariant
+                        Canvas(modifier = Modifier.size(220.dp)) {
+                            val strokeWidth = 14.dp.toPx()
+                            // Track
+                            drawCircle(
+                                color = baseColor.copy(alpha = 0.4f),
+                                radius = size.width / 2 - strokeWidth / 2,
+                                style = Stroke(width = strokeWidth)
+                            )
+                            // Progress
+                            drawArc(
+                                color = primaryColor,
+                                startAngle = -90f,
+                                sweepAngle = progressValue * 360f,
+                                useCenter = false,
+                                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+                            )
+                        }
+
+                        // Inner click to start/pause, long-press to reset
+                        Box(
+                            modifier = Modifier
+                                .size(180.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    Brush.radialGradient(
+                                        colors = listOf(
+                                            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f),
+                                            MaterialTheme.colorScheme.primaryContainer
+                                        )
+                                    )
+                                )
+                                .clickable {
+                                    timerRunning = !timerRunning
+                                }
+                                .testTag("timer_bead_tap_target"),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+                                if (timerType == "Duration") {
+                                    val mins = durationSecondsLeft / 60
+                                    val secs = durationSecondsLeft % 60
+                                    Text(
+                                        text = String.format("%02d:%02d", mins, secs),
+                                        style = MaterialTheme.typography.displayLarge.copy(
+                                            fontSize = 42.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    )
+                                    Text(
+                                        text = if (isEng) "Chants: $currentChantCount" else "जाप संख्या: $currentChantCount",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.secondary
+                                    )
+                                } else {
+                                    Text(
+                                        text = "$currentChantCount/$targetChantCount",
+                                        style = MaterialTheme.typography.displayLarge.copy(
+                                            fontSize = 42.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    )
+                                    Text(
+                                        text = if (isEng) "Target Chants" else "जाप लक्ष्य",
+                                        fontSize = 12.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.secondary
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(4.dp))
                                 Text(
-                                    text = targetMalas.toString(),
+                                    text = if (timerRunning) {
+                                        if (isEng) "TAP TO PAUSE" else "रोकने के लिए दबाएं"
+                                    } else {
+                                        if (isEng) "TAP TO START" else "शुरू करने के लिए दबाएं"
+                                    },
+                                    fontSize = 10.sp,
                                     fontWeight = FontWeight.Bold,
-                                    fontSize = 16.sp,
+                                    color = com.example.ui.theme.Terracotta,
+                                    letterSpacing = 1.sp
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Action buttons for Timer
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceEvenly
+                    ) {
+                        Button(
+                            onClick = { timerRunning = !timerRunning },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(text = if (timerRunning) (if (isEng) "Pause" else "रोकें") else (if (isEng) "Start Japa" else "जाप शुरू करें"), color = Color.White)
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                timerRunning = false
+                                durationSecondsLeft = durationSecondsTotal
+                                currentChantCount = 0
+                            },
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(imageVector = Icons.Default.Refresh, contentDescription = "Reset")
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(text = if (isEng) "Reset Timer" else "टाइमर रीसेट करें", fontSize = 12.sp)
+                        }
+                    }
+                }
+
+                // Timer Configurations card
+                item {
+                    SacredCard(modifier = Modifier.fillMaxWidth()) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            // Timer Type Selector (Duration vs Count)
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = if (isEng) "Timer Mode" else "टाइमर मोड",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
                                     color = MaterialTheme.colorScheme.secondary
                                 )
 
-                                IconButton(
-                                    onClick = {
-                                        targetMalas += 1
-                                        saveInt("target_malas", targetMalas)
-                                    },
-                                    modifier = Modifier
-                                        .size(32.dp)
-                                        .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Text(text = "+", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                    listOf("Duration", "Count").forEach { typeOpt ->
+                                        val isSelected = timerType == typeOpt
+                                        val label = when (typeOpt) {
+                                            "Duration" -> if (isEng) "Duration" else "समय"
+                                            else -> if (isEng) "Count" else "जाप संख्या"
+                                        }
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(8.dp))
+                                                .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
+                                                .clickable {
+                                                    timerType = typeOpt
+                                                    timerRunning = false
+                                                    durationSecondsLeft = durationSecondsTotal
+                                                    currentChantCount = 0
+                                                }
+                                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                                        ) {
+                                            Text(text = label, color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                        }
+                                    }
                                 }
+                            }
+
+                            // Presets depending on timerType
+                            Column {
+                                Text(
+                                    text = if (timerType == "Duration") {
+                                        if (isEng) "Select Quick Duration Preset" else "त्वरित समय विकल्प चुनें"
+                                    } else {
+                                        if (isEng) "Select Target Count Preset" else "त्वरित जाप संख्या विकल्प चुनें"
+                                    },
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceEvenly
+                                ) {
+                                    if (timerType == "Duration") {
+                                        val minsPresets = listOf(1, 3, 5, 10)
+                                        minsPresets.forEach { mins ->
+                                            OutlinedButton(
+                                                onClick = {
+                                                    durationSecondsTotal = mins * 60
+                                                    durationSecondsLeft = mins * 60
+                                                    currentChantCount = 0
+                                                },
+                                                colors = ButtonDefaults.outlinedButtonColors(
+                                                    containerColor = if (durationSecondsTotal == mins * 60) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else Color.Transparent
+                                                ),
+                                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                                            ) {
+                                                Text(text = "$mins ${if (isEng) "Min" else "मिनट"}", fontSize = 11.sp)
+                                            }
+                                        }
+                                    } else {
+                                        val countPresets = listOf(27, 54, 108, 1008)
+                                        countPresets.forEach { preset ->
+                                            OutlinedButton(
+                                                onClick = {
+                                                    targetChantCount = preset
+                                                    currentChantCount = 0
+                                                },
+                                                colors = ButtonDefaults.outlinedButtonColors(
+                                                    containerColor = if (targetChantCount == preset) MaterialTheme.colorScheme.primary.copy(alpha = 0.12f) else Color.Transparent
+                                                ),
+                                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                                            ) {
+                                                Text(text = preset.toString(), fontSize = 11.sp)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Pacing interval speed slider
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(
+                                    text = if (isEng) "Auto-Chant Interval: ${(chantIntervalMs / 1000f)} sec" else "स्वचालित जाप अंतराल: ${(chantIntervalMs / 1000f)} सेकंड",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.secondary
+                                )
+                                Slider(
+                                    value = chantIntervalMs.toFloat() / 1000f,
+                                    onValueChange = { chantIntervalMs = (it * 1000f).toLong() },
+                                    valueRange = 1.5f..10.0f,
+                                    steps = 17,
+                                    colors = SliderDefaults.colors(
+                                        thumbColor = MaterialTheme.colorScheme.primary,
+                                        activeTrackColor = MaterialTheme.colorScheme.primary,
+                                        inactiveTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.24f)
+                                    ),
+                                    modifier = Modifier.fillMaxWidth()
+                                )
                             }
                         }
                     }
@@ -555,16 +904,16 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
 
         // Global Scroll To Top Button
         if (listState.firstVisibleItemIndex > 2) {
-            com.example.ui.components.ScrollToTopButton(
-                onClick = {
-                    coroutineScope.launch {
-                        listState.animateScrollToItem(0)
-                    }
-                },
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(bottom = 16.dp, end = 16.dp)
-            )
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+                com.example.ui.components.ScrollToTopButton(
+                    onClick = {
+                        coroutineScope.launch {
+                            listState.animateScrollToItem(0)
+                        }
+                    },
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
         }
     }
 

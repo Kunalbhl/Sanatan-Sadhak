@@ -1,28 +1,33 @@
 import re
 
-# Fix AllScreens.kt imports
-with open("app/src/main/java/com/example/ui/screens/AllScreens.kt", "r") as f:
-    content_all = f.read()
+with open("app/src/main/java/com/example/MainActivity.kt", "r") as f:
+    text = f.read()
+text = text.replace(".alpha(", ".androidx.compose.ui.draw.alpha(")
+text = text.replace(".androidx.compose.ui.draw.alpha(", ".alpha(") # wait
+text = text.replace("import androidx.compose.animation.core.animateFloat", "import androidx.compose.animation.core.animateFloat\nimport androidx.compose.ui.draw.alpha\n")
+with open("app/src/main/java/com/example/MainActivity.kt", "w") as f:
+    f.write(text)
 
-content_all = content_all.replace("import androidx.compose.material3.CircularProgressIndicator\nimport androidx.compose.material3.CircularProgressIndicator", "import androidx.compose.material3.CircularProgressIndicator")
-if "import androidx.compose.material3.CircularProgressIndicator" not in content_all:
-    content_all = content_all.replace("import androidx.compose.material3.*", "import androidx.compose.material3.*\nimport androidx.compose.material3.CircularProgressIndicator")
+with open("app/src/main/java/com/example/ui/screens/AllScreens.kt", "r") as f:
+    text = f.read()
+
+target = """                        if (isTtsReady) {
+                            IconButton(
+                                onClick = {
+                                    tts?.speak(sanskritVerse, android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, null)
+                                }"""
+
+replacement = """                        val parts = currentThought.split("\\n")
+                        val sanskritVerse = if (parts.isNotEmpty()) parts[0].trim() else currentThought
+                        if (isTtsReady) {
+                            IconButton(
+                                onClick = {
+                                    tts?.speak(sanskritVerse, android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, null)
+                                }"""
+
+if target in text:
+    text = text.replace(target, replacement)
+    print("Fixed sanskrit parts in AllScreens")
 
 with open("app/src/main/java/com/example/ui/screens/AllScreens.kt", "w") as f:
-    f.write(content_all)
-
-# Fix SadhakViewModel.kt
-with open("app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt", "r") as f:
-    content_vm = f.read()
-
-# Remove one of the chatMessages declarations
-content_vm = re.sub(r'val chatMessages: StateFlow<List<com.example.data.ChatMessage>> = repository.getChatMessages\(\)\.stateIn\(viewModelScope, kotlinx\.coroutines\.flow\.SharingStarted\.WhileSubscribed\(5000\), emptyList\(\)\)\n', '', content_vm, count=1)
-
-with open("app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt", "w") as f:
-    f.write(content_vm)
-
-# Check Repository for updateUserDetails
-with open("app/src/main/java/com/example/data/SadhakRepository.kt", "r") as f:
-    content_repo = f.read()
-
-print("updateUserDetails in Repo:", "fun updateUserDetails(" in content_repo)
+    f.write(text)

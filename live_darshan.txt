@@ -1,0 +1,66 @@
+        // Live Darshan Placeholder Card
+        item {
+            var refreshKey by remember { mutableStateOf(0) }
+            val placeholderUrls = remember(refreshKey) {
+                listOf(
+                    "https://picsum.photos/seed/temple${refreshKey}1/400/300",
+                    "https://picsum.photos/seed/darshan${refreshKey}2/400/300"
+                )
+            }
+
+            SacredCard(backgroundColor = MaterialTheme.colorScheme.surface) {
+                Column(
+                    modifier = Modifier.padding(16.dp).fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (isEng) "Live Darshan" else "लाइव दर्शन",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                        )
+                        IconButton(onClick = { refreshKey++ }, modifier = Modifier.size(24.dp)) {
+                            Icon(imageVector = Icons.Default.Refresh, contentDescription = "Refresh", tint = MaterialTheme.colorScheme.secondary)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        placeholderUrls.forEach { url ->
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(120.dp)
+                                    .background(Color.Gray.copy(alpha=0.2f), RoundedCornerShape(8.dp))
+                                    .clip(RoundedCornerShape(8.dp))
+                            ) {
+                                coil.compose.AsyncImage(
+                                    model = url,
+                                    contentDescription = "Darshan Image",
+                                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(4.dp)
+                                        .background(Color.Red, RoundedCornerShape(4.dp))
+                                        .padding(horizontal = 4.dp, vertical = 2.dp)
+                                ) {
+                                    Text("LIVE", color = Color.White, fontSize = 8.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }

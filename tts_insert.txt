@@ -1,0 +1,22 @@
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var tts: android.speech.tts.TextToSpeech? by remember { mutableStateOf(null) }
+    var isTtsReady by remember { mutableStateOf(false) }
+
+    DisposableEffect(context) {
+        tts = android.speech.tts.TextToSpeech(context) { status ->
+            if (status == android.speech.tts.TextToSpeech.SUCCESS) {
+                // Try Sanskrit (sa-IN) or Hindi (hi-IN)
+                val result = tts?.setLanguage(java.util.Locale("sa", "IN"))
+                if (result == android.speech.tts.TextToSpeech.LANG_MISSING_DATA || result == android.speech.tts.TextToSpeech.LANG_NOT_SUPPORTED) {
+                    tts?.setLanguage(java.util.Locale("hi", "IN"))
+                }
+                tts?.setPitch(0.85f)
+                tts?.setSpeechRate(0.80f)
+                isTtsReady = true
+            }
+        }
+        onDispose {
+            tts?.stop()
+            tts?.shutdown()
+        }
+    }

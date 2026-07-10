@@ -18,32 +18,20 @@ object SpiritualData {
         "शांति भीतर से आती है। बाहर मत खोजो। आंतरिक प्रसन्नता ही साधक का सच्चा धन है।"
     )
 
-    val mockPanchangEn = mapOf(
-        "tithi" to "Shukla Paksha Ekadashi",
-        "day" to "Wednesday (Budhavar)",
-        "nakshatra" to "Rohini Nakshatra",
-        "yoga" to "Siddha Yoga",
-        "festival" to "Nirjala Ekadashi / Devotional Puja Muhurat"
-    )
-
-    val mockPanchangHi = mapOf(
-        "tithi" to "शुक्ल पक्ष एकादशी",
-        "day" to "बुधवार",
-        "nakshatra" to "रोहिणी नक्षत्र",
-        "yoga" to "सिद्ध योग",
-        "festival" to "निर्जला एकादशी / भक्ति पूजा मुहूर्त"
-    )
-
     val defaultArticles = listOf(
         // --- ENGLISH ARTICLES ---
-        KnowledgeArticle(
-            category = "Deities",
-            title = "Maa Annapurna Maharani",
-            summary = "The Divine Goddess of Nourishment, Food, and Abundance, who feeds the entire universe.",
-            content = "Maa Annapurna is an incarnation of Goddess Parvati. She represents the infinite feeding power of nature and divine grace. Lord Mahadev Himself stood as a beggar before Mother Annapurna, seeking food to demonstrate that physical and spiritual nourishment are vital for cosmic balance. The word 'Annapurna' translates to 'Giver of Food and Nourishment'. Her primary temple is situated in the sacred city of Varanasi (Kashi), where she is worshiped with deep love and bhakti. Worshiping her ensures that one's kitchen and heart are never empty of sustenance and kindness.",
-            relatedVideos = "dQw4w9WgXcQ,zHzPEdLJEvT",
-            language = "en"
-        ),
+        // --- NEW TAXONOMY ARTICLES ---
+        KnowledgeArticle(category = "Vedas & Granths", title = "Rigveda Overview", summary = "The Veda of Mantras.", content = "...", relatedVideos = "", language = "en", difficulty = "Advanced", readTimeMinutes = 15, relatedTopics = "Mantras,Rishis"),
+        KnowledgeArticle(category = "Puranas", title = "Shiv Purana", summary = "Stories of Shiva.", content = "...", relatedVideos = "", language = "en", difficulty = "Intermediate", readTimeMinutes = 10, relatedTopics = "Mahadev"),
+        KnowledgeArticle(category = "Itihasa (Epics)", title = "Ramayana", summary = "The epic of Rama.", content = "...", relatedVideos = "", language = "en", difficulty = "Beginner", readTimeMinutes = 20, relatedTopics = "Rama,Dharma"),
+        KnowledgeArticle(category = "Deities", title = "Maa Durga", summary = "Mother of strength.", content = "...", relatedVideos = "", language = "en", difficulty = "Beginner", readTimeMinutes = 8, relatedTopics = "Shakti"),
+        KnowledgeArticle(category = "Temples & Tirtha", title = "Kashi Vishwanath", summary = "Sacred Shiva temple.", content = "...", relatedVideos = "", language = "en", difficulty = "Intermediate", readTimeMinutes = 12, relatedTopics = "Shiva,Pilgrimage"),
+        KnowledgeArticle(category = "Mantras & Stotras", title = "Gayatri Mantra", summary = "The supreme mantra.", content = "...", relatedVideos = "", language = "en", difficulty = "Beginner", readTimeMinutes = 5, relatedTopics = "Vedas"),
+        KnowledgeArticle(category = "Puja & Path Vidhi", title = "Daily Puja Steps", summary = "Step by step puja.", content = "...", relatedVideos = "", language = "en", difficulty = "Beginner", readTimeMinutes = 7, relatedTopics = "Rituals"),
+        KnowledgeArticle(category = "Kriya & Sadhana", title = "Pranayama Basics", summary = "Breath control.", content = "...", relatedVideos = "", language = "en", difficulty = "Intermediate", readTimeMinutes = 10, relatedTopics = "Yoga"),
+        KnowledgeArticle(category = "Festivals & Vrats", title = "Diwali", summary = "Festival of lights.", content = "...", relatedVideos = "", language = "en", difficulty = "Beginner", readTimeMinutes = 6, relatedTopics = "Rama,Lakshmi"),
+        KnowledgeArticle(category = "Concepts & Gyaan", title = "Karma Explained", summary = "Law of cause.", content = "...", relatedVideos = "", language = "en", difficulty = "Intermediate", readTimeMinutes = 9, relatedTopics = "Dharma"),
+        KnowledgeArticle(category = "Saints & Gurus", title = "Adi Shankaracharya", summary = "The great teacher.", content = "...", relatedVideos = "", language = "en", difficulty = "Advanced", readTimeMinutes = 14, relatedTopics = "Advaita,Vedanta"),
         KnowledgeArticle(
             category = "Deities",
             title = "Sindari ke Balaji",

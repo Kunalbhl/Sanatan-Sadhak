@@ -1,12 +1,11 @@
-import re
-
 with open("app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt", "r") as f:
-    content = f.read()
+    text = f.read()
 
-bad = "if (apiKey.isNotBlank()) {"
-good = 'if (apiKey.isNotBlank() && apiKey != "YOUR_VEDIC_ASTRO_API_KEY") {'
+target = """    val todayDetailedPanchang = MutableStateFlow<DetailedPanchang?>(null)"""
+replacement = """    val todayDetailedPanchang = MutableStateFlow<DetailedPanchang?>(null)
+    val panchangError = MutableStateFlow<String?>(null)
+    val panchangLastUpdated = MutableStateFlow<String>("")"""
 
-content = content.replace(bad, good)
-
+text = text.replace(target, replacement)
 with open("app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt", "w") as f:
-    f.write(content)
+    f.write(text)

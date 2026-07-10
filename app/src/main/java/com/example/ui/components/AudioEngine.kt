@@ -30,57 +30,72 @@ object AudioEngine {
 
         isPlaying = true
         playingJob = CoroutineScope(Dispatchers.IO).launch {
-            val minSize = AudioTrack.getMinBufferSize(
-                sampleRate,
-                AudioFormat.CHANNEL_OUT_MONO,
-                AudioFormat.ENCODING_PCM_16BIT
-            )
-            audioTrack = AudioTrack.Builder()
-                .setAudioAttributes(
-                    android.media.AudioAttributes.Builder()
-                        .setUsage(android.media.AudioAttributes.USAGE_MEDIA)
-                        .setContentType(android.media.AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .build()
+            try {
+                val minSize = AudioTrack.getMinBufferSize(
+                    sampleRate,
+                    AudioFormat.CHANNEL_OUT_MONO,
+                    AudioFormat.ENCODING_PCM_16BIT
                 )
-                .setAudioFormat(
-                    android.media.AudioFormat.Builder()
-                        .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                        .setSampleRate(sampleRate)
-                        .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-                        .build()
-                )
-                .setBufferSizeInBytes(minSize)
-                .setTransferMode(AudioTrack.MODE_STREAM)
-                .build()
-            audioTrack?.setVolume(volume)
-            audioTrack?.play()
+                if (minSize <= 0) return@launch
+                audioTrack = AudioTrack.Builder()
+                    .setAudioAttributes(
+                        android.media.AudioAttributes.Builder()
+                            .setUsage(android.media.AudioAttributes.USAGE_MEDIA)
+                            .setContentType(android.media.AudioAttributes.CONTENT_TYPE_MUSIC)
+                            .build()
+                    )
+                    .setAudioFormat(
+                        android.media.AudioFormat.Builder()
+                            .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                            .setSampleRate(sampleRate)
+                            .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                            .build()
+                    )
+                    .setBufferSizeInBytes(minSize)
+                    .setTransferMode(AudioTrack.MODE_STREAM)
+                    .build()
+                audioTrack?.setVolume(volume)
+                audioTrack?.play()
 
-            val buffer = ShortArray(minSize)
-            var angle = 0.0
+                val buffer = ShortArray(minSize)
+                var angle = 0.0
 
-            while (isPlaying) {
-                for (i in buffer.indices) {
-                    // Simple sine wave generation
-                    val value = sin(angle)
-                    buffer[i] = (value * Short.MAX_VALUE * 0.5).toInt().toShort()
-                    
-                    // Add some harmonics for OM
-                    if (index == 2) {
-                        val harmonic = sin(angle * 2.0)
-                        buffer[i] = ((value + harmonic * 0.5) * Short.MAX_VALUE * 0.3).toInt().toShort()
+                while (isPlaying) {
+                    for (i in buffer.indices) {
+                        // Simple sine wave generation
+                        val value = sin(angle)
+                        buffer[i] = (value * Short.MAX_VALUE * 0.5).toInt().toShort()
+                        
+                        // Add some harmonics for OM
+                        if (index == 2) {
+                            val harmonic = sin(angle * 2.0)
+                            buffer[i] = ((value + harmonic * 0.5) * Short.MAX_VALUE * 0.3).toInt().toShort()
+                        }
+                        
+                        angle += 2.0 * Math.PI * frequency / sampleRate
+                        if (angle > 2.0 * Math.PI) {
+                            angle -= 2.0 * Math.PI
+                        }
                     }
-                    
-                    angle += 2.0 * Math.PI * frequency / sampleRate
-                    if (angle > 2.0 * Math.PI) {
-                        angle -= 2.0 * Math.PI
-                    }
+                    audioTrack?.write(buffer, 0, buffer.size)
                 }
-                audioTrack?.write(buffer, 0, buffer.size)
+                
+                try {
+                    audioTrack?.stop()
+                } catch (e: Exception) {
+                    // Ignore
+                }
+                try {
+                    audioTrack?.release()
+                } catch (e: Exception) {
+                    // Ignore
+                }
+                audioTrack = null
+            } catch (e: Exception) {
+                android.util.Log.e("AudioEngine", "Error in AudioEngine play job", e)
+                isPlaying = false
+                audioTrack = null
             }
-            
-            audioTrack?.stop()
-            audioTrack?.release()
-            audioTrack = null
         }
     }
 

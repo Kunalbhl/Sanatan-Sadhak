@@ -22,9 +22,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-fun AartiBellScreen(isEng: Boolean, onBack: () -> Unit) {
-    var bellCount by remember { mutableStateOf(0) }
+fun AartiBellScreen(viewModel: com.example.ui.viewmodel.SadhakViewModel, isEng: Boolean, onBack: () -> Unit) {
+    val bellCount by viewModel.currentSessionAartiCount.collectAsState()
     val haptic = LocalHapticFeedback.current
+    val aartiLogs by viewModel.aartiSessionLogs.collectAsState()
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -48,17 +49,29 @@ fun AartiBellScreen(isEng: Boolean, onBack: () -> Unit) {
                 .size(150.dp)
                 .background(MaterialTheme.colorScheme.primary, CircleShape)
                 .clickable {
-                    bellCount++
+                    viewModel.incrementAartiBell()
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                    com.example.ui.screens.AmbientSoundPlayer.playSound(frequency = 880.0, volume = 0.5f)
-                    kotlinx.coroutines.GlobalScope.launch {
-                        kotlinx.coroutines.delay(200)
-                        com.example.ui.screens.AmbientSoundPlayer.stopSound()
-                    }
+                    playTempleBellSound()
                 },
             contentAlignment = Alignment.Center
         ) {
             Text("🔔", fontSize = 64.sp)
+        }
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        if (aartiLogs.isNotEmpty()) {
+            Text(text = if (isEng) "Aarti Bell Log" else "आरती घंटी लॉग", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+            Spacer(modifier = Modifier.height(8.dp))
+            androidx.compose.foundation.lazy.LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
+                items(aartiLogs.size) { index ->
+                    Text(
+                        text = "${index + 1}. ${aartiLogs[index]}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
         }
     }
 }

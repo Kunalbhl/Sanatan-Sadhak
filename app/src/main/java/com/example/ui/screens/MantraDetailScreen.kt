@@ -1,38 +1,71 @@
 package com.example.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import kotlinx.coroutines.launch
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+
+
+
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.*
-import com.example.ui.components.SacredCard
-import com.example.ui.components.ScrollToTopButton
-import com.example.ui.viewmodel.PrayerData
+
+import androidx.compose.material.icons.filled.Close
+
 import com.example.ui.viewmodel.allPrayersList
+
+import androidx.compose.material.icons.Icons
+
+import androidx.compose.ui.Alignment
+
+import androidx.compose.foundation.clickable
+
+import androidx.compose.ui.text.font.FontStyle
+
+import androidx.compose.ui.text.font.FontWeight
+
+import androidx.compose.runtime.collectAsState
+
+import androidx.compose.runtime.*
+
+import androidx.compose.material.icons.filled.Favorite
+
+import androidx.compose.foundation.shape.RoundedCornerShape
+
+import androidx.compose.foundation.layout.*
+
+import androidx.compose.ui.Modifier
+
+import androidx.compose.material.icons.filled.ArrowBack
+
+import androidx.compose.ui.unit.dp
+
+import androidx.compose.material.icons.filled.PlayArrow
+
+import com.example.ui.viewmodel.PrayerData
+
+import com.example.ui.components.ScrollToTopButton
+
+import androidx.compose.foundation.verticalScroll
+
+import androidx.compose.foundation.rememberScrollState
+
+import com.example.ui.theme.*
+
+import com.example.ui.components.SacredCard
+
+import androidx.compose.ui.graphics.Color
+
+import androidx.compose.material.icons.filled.FavoriteBorder
+
+import kotlinx.coroutines.launch
+
+import androidx.compose.foundation.background
+
+import androidx.compose.material3.*
 
 @Composable
 fun MantraDetailScreen(
     prayerData: PrayerData,
     isEnglish: Boolean,
     onBack: () -> Unit,
-    onRelatedClick: (String) -> Unit
+    onRelatedClick: (String) -> Unit,
+    viewModel: com.example.ui.viewmodel.SadhakViewModel? = null
 ) {
     var isPlaying by remember { mutableStateOf(false) }
     var progress by remember { mutableStateOf(0f) }
@@ -87,6 +120,32 @@ fun MantraDetailScreen(
                 modifier = Modifier.weight(1f)
             )
             
+            // Bookmark Button
+            if (viewModel != null) {
+                val favoriteMantras by viewModel.favoriteMantras.collectAsState(initial = emptyList())
+                val isBookmarked = favoriteMantras.any { it.title == prayerData.titleEn || it.title == prayerData.titleHi }
+                IconButton(onClick = {
+                    if (isBookmarked) {
+                        val toDel = favoriteMantras.find { it.title == prayerData.titleEn || it.title == prayerData.titleHi }
+                        if (toDel != null) {
+                            viewModel.deleteFavoriteMantra(toDel.id)
+                        }
+                    } else {
+                        viewModel.addFavoriteMantra(
+                            title = if (isEnglish) prayerData.titleEn else prayerData.titleHi,
+                            content = prayerData.contentHi.take(100),
+                            youtubeId = prayerData.youtubeId
+                        )
+                    }
+                }) {
+                    androidx.compose.material3.Icon(
+                        imageVector = if (isBookmarked) androidx.compose.material.icons.Icons.Filled.Favorite else androidx.compose.material.icons.Icons.Default.FavoriteBorder,
+                        contentDescription = "Bookmark",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
             // Language Toggle
             Row(
                 modifier = Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), RoundedCornerShape(20.dp))
@@ -207,15 +266,16 @@ fun MantraDetailScreen(
 
         // Scroll to top button
         if (scrollState.value > 150) {
-            ScrollToTopButton(
-                onClick = {
-                    coroutineScope.launch {
-                        scrollState.animateScrollTo(0)
-                    }
-                },
-                modifier = Modifier
-                    .padding(bottom = 16.dp, end = 16.dp)
-            )
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
+                ScrollToTopButton(
+                    onClick = {
+                        coroutineScope.launch {
+                            scrollState.animateScrollTo(0)
+                        }
+                    },
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
         }
     }
     }

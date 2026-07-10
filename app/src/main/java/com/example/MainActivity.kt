@@ -1,4 +1,13 @@
+
 package com.example
+import com.example.ui.screens.*
+import com.example.ui.viewmodel.devotionalTracks
+import com.example.ui.viewmodel.DevotionalTrack
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.ui.draw.alpha
+
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -18,10 +27,25 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.Divider
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import com.example.ui.components.SacredCard
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DoneAll
+import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Home
@@ -64,18 +88,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.screens.AccessDeniedScreen
-import com.example.ui.screens.AdminScreen
-import com.example.ui.screens.BhaktiSadhanaScreen
-import com.example.ui.screens.BhaktiToolsScreen
-import com.example.ui.screens.AartiBellScreen
-import com.example.ui.screens.CalendarScreen
-import com.example.ui.screens.ChatScreen
-import com.example.ui.screens.CommunityScreen
-import com.example.ui.screens.HomeScreen
-import com.example.ui.screens.KnowledgeScreen
-import com.example.ui.screens.ProfileScreen
-import com.example.ui.screens.VideoHubScreen
 import com.example.ui.theme.MyApplicationTheme
 import com.example.ui.theme.SoftGoldBg
 import com.example.ui.theme.WarmSand
@@ -88,6 +100,21 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        
+        // Pre-create WebView cache directories to prevent Chromium opendir errors on startup
+        try {
+            val webViewCacheDirWasm = java.io.File(cacheDir, "WebView/Default/HTTP Cache/Code Cache/wasm")
+            val webViewCacheDirJs = java.io.File(cacheDir, "WebView/Default/HTTP Cache/Code Cache/js")
+            if (!webViewCacheDirWasm.exists()) {
+                webViewCacheDirWasm.mkdirs()
+            }
+            if (!webViewCacheDirJs.exists()) {
+                webViewCacheDirJs.mkdirs()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
         setContent {
 
                 val viewModel: SadhakViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
@@ -103,9 +130,25 @@ class MainActivity : ComponentActivity() {
 
                 MyApplicationTheme(darkTheme = isDark) {
 
+                val bgChantEnabled by viewModel.bgChantEnabled.collectAsState()
+                val bgChantVolume by viewModel.bgChantVolume.collectAsState()
+                com.example.ui.screens.GlobalChantPlayer(enabled = bgChantEnabled, volume = bgChantVolume)
+
+                // Intercept Android Back Button/Gesture to go back to previous pages instead of exiting the app
+                androidx.activity.compose.BackHandler(enabled = currentScreen != "Home") {
+                    when (currentScreen) {
+                        "Admin" -> viewModel.setScreen("Profile")
+                        "AartiBell" -> viewModel.setScreen("BhaktiTools")
+                        else -> viewModel.setScreen("Home")
+                    }
+                }
+
                 val userRole by viewModel.userRole.collectAsState()
                 val showLanguagePref by viewModel.showLanguagePrefDialog.collectAsState()
                 val showGuestPromo by viewModel.showGuestPromoDialog.collectAsState()
+
+                var showNotificationDialog by remember { mutableStateOf(false) }
+                val hasNewNotifications by viewModel.hasNewNotifications.collectAsState()
 
                 Scaffold(
                     topBar = {
@@ -113,16 +156,27 @@ class MainActivity : ComponentActivity() {
                             isEnglish = isEng,
                             onLanguageToggle = { viewModel.toggleLanguage() },
                             onLogoClick = { viewModel.setScreen("Home") },
-                            onCalendarClick = { viewModel.setScreen("Calendar") }
+                            onCalendarClick = { viewModel.setScreen("Calendar") },
+                            hasNewNotifications = hasNewNotifications,
+                            onNotificationClick = {
+                                showNotificationDialog = true
+                                viewModel.setHasNewNotifications(false)
+                            }
                         )
                     },
                     bottomBar = {
-                        SadhakBottomBar(
-                            currentScreen = currentScreen,
-                            userRole = userRole,
-                            isEnglish = isEng,
-                            onNavigate = { viewModel.setScreen(it) }
-                        )
+                        Column {
+                            val isPlayerVisible by viewModel.isAudioPlayerVisible.collectAsState()
+                            if (isPlayerVisible) {
+                                PersistentAudioPlayer(viewModel = viewModel, isEnglish = isEng)
+                            }
+                            SadhakBottomBar(
+                                currentScreen = currentScreen,
+                                userRole = userRole,
+                                isEnglish = isEng,
+                                onNavigate = { viewModel.setScreen(it) }
+                            )
+                        }
                     },
                     modifier = Modifier.fillMaxSize()
                 ) { innerPadding ->
@@ -138,18 +192,141 @@ class MainActivity : ComponentActivity() {
                             "Community" -> CommunityScreen(viewModel = viewModel)
                             "Bhakti" -> BhaktiSadhanaScreen(viewModel = viewModel)
                             "BhaktiTools" -> BhaktiToolsScreen(viewModel = viewModel)
-                            "AartiBell" -> AartiBellScreen(isEng = isEng, onBack = { viewModel.setScreen("BhaktiTools") })
+                            "AartiBell" -> AartiBellScreen(viewModel = viewModel, isEng = isEng, onBack = { viewModel.setScreen("BhaktiTools") })
                             "Videos" -> VideoHubScreen(viewModel = viewModel)
+                            "InstagramUpdates" -> InstagramUpdatesScreen(viewModel = viewModel, onBack = { viewModel.setScreen("Home") })
                             "Chat" -> ChatScreen(viewModel = viewModel)
-                            "Calendar" -> CalendarScreen(onBack = { viewModel.setScreen("Home") }, isEng = isEng)
+                            "Calendar" -> CalendarScreen(viewModel = viewModel, onBack = { viewModel.setScreen("Home") }, isEng = isEng)
                             "Profile" -> ProfileScreen(viewModel = viewModel, onNavigateAdmin = { viewModel.setScreen("Admin") })
                             "Admin" -> {
-                                if (userRole == "SuperUser") {
+                                val isAdmin by viewModel.isAdmin.collectAsState()
+                                if (isAdmin) {
                                     AdminScreen(viewModel = viewModel)
                                 } else {
                                     AccessDeniedScreen(viewModel = viewModel)
                                 }
                             }
+                        }
+
+                        if (showNotificationDialog) {
+                            val notificationsList by viewModel.notifications.collectAsState()
+
+                            AlertDialog(
+                                onDismissRequest = { showNotificationDialog = false },
+                                title = {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = if (isEng) "Divine Updates" else "दिव्य अपडेट",
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.secondary,
+                                            fontSize = 18.sp
+                                        )
+                                        IconButton(onClick = { showNotificationDialog = false }) {
+                                            Icon(imageVector = Icons.Default.Close, contentDescription = "Close")
+                                        }
+                                    }
+                                },
+                                text = {
+                                    Column(
+                                        modifier = Modifier.fillMaxWidth().heightIn(max = 350.dp),
+                                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = if (isEng) "Your recent alerts:" else "आपकी नवीनतम सूचनाएं:",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            if (notificationsList.isNotEmpty()) {
+                                                Row {
+                                                    IconButton(onClick = { viewModel.markAllNotificationsAsRead() }, modifier = Modifier.size(24.dp)) {
+                                                        Icon(Icons.Default.DoneAll, contentDescription = "Mark All Read", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                                                    }
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    IconButton(onClick = { viewModel.clearAllNotifications() }, modifier = Modifier.size(24.dp)) {
+                                                        Icon(Icons.Default.Delete, contentDescription = "Clear All", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.error)
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
+
+                                        if (notificationsList.isEmpty()) {
+                                            Box(
+                                                modifier = Modifier.fillMaxWidth().padding(24.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(
+                                                    text = if (isEng) "No new notifications found." else "कोई नई सूचनाएं नहीं मिलीं।",
+                                                    fontSize = 12.sp,
+                                                    color = Color.Gray
+                                                )
+                                            }
+                                        } else {
+                                            LazyColumn(
+                                                modifier = Modifier.weight(1f),
+                                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                                            ) {
+                                                items(notificationsList) { notif ->
+                                                    val bgColor = if (notif.isRead) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
+                                                    SacredCard(backgroundColor = bgColor) {
+                                                        Row(
+                                                            modifier = Modifier
+                                                                .fillMaxWidth()
+                                                                .padding(10.dp),
+                                                            verticalAlignment = Alignment.CenterVertically
+                                                        ) {
+                                                            Box(
+                                                                modifier = Modifier
+                                                                    .size(32.dp)
+                                                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape),
+                                                                contentAlignment = Alignment.Center
+                                                            ) {
+                                                                val icon = if (notif.type == "video") Icons.Default.PlayArrow else Icons.Default.Notifications
+                                                                Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                                            }
+                                                            Spacer(modifier = Modifier.width(10.dp))
+                                                            Column(modifier = Modifier.weight(1f)) {
+                                                                Text(
+                                                                    text = notif.title,
+                                                                    fontWeight = if (notif.isRead) FontWeight.Normal else FontWeight.Bold,
+                                                                    fontSize = 12.sp,
+                                                                    maxLines = 1
+                                                                )
+                                                                Text(
+                                                                    text = notif.message,
+                                                                    fontSize = 10.sp,
+                                                                    color = MaterialTheme.colorScheme.secondary,
+                                                                    maxLines = 2
+                                                                )
+                                                            }
+                                                            if (!notif.isRead) {
+                                                                IconButton(onClick = { viewModel.markNotificationAsRead(notif.id) }, modifier = Modifier.size(24.dp)) {
+                                                                    Icon(Icons.Default.Done, contentDescription = "Mark Read", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                },
+                                confirmButton = {
+                                    TextButton(onClick = { showNotificationDialog = false }) {
+                                        Text(if (isEng) "Done" else "संपन्न")
+                                    }
+                                }
+                            )
                         }
 
                         val showLoginWall by viewModel.showLoginWall.collectAsState()
@@ -286,7 +463,9 @@ fun SadhakTopAppBar(
     isEnglish: Boolean,
     onLanguageToggle: () -> Unit,
     onLogoClick: () -> Unit,
-    onCalendarClick: () -> Unit
+    onCalendarClick: () -> Unit,
+    hasNewNotifications: Boolean,
+    onNotificationClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
@@ -331,9 +510,28 @@ fun SadhakTopAppBar(
                 }
             },
             actions = {
+                // Notification Bell icon
+                IconButton(onClick = onNotificationClick, modifier = Modifier.testTag("notification_bell_button")) {
+                    Box {
+                        Icon(
+                            imageVector = Icons.Default.Notifications,
+                            contentDescription = "Notifications",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        if (hasNewNotifications) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .background(Color.Red, CircleShape)
+                                    .align(Alignment.TopEnd)
+                            )
+                        }
+                    }
+                }
+
                 // Calendar icon
                 IconButton(onClick = onCalendarClick) {
-                    Icon(imageVector = Icons.Default.CalendarToday, contentDescription = "Calendar", tint = MaterialTheme.colorScheme.primary)
+                    Icon(imageVector = Icons.Default.DateRange, contentDescription = "Calendar", tint = MaterialTheme.colorScheme.primary)
                 }
 
                 // Highly polished bilingual toggle button
@@ -380,13 +578,25 @@ fun SadhakTopAppBar(
 }
 
 @Composable
-fun SanatanSadhakLogo(modifier: Modifier = Modifier) {
+fun SanatanSadhakLogo(modifier: Modifier = Modifier, logoSize: androidx.compose.ui.unit.Dp = 36.dp, isAnimated: Boolean = false) {
     
+    val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition()
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = if (isAnimated) 0.4f else 1f,
+        targetValue = 1f,
+        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+            animation = androidx.compose.animation.core.tween(800),
+            repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
+        ),
+        label = "blink"
+    )
+
     val primaryColor = MaterialTheme.colorScheme.primary
     Box(
         modifier = Modifier
-            .size(36.dp)
+            .size(logoSize)
             .then(modifier)
+            .alpha(if (isAnimated) alpha else 1f)
             .clip(CircleShape)
             .background(Color(0xFF4A0E17)) // Deep wine/maroon
             .border(2.dp, MaterialTheme.colorScheme.tertiary, CircleShape),
@@ -524,3 +734,160 @@ data class NavigationItem(
     val label: String,
     val icon: ImageVector
 )
+
+@Composable
+fun PersistentAudioPlayer(viewModel: SadhakViewModel, isEnglish: Boolean) {
+    val isPlaying by viewModel.isAudioPlaying.collectAsState()
+    val currentIndex by viewModel.currentAudioTrackIndex.collectAsState()
+    val track = devotionalTracks[currentIndex]
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.95f))
+            .border(width = 1.dp, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            // Left part: Icon & Text
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f)
+            ) {
+                // Sacred spinning icon
+                val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition(label = "music_rotation")
+                val rotationAngle by infiniteTransition.animateFloat(
+                    initialValue = 0f,
+                    targetValue = 360f,
+                    animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+                        animation = androidx.compose.animation.core.tween(durationMillis = 10000, easing = androidx.compose.animation.core.LinearEasing),
+                        repeatMode = androidx.compose.animation.core.RepeatMode.Restart
+                    ),
+                    label = "rotation"
+                )
+                
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .graphicsLayer {
+                            if (isPlaying) {
+                                rotationZ = rotationAngle
+                            }
+                        }
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.SelfImprovement,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = if (isEnglish) track.titleEn else track.titleHi,
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    Text(
+                        text = if (isEnglish) track.artistEn else track.artistHi,
+                        style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                    )
+                }
+            }
+
+            // Right part: Controls (Prev, Play/Pause, Next)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                // Prev Track Button
+                IconButton(
+                    onClick = { viewModel.prevAudioTrack() }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = "Previous Track",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                // Play / Pause Button with circle outline
+                IconButton(
+                    onClick = { viewModel.toggleAudioPlay() },
+                    modifier = Modifier
+                        .size(36.dp)
+                        .background(MaterialTheme.colorScheme.primary, CircleShape)
+                ) {
+                    if (isPlaying) {
+                        PauseIcon(tint = MaterialTheme.colorScheme.onPrimary)
+                    } else {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = "Play",
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+
+                // Next Track Button
+                IconButton(
+                    onClick = { viewModel.nextAudioTrack() }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowForward,
+                        contentDescription = "Next Track",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+
+                // Close / Hide Audio Player Button
+                IconButton(
+                    onClick = { viewModel.closeAudioPlayer() }
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Close Player",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PauseIcon(tint: Color) {
+    Canvas(modifier = Modifier.size(14.dp)) {
+        val w = size.width
+        val h = size.height
+        val barWidth = 3.dp.toPx()
+        // Left bar
+        drawRect(
+            color = tint,
+            topLeft = Offset(w * 0.25f, 0f),
+            size = androidx.compose.ui.geometry.Size(barWidth, h)
+        )
+        // Right bar
+        drawRect(
+            color = tint,
+            topLeft = Offset(w * 0.60f, 0f),
+            size = androidx.compose.ui.geometry.Size(barWidth, h)
+        )
+    }
+}

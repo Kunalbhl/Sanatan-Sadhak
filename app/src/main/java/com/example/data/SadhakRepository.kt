@@ -28,6 +28,16 @@ class SadhakRepository(private val context: Context) {
     private val articleDao by lazy { db.knowledgeArticleDao() }
     private val postDao by lazy { db.communityPostDao() }
     private val commentDao by lazy { db.postCommentDao() }
+
+    private val sankalpaDao by lazy { db.sankalpaDao() }
+    private val panchangDao by lazy { db.panchangDao() }
+    
+    fun getSankalpaLogs(): kotlinx.coroutines.flow.Flow<List<SankalpaLog>> = sankalpaDao.getAllLogs()
+    suspend fun addSankalpaLog(log: SankalpaLog) = sankalpaDao.insertLog(log)
+    
+    suspend fun getPanchangForDate(date: String): PanchangEntity? = panchangDao.getPanchangForDate(date)
+    suspend fun savePanchang(panchang: PanchangEntity) = panchangDao.insertPanchang(panchang)
+
     private val videoDao by lazy { db.bhaktiVideoDao() }
     private val karmaDao by lazy { db.karmaLogDao() }
     private val gratitudeDao by lazy { db.gratitudeLogDao() }
@@ -35,6 +45,9 @@ class SadhakRepository(private val context: Context) {
     private val chatDao by lazy { db.chatMessageDao() }
     private val favoriteMantraDao by lazy { db.favoriteMantraDao() }
     private val userDao by lazy { db.userDao() }
+    private val instagramPostDao by lazy { db.instagramPostDao() }
+    private val thoughtQuoteDao by lazy { db.thoughtQuoteDao() }
+    private val announcementDao by lazy { db.announcementDao() }
 
     // User session state (local auth persistence using Room)
     private val _userEmailState = MutableStateFlow("")
@@ -89,7 +102,7 @@ class SadhakRepository(private val context: Context) {
                 // We'll use a direct count query. Let's just try inserting if count is 0
                 // Wait, we can implement a custom query in DAO or just try inserting default data once.
                 // Let's see: we can load the setting "prepopulated" to ensure we only do it once!
-                val prepopulatedSetting = settingDao.getSetting("db_prepopulated_v4")
+                val prepopulatedSetting = settingDao.getSetting("db_prepopulated_v5")
                 if (prepopulatedSetting == null) {
                     // Refresh articles to include newly added scripture categories
                     articleDao.clearAllArticles()
@@ -109,7 +122,7 @@ class SadhakRepository(private val context: Context) {
                         }
                     }
                     
-                    settingDao.insertSetting(AppSetting("db_prepopulated_v4", "true"))
+                    settingDao.insertSetting(AppSetting("db_prepopulated_v5", "true"))
                     settingDao.insertSetting(AppSetting("db_prepopulated", "true"))
                     settingDao.insertSetting(AppSetting("public_posting_enabled", "false"))
                 }
@@ -145,6 +158,10 @@ class SadhakRepository(private val context: Context) {
         settingDao.insertSetting(AppSetting("remembered_user_email", emailOrMobile))
     }
 
+    suspend fun getRememberedUserEmail(): String? {
+        return settingDao.getSetting("remembered_user_email")?.value
+    }
+
     suspend fun clearRememberedUser() {
         settingDao.insertSetting(AppSetting("remembered_user_email", ""))
     }
@@ -153,6 +170,8 @@ class SadhakRepository(private val context: Context) {
     fun getArticles(language: String): Flow<List<KnowledgeArticle>> = articleDao.getAllArticles(language)
     fun searchArticles(query: String, language: String): Flow<List<KnowledgeArticle>> = articleDao.searchArticles(query, language)
     suspend fun addArticle(article: KnowledgeArticle) = articleDao.insertArticle(article)
+    suspend fun updateArticle(article: KnowledgeArticle) = articleDao.updateArticle(article)
+    suspend fun deleteArticle(id: Int) = articleDao.deleteArticleById(id)
 
     // --- COMMUNITY POST FUNCTIONS ---
     fun getPosts(): Flow<List<CommunityPost>> = postDao.getAllPosts()
@@ -170,15 +189,20 @@ class SadhakRepository(private val context: Context) {
 
     // --- COMMENT FUNCTIONS ---
     fun getComments(postId: Int): Flow<List<PostComment>> = commentDao.getCommentsForPost(postId)
+    fun getAllComments(): Flow<List<PostComment>> = commentDao.getAllComments()
     suspend fun addComment(comment: PostComment) = commentDao.insertComment(comment)
+    suspend fun updateComment(comment: PostComment) = commentDao.updateComment(comment)
+    suspend fun deleteComment(id: Int) = commentDao.deleteCommentById(id)
 
     // --- VIDEO FUNCTIONS ---
     fun getVideos(): Flow<List<BhaktiVideo>> = videoDao.getAllVideos()
     suspend fun addVideo(video: BhaktiVideo) = videoDao.insertVideo(video)
+    suspend fun updateVideo(video: BhaktiVideo) = videoDao.updateVideo(video)
+    suspend fun deleteVideo(id: Int) = videoDao.deleteVideoById(id)
     
     suspend fun refreshYoutubeVideos() = withContext(Dispatchers.IO) {
         try {
-            val fetched = YoutubeFetcher.fetchVideosFromChannel("UCzHzPEdLJEvTSHn_ev3JYBA")
+            val fetched = YoutubeFetcher.fetchVideosFromChannel("")
             if (fetched.isNotEmpty()) {
                 videoDao.clearNonCustomVideos()
                 videoDao.insertVideos(fetched)
@@ -187,6 +211,29 @@ class SadhakRepository(private val context: Context) {
             e.printStackTrace()
         }
     }
+
+    // --- INSTAGRAM FUNCTIONS ---
+    fun getInstagramPosts(): Flow<List<InstagramPost>> = instagramPostDao.getAllInstagramPosts()
+    suspend fun addInstagramPost(post: InstagramPost) = instagramPostDao.insertInstagramPost(post)
+    suspend fun updateInstagramPost(post: InstagramPost) = instagramPostDao.updateInstagramPost(post)
+    suspend fun deleteInstagramPostById(id: Int) = instagramPostDao.deleteById(id)
+
+    // --- THOUGHT FUNCTIONS ---
+    fun getThoughtQuotes(): Flow<List<ThoughtQuote>> = thoughtQuoteDao.getAllThoughtQuotes()
+    suspend fun addThoughtQuote(quote: ThoughtQuote) = thoughtQuoteDao.insertThoughtQuote(quote)
+    suspend fun updateThoughtQuote(quote: ThoughtQuote) = thoughtQuoteDao.updateThoughtQuote(quote)
+    suspend fun deleteThoughtQuoteById(id: Int) = thoughtQuoteDao.deleteById(id)
+
+    // --- ANNOUNCEMENT FUNCTIONS ---
+    fun getAnnouncements(): Flow<List<Announcement>> = announcementDao.getAllAnnouncements()
+    suspend fun addAnnouncement(announcement: Announcement) = announcementDao.insertAnnouncement(announcement)
+    suspend fun updateAnnouncement(announcement: Announcement) = announcementDao.updateAnnouncement(announcement)
+    suspend fun deleteAnnouncementById(id: Int) = announcementDao.deleteById(id)
+
+    // --- USER MANAGEMENT & PERMISSION FUNCTIONS ---
+    fun getAllUsers(): Flow<List<User>> = userDao.getAllUsers()
+    suspend fun updateUserCanPost(email: String, canPost: Boolean) = userDao.updateUserCanPost(email, canPost)
+    suspend fun updateUserRole(email: String, role: String) = userDao.updateUserRole(email, role)
 
     // --- KARMA JOURNAL FUNCTIONS ---
     fun getKarmaLogs(): Flow<List<KarmaLog>> = karmaDao.getAllLogs()
@@ -239,6 +286,15 @@ class SadhakRepository(private val context: Context) {
         return null
     }
 
+    suspend fun authenticateUserByEmailOnly(identifier: String): User? {
+        val idClean = identifier.lowercase().trim()
+        var user = userDao.getUserByEmail(idClean)
+        if (user == null) {
+            user = userDao.getUserByMobile(idClean)
+        }
+        return user
+    }
+
     suspend fun updateUserProfile(email: String, fullName: String, mobileNumber: String, city: String, state: String, avatar: Int, imageUri: String) {
         userDao.updateUserProfile(email.lowercase().trim(), fullName, mobileNumber, city, state, avatar, imageUri)
         if (_userEmailState.value.lowercase().trim() == email.lowercase().trim()) {
@@ -247,6 +303,7 @@ class SadhakRepository(private val context: Context) {
             _userCityState.value = city
             _userStateProvinceState.value = state
             _userAvatarState.value = avatar
+            _userProfileImageUriState.value = imageUri
         }
     }
 
@@ -258,7 +315,7 @@ class SadhakRepository(private val context: Context) {
         _userMobileState.value = user.mobileNumber
         _userCityState.value = user.city
         _userStateProvinceState.value = user.state
-        // imageUri would be loaded from persistence in real app
+        _userProfileImageUriState.value = user.profileImageUri
     }
 
     fun logout() {
