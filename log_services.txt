@@ -1,0 +1,70 @@
+580: 0 : Text(
+581: 0 : text = if (isEng) "Sacred Services" else "पवित्र सेवाएं",
+582: 0 : style = MaterialTheme.typography.titleMedium.copy(
+583: 0 : fontWeight = FontWeight.Bold,
+584: 0 : color = MaterialTheme.colorScheme.secondary
+585: 0 : ),
+586: 0 : modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
+587: 0 : )
+588: 0 : 
+589: 0 : val services = listOf(
+590: 0 : Triple(if (isEng) "Knowledge Hub" else "ज्ञान गंगा", Icons.Default.MenuBook, "Knowledge"),
+591: 0 : Triple(if (isEng) "Community" else "साधक संघ", Icons.Default.Forum, "Community"),
+592: 0 : Triple(if (isEng) "Bhakti Sadhana" else "भक्ति साधना", Icons.Default.SelfImprovement, "Bhakti"),
+593: 0 : Triple(if (isEng) "Video Hub" else "दर्शन तरंगिणी", Icons.Default.VideoLibrary, "Videos"),
+594: 0 : Triple(if (isEng) "Instagram Updates" else "इंस्टाग्राम अपडेट", Icons.Default.PhotoCamera, "InstagramUpdates"),
+595: 0 : Triple(if (isEng) "Bhakti Tools" else "भक्ति उपकरण", Icons.Default.Build, "BhaktiTools"),
+596: 0 : Triple(if (isEng) "Sadhak Mitra AI" else "साधक मित्र AI", Icons.Default.Chat, "Chat")
+597: 0 : )
+598: 0 : 
+599: 1 : Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+600: 2 : for (i in services.indices step 2) {
+601: 2 : Row(
+602: 2 : modifier = Modifier.fillMaxWidth(),
+603: 2 : horizontalArrangement = Arrangement.spacedBy(8.dp)
+604: 3 : ) {
+605: 4 : for (j in i..i+1) {
+606: 5 : if (j < services.size) {
+607: 5 : val svc = services[j]
+608: 5 : Card(
+609: 5 : modifier = Modifier
+610: 5 : .weight(1f)
+611: 5 : .height(64.dp)
+612: 5 : .clickable { viewModel.setScreen(svc.third) },
+613: 5 : colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+614: 5 : elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+615: 5 : shape = RoundedCornerShape(12.dp)
+616: 6 : ) {
+617: 6 : Row(
+618: 6 : modifier = Modifier
+619: 6 : .fillMaxSize()
+620: 6 : .padding(12.dp),
+621: 6 : verticalAlignment = Alignment.CenterVertically
+622: 7 : ) {
+623: 7 : Icon(
+624: 7 : imageVector = svc.second,
+625: 7 : contentDescription = svc.first,
+626: 7 : tint = MaterialTheme.colorScheme.primary,
+627: 7 : modifier = Modifier.size(24.dp)
+628: 7 : )
+629: 7 : Spacer(modifier = Modifier.width(8.dp))
+630: 7 : Text(
+631: 7 : text = svc.first,
+632: 7 : style = MaterialTheme.typography.bodyMedium.copy(
+633: 7 : fontWeight = FontWeight.Bold,
+634: 7 : color = MaterialTheme.colorScheme.secondary,
+635: 7 : fontSize = 11.sp
+636: 7 : ),
+637: 7 : maxLines = 2
+638: 7 : )
+639: 6 : }
+640: 5 : }
+641: 5 : } else {
+642: 5 : Spacer(modifier = Modifier.weight(1f))
+643: 4 : }
+644: 3 : }
+645: 2 : }
+646: 1 : }
+647: 0 : }
+648: -1 : }
+649: -1 : 

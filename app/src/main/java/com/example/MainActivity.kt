@@ -1,5 +1,6 @@
 
 package com.example
+import com.example.ui.theme.SadhakThemeColors
 import com.example.ui.screens.*
 import com.example.ui.viewmodel.devotionalTracks
 import com.example.ui.viewmodel.DevotionalTrack
@@ -48,14 +49,17 @@ import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Forum
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.VideoLibrary
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Surface
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -95,10 +99,25 @@ import com.example.ui.viewmodel.SadhakViewModel
 import com.example.ui.theme.BrassTan
 import com.example.ui.theme.Terracotta
 
+val LocalSadhakViewModel = androidx.compose.runtime.staticCompositionLocalOf<SadhakViewModel> {
+    error("No SadhakViewModel provided")
+}
 
 class MainActivity : ComponentActivity() {
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        com.example.ui.audio.SadhakAudioManager.releaseAll()
+    }
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        com.example.ui.audio.SadhakAudioManager.init(this)
         enableEdgeToEdge()
         
         // Pre-create WebView cache directories to prevent Chromium opendir errors on startup
@@ -115,9 +134,19 @@ class MainActivity : ComponentActivity() {
             e.printStackTrace()
         }
 
+
         setContent {
 
                 val viewModel: SadhakViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+
+                // Process intent for destination navigation
+                androidx.compose.runtime.LaunchedEffect(intent) {
+                    val dest = intent.getStringExtra("destination")
+                    if (dest != null) {
+                        viewModel.setScreen(dest)
+                        intent.removeExtra("destination")
+                    }
+                }
                 
                 val currentScreen by viewModel.currentScreen.collectAsState()
                 val isEng by viewModel.isEnglish.collectAsState()
@@ -129,6 +158,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 MyApplicationTheme(darkTheme = isDark) {
+                    androidx.compose.runtime.CompositionLocalProvider(LocalSadhakViewModel provides viewModel) {
 
                 val bgChantEnabled by viewModel.bgChantEnabled.collectAsState()
                 val bgChantVolume by viewModel.bgChantVolume.collectAsState()
@@ -136,10 +166,8 @@ class MainActivity : ComponentActivity() {
 
                 // Intercept Android Back Button/Gesture to go back to previous pages instead of exiting the app
                 androidx.activity.compose.BackHandler(enabled = currentScreen != "Home") {
-                    when (currentScreen) {
-                        "Admin" -> viewModel.setScreen("Profile")
-                        "AartiBell" -> viewModel.setScreen("BhaktiTools")
-                        else -> viewModel.setScreen("Home")
+                    if (!viewModel.navigateBack()) {
+                        viewModel.setScreen("Home")
                     }
                 }
 
@@ -165,17 +193,20 @@ class MainActivity : ComponentActivity() {
                         )
                     },
                     bottomBar = {
-                        Column {
-                            val isPlayerVisible by viewModel.isAudioPlayerVisible.collectAsState()
-                            if (isPlayerVisible) {
-                                PersistentAudioPlayer(viewModel = viewModel, isEnglish = isEng)
+                        val isBottomBarVisible by viewModel.isBottomBarVisible.collectAsState()
+                        if (isBottomBarVisible) {
+                            Column {
+                                val isPlayerVisible by viewModel.isAudioPlayerVisible.collectAsState()
+                                if (isPlayerVisible) {
+                                    PersistentAudioPlayer(viewModel = viewModel, isEnglish = isEng)
+                                }
+                                SadhakBottomBar(
+                                    currentScreen = currentScreen,
+                                    userRole = userRole,
+                                    isEnglish = isEng,
+                                    onNavigate = { viewModel.setScreen(it) }
+                                )
                             }
-                            SadhakBottomBar(
-                                currentScreen = currentScreen,
-                                userRole = userRole,
-                                isEnglish = isEng,
-                                onNavigate = { viewModel.setScreen(it) }
-                            )
                         }
                     },
                     modifier = Modifier.fillMaxSize()
@@ -192,11 +223,10 @@ class MainActivity : ComponentActivity() {
                             "Community" -> CommunityScreen(viewModel = viewModel)
                             "Bhakti" -> BhaktiSadhanaScreen(viewModel = viewModel)
                             "BhaktiTools" -> BhaktiToolsScreen(viewModel = viewModel)
-                            "AartiBell" -> AartiBellScreen(viewModel = viewModel, isEng = isEng, onBack = { viewModel.setScreen("BhaktiTools") })
                             "Videos" -> VideoHubScreen(viewModel = viewModel)
-                            "InstagramUpdates" -> InstagramUpdatesScreen(viewModel = viewModel, onBack = { viewModel.setScreen("Home") })
+                            "InstagramUpdates" -> InstagramUpdatesScreen(viewModel = viewModel, onBack = { if (!viewModel.navigateBack()) viewModel.setScreen("Home") })
                             "Chat" -> ChatScreen(viewModel = viewModel)
-                            "Calendar" -> CalendarScreen(viewModel = viewModel, onBack = { viewModel.setScreen("Home") }, isEng = isEng)
+                            "Calendar" -> CalendarScreen(viewModel = viewModel, onBack = { if (!viewModel.navigateBack()) viewModel.setScreen("Home") }, isEng = isEng)
                             "Profile" -> ProfileScreen(viewModel = viewModel, onNavigateAdmin = { viewModel.setScreen("Admin") })
                             "Admin" -> {
                                 val isAdmin by viewModel.isAdmin.collectAsState()
@@ -456,6 +486,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -470,8 +501,8 @@ fun SadhakTopAppBar(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(Color.White)
-            .border(width = 1.dp, color = MaterialTheme.colorScheme.outline) // subtle bottom border
+            .background(MaterialTheme.colorScheme.surface)
+            .border(width = 1.dp, color = SadhakThemeColors.divider)
     ) {
         TopAppBar(
             title = {
@@ -492,18 +523,18 @@ fun SadhakTopAppBar(
                             text = "Sanatan Sadhak",
                             style = MaterialTheme.typography.titleMedium.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.secondary,
+                                color = SadhakThemeColors.secondary,
                                 fontSize = 16.sp,
                                 letterSpacing = 0.5.sp
                             )
                         )
                         Text(
-                            text = if (isEnglish) "INNER PEACE • DHARMA" else "अंतर्मन की शांति • धर्म",
+                            text = if (isEnglish) "सनातन • साधना • संस्कृति" else "सनातन • साधना • संस्कृति",
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = BrassTan,
-                                fontSize = 8.sp,
-                                letterSpacing = 1.sp
+                                color = SadhakThemeColors.textMuted,
+                                fontSize = 9.sp,
+                                letterSpacing = 0.8.sp
                             )
                         )
                     }
@@ -516,13 +547,13 @@ fun SadhakTopAppBar(
                         Icon(
                             imageVector = Icons.Default.Notifications,
                             contentDescription = "Notifications",
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = SadhakThemeColors.primary
                         )
                         if (hasNewNotifications) {
                             Box(
                                 modifier = Modifier
                                     .size(8.dp)
-                                    .background(Color.Red, CircleShape)
+                                    .background(SadhakThemeColors.error, CircleShape)
                                     .align(Alignment.TopEnd)
                             )
                         }
@@ -531,47 +562,31 @@ fun SadhakTopAppBar(
 
                 // Calendar icon
                 IconButton(onClick = onCalendarClick) {
-                    Icon(imageVector = Icons.Default.DateRange, contentDescription = "Calendar", tint = MaterialTheme.colorScheme.primary)
+                    Icon(imageVector = Icons.Default.DateRange, contentDescription = "Calendar", tint = SadhakThemeColors.primary)
                 }
 
-                // Highly polished bilingual toggle button
+                // Bilingual toggle button
                 Box(
                     modifier = Modifier
-                        .padding(end = 8.dp)
-                        .border(1.dp, MaterialTheme.colorScheme.tertiary, RoundedCornerShape(16.dp))
-                        .background(SoftGoldBg, RoundedCornerShape(16.dp))
+                        .padding(end = 6.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(SadhakThemeColors.primary.copy(alpha = 0.12f))
+                        .border(1.dp, SadhakThemeColors.primary.copy(alpha = 0.3f), RoundedCornerShape(16.dp))
                         .clickable(onClick = onLanguageToggle)
-                        .padding(horizontal = 10.dp, vertical = 4.dp),
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = if (isEnglish) "EN | हिंदी" else "हिंदी | EN",
-                        color = MaterialTheme.colorScheme.tertiary,
+                        text = if (isEnglish) "EN | हिं" else "हिं | EN",
+                        color = SadhakThemeColors.secondary,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 10.sp
-                    )
-                }
-                
-                // Profile Avatar Badge
-                Box(
-                    modifier = Modifier
-                        .padding(end = 12.dp)
-                        .size(36.dp)
-                        .border(2.dp, Color.White, CircleShape)
-                        .background(WarmSand, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Person,
-                        contentDescription = "Profile",
-                        tint = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.size(20.dp)
+                        fontSize = 11.sp
                     )
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = Color.White, // Pure polished white background
-                titleContentColor = MaterialTheme.colorScheme.secondary
+                containerColor = MaterialTheme.colorScheme.surface,
+                titleContentColor = SadhakThemeColors.secondary
             )
         )
     }
@@ -591,15 +606,15 @@ fun SanatanSadhakLogo(modifier: Modifier = Modifier, logoSize: androidx.compose.
         label = "blink"
     )
 
-    val primaryColor = MaterialTheme.colorScheme.primary
+    val primaryColor = SadhakThemeColors.primary
     Box(
         modifier = Modifier
             .size(logoSize)
             .then(modifier)
             .alpha(if (isAnimated) alpha else 1f)
             .clip(CircleShape)
-            .background(Color(0xFF4A0E17)) // Deep wine/maroon
-            .border(2.dp, MaterialTheme.colorScheme.tertiary, CircleShape),
+            .background(Color(0xFF4A0E17)) // Deep sacred wine/maroon
+            .border(2.dp, SadhakThemeColors.accent, CircleShape),
         contentAlignment = Alignment.Center
     ) {
         // Draw Trishula (Trident) using Canvas
@@ -634,7 +649,6 @@ fun SanatanSadhakLogo(modifier: Modifier = Modifier, logoSize: androidx.compose.
             drawPath(
                 path = rightPath,
                 color = primaryColor,
-
                 style = Stroke(width = 1.5.dp.toPx())
             )
             
@@ -669,58 +683,97 @@ fun SadhakBottomBar(
     isEnglish: Boolean,
     onNavigate: (String) -> Unit
 ) {
-    val items = mutableListOf(
+    // NEW Order: Knowledge | Sadhana | HOME | Videos | Profile
+    val items = listOf(
+        NavigationItem("Knowledge", if (isEnglish) "Knowledge" else "ज्ञान", Icons.Default.MenuBook),
         NavigationItem("Bhakti", if (isEnglish) "Sadhana" else "साधना", Icons.Default.SelfImprovement),
-        NavigationItem("BhaktiTools", if (isEnglish) "Tools" else "साधन", Icons.Default.Build),
         NavigationItem("Home", if (isEnglish) "Home" else "मुख्य", Icons.Default.Home),
-        NavigationItem("Chat", if (isEnglish) "Sadhak Mitra AI" else "साधक मित्र AI", Icons.Default.Chat),
-        NavigationItem("Profile", if (isEnglish) "Devotee" else "भक्त", Icons.Default.Person)
+        NavigationItem("Videos", if (isEnglish) "Videos" else "वीडियो", Icons.Default.VideoLibrary),
+        NavigationItem("Profile", if (isEnglish) "Profile" else "प्रोफ़ाइल", Icons.Default.Person)
     )
 
     NavigationBar(
-        containerColor = MaterialTheme.colorScheme.surface,
-        tonalElevation = 0.dp, // Flat professional style
+        containerColor = SadhakThemeColors.sacredNavigationBackground,
+        tonalElevation = 0.dp,
         modifier = Modifier
             .testTag("bottom_nav_bar")
-            .border(width = 1.dp, color = MaterialTheme.colorScheme.outline) // Elegant top border
+            .border(width = 1.dp, color = SadhakThemeColors.sacredDivider)
     ) {
         items.forEach { item ->
             val isSelected = currentScreen == item.route
+            val isCenterHome = item.route == "Home"
+
             val scale by androidx.compose.animation.core.animateFloatAsState(
-                targetValue = if (isSelected) 1.2f else 1.0f,
+                targetValue = if (isSelected) 1.15f else 1.0f,
                 animationSpec = androidx.compose.animation.core.spring(
                     dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
                     stiffness = androidx.compose.animation.core.Spring.StiffnessLow
                 )
             )
+
             NavigationBarItem(
                 selected = isSelected,
                 onClick = { onNavigate(item.route) },
                 icon = {
-                    Icon(
-                        imageVector = item.icon,
-                        contentDescription = item.label,
-                        modifier = Modifier.size(20.dp).graphicsLayer {
-                            scaleX = scale
-                            scaleY = scale
+                    if (isCenterHome) {
+                        // Sanctum Center Home Treatment
+                        Box(
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    if (isSelected) SadhakThemeColors.sacredPrimary
+                                    else SadhakThemeColors.sacredIconBackground
+                                )
+                                .border(
+                                    width = 1.dp,
+                                    color = if (isSelected) SadhakThemeColors.sacredGold else SadhakThemeColors.sacredPrimary.copy(alpha = 0.3f),
+                                    shape = CircleShape
+                                )
+                                .graphicsLayer {
+                                    scaleX = scale
+                                    scaleY = scale
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = item.icon,
+                                contentDescription = item.label,
+                                tint = if (isSelected) Color.White else SadhakThemeColors.sacredPrimary,
+                                modifier = Modifier.size(18.dp)
+                            )
                         }
-                    )
+                    } else {
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = item.label,
+                            modifier = Modifier
+                                .size(20.dp)
+                                .graphicsLayer {
+                                    scaleX = scale
+                                    scaleY = scale
+                                }
+                        )
+                    }
                 },
                 label = {
                     Text(
                         text = item.label,
-                        fontSize = 9.sp,
+                        fontSize = if (isCenterHome) 10.sp else 9.sp,
                         softWrap = false,
                         overflow = androidx.compose.ui.text.style.TextOverflow.Visible,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                        maxLines = 1
+                        fontWeight = if (isSelected || isCenterHome) FontWeight.Bold else FontWeight.Medium,
+                        maxLines = 1,
+                        color = if (isSelected) SadhakThemeColors.sacredNavigationSelected
+                        else if (isCenterHome) SadhakThemeColors.sacredSecondary
+                        else SadhakThemeColors.sacredNavigationUnselected
                     )
                 },
                 colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = MaterialTheme.colorScheme.primary,
-                    selectedTextColor = MaterialTheme.colorScheme.primary,
-                    unselectedIconColor = Color.Gray.copy(alpha = 0.6f),
-                    unselectedTextColor = Color.Gray.copy(alpha = 0.8f),
+                    selectedIconColor = SadhakThemeColors.sacredNavigationSelected,
+                    selectedTextColor = SadhakThemeColors.sacredNavigationSelected,
+                    unselectedIconColor = SadhakThemeColors.sacredNavigationUnselected,
+                    unselectedTextColor = SadhakThemeColors.sacredNavigationUnselected,
                     indicatorColor = Color.Transparent
                 ),
                 modifier = Modifier.testTag("nav_item_${item.route}")
@@ -740,133 +793,233 @@ fun PersistentAudioPlayer(viewModel: SadhakViewModel, isEnglish: Boolean) {
     val isPlaying by viewModel.isAudioPlaying.collectAsState()
     val currentIndex by viewModel.currentAudioTrackIndex.collectAsState()
     val track = devotionalTracks[currentIndex]
+    var showQueue by remember { mutableStateOf(false) }
 
+    if (showQueue) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showQueue = false },
+            title = { Text(if (isEnglish) "Audio Queue" else "ऑडियो कतार", fontWeight = FontWeight.Bold, color = SadhakThemeColors.secondary) },
+            text = {
+                LazyColumn {
+                    devotionalTracks.groupBy { it.category }.forEach { (category, tracks) ->
+                        item {
+                            Text(
+                                text = category,
+                                style = MaterialTheme.typography.titleSmall,
+                                color = SadhakThemeColors.primary,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        }
+                        items(tracks) { itemTrack ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        viewModel.changeAudioTrack(devotionalTracks.indexOf(itemTrack))
+                                        showQueue = false
+                                    }
+                                    .padding(vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.MusicNote,
+                                    contentDescription = null,
+                                    tint = if (itemTrack == track) SadhakThemeColors.primary else SadhakThemeColors.textSecondary
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = if (isEnglish) itemTrack.titleEn else itemTrack.titleHi,
+                                    color = if (itemTrack == track) SadhakThemeColors.primary else SadhakThemeColors.textPrimary,
+                                    fontWeight = if (itemTrack == track) FontWeight.Bold else FontWeight.Normal,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = SadhakThemeColors.primary.copy(alpha = 0.12f)
+                                ) {
+                                    Text(
+                                        text = itemTrack.category,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = SadhakThemeColors.primary,
+                                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = { showQueue = false }) {
+                    Text(if (isEnglish) "Close" else "बंद करें", color = SadhakThemeColors.primary)
+                }
+            }
+        )
+    }
+
+    // Slim Floating/Anchored Mini Player
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.95f))
-            .border(width = 1.dp, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .background(SadhakThemeColors.sacredSurface)
+            .border(width = 1.dp, color = SadhakThemeColors.sacredPrimary.copy(alpha = 0.25f))
+            .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            // Left part: Icon & Text
+        Column(modifier = Modifier.fillMaxWidth()) {
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.weight(1f)
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Sacred spinning icon
-                val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition(label = "music_rotation")
-                val rotationAngle by infiniteTransition.animateFloat(
-                    initialValue = 0f,
-                    targetValue = 360f,
-                    animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-                        animation = androidx.compose.animation.core.tween(durationMillis = 10000, easing = androidx.compose.animation.core.LinearEasing),
-                        repeatMode = androidx.compose.animation.core.RepeatMode.Restart
-                    ),
-                    label = "rotation"
-                )
-                
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .graphicsLayer {
-                            if (isPlaying) {
-                                rotationZ = rotationAngle
+                // Left part: Rotating Icon & Track Info
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition(label = "music_rotation")
+                    val rotationAngle by infiniteTransition.animateFloat(
+                        initialValue = 0f,
+                        targetValue = 360f,
+                        animationSpec = androidx.compose.animation.core.infiniteRepeatable(
+                            animation = androidx.compose.animation.core.tween(durationMillis = 10000, easing = androidx.compose.animation.core.LinearEasing),
+                            repeatMode = androidx.compose.animation.core.RepeatMode.Restart
+                        ),
+                        label = "rotation"
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .graphicsLayer {
+                                if (isPlaying) {
+                                    rotationZ = rotationAngle
+                                }
                             }
-                        }
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.SelfImprovement,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(
-                        text = if (isEnglish) track.titleEn else track.titleHi,
-                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                        maxLines = 1,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                    Text(
-                        text = if (isEnglish) track.artistEn else track.artistHi,
-                        style = MaterialTheme.typography.labelSmall,
-                        maxLines = 1,
-                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
-                    )
-                }
-            }
-
-            // Right part: Controls (Prev, Play/Pause, Next)
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                // Prev Track Button
-                IconButton(
-                    onClick = { viewModel.prevAudioTrack() }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Previous Track",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-
-                // Play / Pause Button with circle outline
-                IconButton(
-                    onClick = { viewModel.toggleAudioPlay() },
-                    modifier = Modifier
-                        .size(36.dp)
-                        .background(MaterialTheme.colorScheme.primary, CircleShape)
-                ) {
-                    if (isPlaying) {
-                        PauseIcon(tint = MaterialTheme.colorScheme.onPrimary)
-                    } else {
+                            .clip(CircleShape)
+                            .background(SadhakThemeColors.sacredIconBackground),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(
-                            imageVector = Icons.Default.PlayArrow,
-                            contentDescription = "Play",
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier.size(20.dp)
+                            imageVector = Icons.Default.SelfImprovement,
+                            contentDescription = null,
+                            tint = SadhakThemeColors.sacredPrimary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = if (isEnglish) track.titleEn else track.titleHi,
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            color = SadhakThemeColors.sacredTextPrimary
+                        )
+                        Text(
+                            text = if (isEnglish) track.artistEn else track.artistHi,
+                            style = MaterialTheme.typography.labelSmall,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            color = SadhakThemeColors.sacredTextSecondary
                         )
                     }
                 }
 
-                // Next Track Button
-                IconButton(
-                    onClick = { viewModel.nextAudioTrack() }
+                // Right part: Controls (Queue, Prev, Play/Pause, Next, Close)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowForward,
-                        contentDescription = "Next Track",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
+                    // Queue Button
+                    IconButton(
+                        onClick = { showQueue = true },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Menu,
+                            contentDescription = "Queue",
+                            tint = SadhakThemeColors.sacredPrimary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
 
-                // Close / Hide Audio Player Button
-                IconButton(
-                    onClick = { viewModel.closeAudioPlayer() }
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Close Player",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    // Prev Track Button
+                    IconButton(
+                        onClick = { viewModel.prevAudioTrack() },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBack,
+                            contentDescription = "Previous Track",
+                            tint = SadhakThemeColors.sacredPrimary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    // Play / Pause Button with solid circle
+                    IconButton(
+                        onClick = { viewModel.toggleAudioPlay() },
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(SadhakThemeColors.sacredPrimary)
+                    ) {
+                        if (isPlaying) {
+                            PauseIcon(tint = Color.White)
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.PlayArrow,
+                                contentDescription = "Play",
+                                tint = Color.White,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+
+                    // Next Track Button
+                    IconButton(
+                        onClick = { viewModel.nextAudioTrack() },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowForward,
+                            contentDescription = "Next Track",
+                            tint = SadhakThemeColors.sacredPrimary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    // Close Button
+                    IconButton(
+                        onClick = { viewModel.closeAudioPlayer() },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Close Player",
+                            tint = SadhakThemeColors.sacredTextSecondary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
+            Spacer(modifier = Modifier.height(2.dp))
+            // Slim Progress Slider
+            val progress by viewModel.globalAudioProgress.collectAsState()
+            androidx.compose.material3.Slider(
+                value = progress,
+                onValueChange = { viewModel.seekAudio(it) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(12.dp),
+                colors = androidx.compose.material3.SliderDefaults.colors(
+                    thumbColor = SadhakThemeColors.sacredPrimary,
+                    activeTrackColor = SadhakThemeColors.sacredPrimary,
+                    inactiveTrackColor = SadhakThemeColors.sacredPrimary.copy(alpha = 0.2f)
+                )
+            )
         }
     }
 }

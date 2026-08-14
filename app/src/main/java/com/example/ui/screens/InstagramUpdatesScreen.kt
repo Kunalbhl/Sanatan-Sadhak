@@ -18,7 +18,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Launch
 import androidx.compose.material.icons.filled.PhotoCamera
@@ -64,7 +64,7 @@ fun InstagramUpdatesScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack, modifier = Modifier.testTag("ig_back_button")) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back"
                         )
                     }
@@ -128,7 +128,8 @@ fun InstagramUpdatesScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .testTag("instagram_updates_list")
-                        .padding(16.dp),
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    contentPadding = PaddingValues(bottom = 80.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(instagramPosts.reversed()) { post ->

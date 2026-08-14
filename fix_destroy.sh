@@ -1,0 +1,1 @@
+sed -i '/override fun onCreate/i \    override fun onDestroy() {\n        super.onDestroy()\n        com.example.ui.components.AudioEngine.releaseAll()\n    }\n' app/src/main/java/com/example/MainActivity.kt

@@ -60,10 +60,10 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
     var chantIntervalMs by remember { mutableStateOf(3000L) } // 3 seconds per chant
 
     // Timer countdown/pacing logic
-    LaunchedEffect(timerRunning, timerType, durationSecondsLeft, currentChantCount) {
+    LaunchedEffect(timerRunning, timerType) {
         if (timerRunning) {
             if (timerType == "Duration") {
-                if (durationSecondsLeft > 0) {
+                while(durationSecondsLeft > 0 && timerRunning) {
                     kotlinx.coroutines.delay(1000)
                     durationSecondsLeft -= 1
                     
@@ -71,21 +71,23 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
                     if ((durationSecondsTotal - durationSecondsLeft) % (chantIntervalMs / 1000L).toInt() == 0) {
                         currentChantCount += 1
                     }
-                } else {
+                }
+                if (durationSecondsLeft <= 0) {
                     // Completed!
                     timerRunning = false
-                    com.example.ui.screens.AmbientSoundPlayer.playSound(1, 0.8f) // Ring Majestic Temple Bell!
+                    com.example.ui.audio.SadhakAudioManager.playOneShot(com.example.ui.audio.AudioTrackId.SADHANA_SUCCESS)
                     viewModel.logKarmaDeed("Completed Japa Timer of ${durationSecondsTotal / 60} mins: $currentChantCount chants")
                     showCelebrationDialog = true
                 }
             } else { // "Count" mode
-                if (currentChantCount < targetChantCount) {
+                while(currentChantCount < targetChantCount && timerRunning) {
                     kotlinx.coroutines.delay(chantIntervalMs)
                     currentChantCount += 1
-                } else {
+                }
+                if (currentChantCount >= targetChantCount) {
                     // Completed!
                     timerRunning = false
-                    com.example.ui.screens.AmbientSoundPlayer.playSound(1, 0.8f) // Ring Majestic Temple Bell!
+                    com.example.ui.audio.SadhakAudioManager.playOneShot(com.example.ui.audio.AudioTrackId.SADHANA_SUCCESS)
                     viewModel.logKarmaDeed("Completed Japa Timer of $targetChantCount chants")
                     showCelebrationDialog = true
                 }
@@ -164,6 +166,9 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
 
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+    val showScrollToTop by remember {
+        derivedStateOf { listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 300 }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         androidx.compose.foundation.lazy.LazyColumn(
@@ -903,18 +908,16 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
         }
 
         // Global Scroll To Top Button
-        if (listState.firstVisibleItemIndex > 2) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
-                com.example.ui.components.ScrollToTopButton(
-                    onClick = {
-                        coroutineScope.launch {
-                            listState.animateScrollToItem(0)
-                        }
-                    },
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
-        }
+        ScrollToTopButton(
+            visible = showScrollToTop,
+            testTag = "scroll_to_top_counter",
+            onClick = {
+                coroutineScope.launch {
+                    listState.animateScrollToItem(0)
+                }
+            },
+            modifier = Modifier.align(Alignment.BottomStart)
+        )
     }
 
     // Celebratory Success Target Dialogue

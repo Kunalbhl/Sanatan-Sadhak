@@ -1,40 +1,36 @@
 import re
 
-def fix_imports(filename):
-    with open(filename, "r") as f:
-        text = f.read()
-    lines = text.split("\n")
-    imports = []
-    other = []
-    for line in lines:
-        if line.startswith("import "):
-            imports.append(line)
-        elif line.strip() != "" or len(other) > 0:
-            if line.startswith("package ") and len(other) == 0:
-                other.append(line)
-            else:
-                if not line.startswith("import "):
-                    other.append(line)
-    
-    # Actually let's just make sure package is first, then imports, then code
-    pkg = ""
-    imp = []
-    code = []
-    for line in lines:
-        if line.startswith("package "):
-            pkg = line
-        elif line.startswith("import "):
-            imp.append(line)
-        else:
-            if line.strip() != "" or len(code) > 0:
-                code.append(line)
-                
-    with open(filename, "w") as f:
-        f.write(pkg + "\n\n")
-        for i in set(imp):
-            f.write(i + "\n")
-        f.write("\n")
-        f.write("\n".join(code))
+with open('app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt', 'r') as f:
+    text = f.read()
 
-fix_imports("app/src/main/java/com/example/ui/screens/MantraDetailScreen.kt")
-fix_imports("app/src/main/java/com/example/ui/screens/MissingScreens.kt")
+# Fix articles
+text = text.replace(
+"""                    else -> compareByDescending { it.id } // Newest
+                }
+            )
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList<KnowledgeArticle>())
+    // 2. Videos""",
+"""                    else -> compareByDescending { it.id } // Newest
+                }
+            )
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // 2. Videos""")
+
+# Fix videos
+text = text.replace(
+"""                "Stories" -> list.filter { it.category.contains("Stories", ignoreCase = true) || it.category.contains("Experiences", ignoreCase = true) }
+                else -> list.filter { it.category.equals(cat, ignoreCase = true) }
+            }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList<BhaktiVideo>())
+    // Curated dynamic playlist""",
+"""                "Stories" -> list.filter { it.category.contains("Stories", ignoreCase = true) || it.category.contains("Experiences", ignoreCase = true) }
+                else -> list.filter { it.category.equals(cat, ignoreCase = true) }
+            }
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // Curated dynamic playlist""")
+
+with open('app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt', 'w') as f:
+    f.write(text)
+

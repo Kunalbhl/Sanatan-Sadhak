@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy & Data Safety — Sanatan Sadhak</title>
+    <style>
+        :root {
+            --primary: #E65100;
+            --primary-light: #FFF3E0;
+            --primary-dark: #BF360C;
+            --secondary: #F57C00;
+            --text-dark: #212121;
+            --text-muted: #666666;
+            --bg-light: #FAFAFA;
+            --white: #FFFFFF;
+            --border-color: #FFE0B2;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+            padding: 0;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background-color: var(--white);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(230, 81, 0, 0.05);
+            border: 1px solid var(--border-color);
+            margin-bottom: 30px;
+        }
+
+        .meta-date {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 25px;
+            display: inline-block;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        h2 {
+            color: var(--primary);
+            font-size: 1.4rem;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--primary-light);
+            padding-bottom: 8px;
+            font-weight: 700;
+        }
+
+        h2:first-of-type {
+            margin-top: 0;
+        }
+
+        p {
+            margin-bottom: 15px;
+            color: #333333;
+        }
+
+        ul {
+            margin-bottom: 20px;
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 10px;
+            color: #333333;
+        }
+
+        .highlight-box {
+            background-color: var(--primary-light);
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+
+        .highlight-box p {
+            margin-bottom: 0;
+            font-weight: 500;
+            color: var(--primary-dark);
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px 20px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: 60px;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        a:hover {
+            text-decoration: underline;
+            color: var(--primary-dark);
+        }
+
+        @media (max-width: 600px) {
+            header h1 {
+                font-size: 1.8rem;
+            }
+            .card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Sanatan Sadhak</h1>
+        <p>Daily Panchang, Sadhana, Meditation & Scriptural Library</p>
+    </header>
+
+    <div class="container">
+        <div class="card">
+            <span class="meta-date">Effective Date: August 12, 2026</span>
+            
+            <p><strong>Sanatan Sadhak - Daily Panchang</strong> is a private, offline-first spiritual companion application designed for Sanatan Dharma practitioners. We respect your privacy and are committed to maintaining transparent data practices. This policy details how we handle user information.</p>
+
+            <div class="highlight-box">
+                <p>Core Philosophy: We operate primarily on an offline-first model. Your core spiritual habits, journals, and counts are your private sacred domain.</p>
+            </div>
+
+            <h2>1. Location Data & Offline Calculations</h2>
+            <p>To deliver high-precision daily Vedic Panchang coordinates (including local Tithi, Nakshatra, Sunrise, Sunset, and Rahu Kalam timings), the app may request permission to access your device's fine or coarse location coordinates:</p>
+            <ul>
+                <li><strong>Local Calculations:</strong> All location data is processed strictly locally on-device. No location coordinate payloads are ever transmitted to our cloud endpoints, stored on servers, or tracked over time.</li>
+                <li><strong>Privacy Safeguard:</strong> Location permissions are completely optional. If denied, the app gracefully falls back to calculated or preset parameters without interrupting overall system functionality.</li>
+            </ul>
+
+            <h2>2. User Accounts & Identity Sync</h2>
+            <p>When you create an authentication profile or log in to the "Sadhak Mandir":</p>
+            <ul>
+                <li><strong>Data Collected:</strong> We process your Name and Email address via <strong>Firebase Authentication</strong> and store profile preferences securely in <strong>Cloud Firestore</strong>.</li>
+                <li><strong>Purpose:</strong> This profile allows you to sync your community posts, comments, moderation requests, and administrative access safely across devices.</li>
+                <li><strong>Data Isolation:</strong> User profiles are strictly isolated. No database records are ever rented, sold, or shared with third-party marketing companies.</li>
+            </ul>
+
+            <h2>3. Local Storage & Offline Room Database</h2>
+            <p>All core sadhana, progress logs, and personal habits remain securely on your device:</p>
+            <ul>
+                <li><strong>Offline Records:</strong> Daily Japa counts, Japa Mala history, spiritual journaling logs, custom target milestones, and favorite mantras are stored strictly in the local SQLite <strong>Room Database</strong>.</li>
+                <li><strong>Zero Cloud Tracking:</strong> These items are never sent to external servers unless you specifically opt to post in the public community forum.</li>
+            </ul>
+
+            <h2>4. Sadhak AI Mitra & Gemini Processing</h2>
+            <p>The "Sadhak AI Mitra" assistant provides secure, context-aware interactive spiritual guidance:</p>
+            <ul>
+                <li><strong>Secure REST Delivery:</strong> Prompt questions are routed safely through secure, encrypted endpoints using official Google Gemini APIs.</li>
+                <li><strong>Privacy Isolation:</strong> No personal details, names, or email accounts are attached to the API prompts.</li>
+                <li><strong>Scriptural Safeguards:</strong> AI Mitra acts under strict boundaries that separate authentic scriptural source text from AI-generated traditional interpretation, avoiding the fabrication of Sanskrit verses.</li>
+            </ul>
+
+            <h2>5. Devotional Videos & YouTube API</h2>
+            <p>The "Bhakti Video Hub" retrieves curated classical devotional music, audio, and high-quality chanting videos:</p>
+            <ul>
+                <li><strong>Retrieved Data:</strong> Content is loaded via the official YouTube Data API and RSS feeds of designated, authentic channels.</li>
+                <li><strong>Zero tracking:</strong> Our integration does not track your private viewing history or build behavioral advertisement profiles. All cache data resides inside the local database.</li>
+            </ul>
+
+            <h2>6. User-Generated Content (UGC) & Moderation</h2>
+            <p>The community feed allows devotees to connect, share wisdom, and view spiritual announcements:</p>
+            <ul>
+                <li><strong>Posting Guidelines:</strong> Users can create custom posts and submit supportive comments. Community guidelines are displayed and easily accessible within the post creation screen.</li>
+                <li><strong>Reporting & Safety:</strong> Any user can immediately flag or report inappropriate posts. Reported content reaches the moderated admin workspace immediately for swift review.</li>
+                <li><strong>Admin Enforcement:</strong> Administrators hold authoritative server-side rights to instantly review, block, or delete offending UGC posts. Non-admin users are strictly prevented from executing moderation writes.</li>
+            </ul>
+
+            <h2>7. Security, Encryption & Network Protocol</h2>
+            <p>To keep your authentication and community communications protected:</p>
+            <ul>
+                <li>All network communications are strictly enforced over encrypted <strong>HTTPS / TLS 1.3</strong> channels.</li>
+                <li>The application disables cleartext HTTP traffic to prevent any potential interception or tampering on public Wi-Fi networks.</li>
+            </ul>
+
+            <h2>8. Complete Account Deletion Right</h2>
+            <p>In accordance with Google Play Store policies, we support full self-service account deletion:</p>
+            <ul>
+                <li><strong>How to Delete:</strong> Navigate to your <strong>Profile -> Settings</strong> screen and click the <strong>Delete Devotee Account</strong> button.</li>
+                <li><strong>Deletion Scope:</strong> Upon confirmation, our system instantly triggers:
+                    <ul>
+                        <li>Deletion of your Firebase Authentication record.</li>
+                        <li>Deletion of your public/private Cloud Firestore profile document and metadata.</li>
+                        <li>Complete local purge of offline databases, preferences, and session caches.</li>
+                    </ul>
+                </li>
+                <li><strong>Content Preservation:</strong> For community continuity, public spiritual commentary or shared community posts are anonymous-disassociated rather than leaving empty gaps, unless explicitly removed.</li>
+            </ul>
+
+            <h2>9. Contact & Support</h2>
+            <p>If you have any questions regarding this Privacy Policy, your rights, or data safety, please reach out to our team at:</p>
+            <p>📧 Email: <a href="mailto:kunalpareekusa@gmail.com">kunalpareekusa@gmail.com</a></p>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Sanatan Sadhak. All Rights Reserved.</p>
+    </footer>
+
+</body>
+</html>

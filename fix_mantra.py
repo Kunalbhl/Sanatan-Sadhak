@@ -1,57 +1,59 @@
-with open("app/src/main/java/com/example/ui/screens/MantraDetailScreen.kt", "r") as f:
+import re
+
+with open('app/src/main/java/com/example/ui/screens/MantraDetailScreen.kt', 'r') as f:
     text = f.read()
 
-target = """                val favoriteMantras by viewModel.favoriteMantras.androidx.compose.runtime.collectAsState(initial = emptyList())
-                val isBookmarked = favoriteMantras.any { it.title == prayerData.titleEn || it.title == prayerData.titleHi }
-                IconButton(onClick = {
-                    if (isBookmarked) {
-                        val toDel = favoriteMantras.find { it.title == prayerData.titleEn || it.title == prayerData.titleHi }
-                        if (toDel != null) {
-                            viewModel.deleteFavoriteMantra(toDel.id)
-                        }
-                    } else {
-                        viewModel.addFavoriteMantra(
-                            title = if (isEnglish) prayerData.titleEn else prayerData.titleHi,
-                            content = if (isEnglish) prayerData.sanskritLyrics.take(100) else prayerData.sanskritLyrics.take(100),
-                            youtubeUrl = prayerData.youtubeId
-                        )
-                    }
-                }) {
-                    androidx.compose.material3.Icon(
-                        imageVector = if (isBookmarked) androidx.compose.material.icons.Icons.Default.Bookmark else androidx.compose.material.icons.Icons.Default.BookmarkBorder,
-                        contentDescription = "Bookmark",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }"""
+# Replace the "var isPlaying by remember" and progress states with AudioEngine flows
+text = re.sub(
+    r'var isPlaying by remember \{ mutableStateOf\(false\) \}\s*var progress by remember \{ mutableStateOf\(0f\) \}',
+    '''val isPlaying by com.example.ui.components.AudioEngine.isPlaying.collectAsState()
+    val isBuffering by com.example.ui.components.AudioEngine.isBuffering.collectAsState()
+    val progress by com.example.ui.components.AudioEngine.progress.collectAsState()
+    val currentPos by com.example.ui.components.AudioEngine.currentPositionStr.collectAsState()
+    val totalDur by com.example.ui.components.AudioEngine.durationStr.collectAsState()''',
+    text
+)
 
-replacement = """                val favoriteMantras by viewModel.favoriteMantras.collectAsState(initial = emptyList())
-                val isBookmarked = favoriteMantras.any { it.title == prayerData.titleEn || it.title == prayerData.titleHi }
-                IconButton(onClick = {
-                    if (isBookmarked) {
-                        val toDel = favoriteMantras.find { it.title == prayerData.titleEn || it.title == prayerData.titleHi }
-                        if (toDel != null) {
-                            viewModel.deleteFavoriteMantra(toDel.id)
-                        }
-                    } else {
-                        viewModel.addFavoriteMantra(
-                            title = if (isEnglish) prayerData.titleEn else prayerData.titleHi,
-                            content = prayerData.sanskritOrHindi.take(100),
-                            youtubeUrl = prayerData.youtubeUrl
-                        )
-                    }
-                }) {
-                    androidx.compose.material3.Icon(
-                        imageVector = if (isBookmarked) androidx.compose.material.icons.Icons.Filled.Favorite else androidx.compose.material.icons.Icons.Default.FavoriteBorder,
-                        contentDescription = "Bookmark",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }"""
+text = re.sub(
+    r'isPlaying = !isPlaying\s*if \(isPlaying\) \{\s*com\.example\.ui\.components\.AudioEngine\.playAmbientSound\(2, 0\.8f\)\s*\} else \{\s*com\.example\.ui\.components\.AudioEngine\.stopAmbientSound\(\)\s*\}',
+    '''if (isPlaying) {
+                                        com.example.ui.components.AudioEngine.pauseAmbientSound()
+                                    } else {
+                                        com.example.ui.components.AudioEngine.playAmbientSound(2, 0.8f)
+                                    }''',
+    text
+)
 
-text = text.replace(target, replacement)
-text = text.replace("import androidx.compose.runtime.collectAsState", "")
-text = "import androidx.compose.runtime.collectAsState\n" + text
-text = text.replace("import androidx.compose.material.icons.filled.Bookmark", "")
-text = text.replace("import androidx.compose.material.icons.filled.BookmarkBorder", "")
-text = "import androidx.compose.material.icons.filled.Favorite\nimport androidx.compose.material.icons.filled.FavoriteBorder\n" + text
-with open("app/src/main/java/com/example/ui/screens/MantraDetailScreen.kt", "w") as f:
+text = re.sub(
+    r'if \(isPlaying\) \{\s*Text\(\s*text = if \(isEnglish\) "Playing audio..." else "ऑडियो चल रहा है...",\s*fontSize = 11\.sp,\s*color = MaterialTheme\.colorScheme\.primary,\s*modifier = Modifier\.padding\(top = 8\.dp\)\s*\)\s*\}',
+    '''if (isBuffering) {
+                            Text(
+                                text = if (isEnglish) "Buffering audio..." else "ऑडियो लोड हो रहा है...",
+                                fontSize = 11.sp,
+                                color = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        } else if (isPlaying || progress > 0f) {
+                            Row(modifier = Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(text = currentPos, fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
+                                Text(text = totalDur, fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
+                            }
+                        }''',
+    text
+)
+
+# And if there is any DisposableEffect we should pause on dispose
+if "DisposableEffect" not in text:
+    text = re.sub(
+        r'val scrollState = rememberScrollState\(\)',
+        '''val scrollState = rememberScrollState()
+    DisposableEffect(Unit) {
+        onDispose {
+            com.example.ui.components.AudioEngine.stopAmbientSound()
+        }
+    }''',
+        text
+    )
+
+with open('app/src/main/java/com/example/ui/screens/MantraDetailScreen.kt', 'w') as f:
     f.write(text)

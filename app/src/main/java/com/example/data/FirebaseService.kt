@@ -93,6 +93,31 @@ class FirebaseService(private val context: Context) {
     }
 
     // --- FIRESTORE PERSISTENCE ---
+    suspend fun saveUserToFirestore(user: User): Boolean {
+        if (!_isFirebaseAvailable.value || firestore == null) return false
+        return try {
+            val userData = hashMapOf(
+                "email" to user.email,
+                "fullName" to user.fullName,
+                "role" to user.role,
+                "avatar" to user.avatar,
+                "mobileNumber" to user.mobileNumber,
+                "city" to user.city,
+                "state" to user.state,
+                "profileImageUri" to user.profileImageUri,
+                "createdAt" to System.currentTimeMillis()
+            )
+            val uid = auth?.currentUser?.uid ?: user.email.replace(".", "_")
+            firestore!!.collection("users")
+                .document(uid)
+                .set(userData)
+                .await()
+            true
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to save user to Firestore: ${e.message}")
+            false
+        }
+    }
     suspend fun savePostToFirestore(post: CommunityPost): Boolean {
         if (!_isFirebaseAvailable.value || firestore == null) return false
         return try {
@@ -114,6 +139,20 @@ class FirebaseService(private val context: Context) {
             true
         } catch (e: Exception) {
             Log.e(tag, "Failed to save post to Firestore: ${e.message}")
+            false
+        }
+    }
+
+    suspend fun deletePostFromFirestore(postId: String): Boolean {
+        if (!_isFirebaseAvailable.value || firestore == null) return false
+        return try {
+            firestore!!.collection("community_posts")
+                .document(postId)
+                .delete()
+                .await()
+            true
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to delete post from Firestore: ${e.message}")
             false
         }
     }
@@ -145,6 +184,23 @@ class FirebaseService(private val context: Context) {
         } catch (e: Exception) {
             Log.e(tag, "Failed to fetch posts from Firestore: ${e.message}")
             emptyList()
+        }
+    }
+
+    suspend fun deleteUserAccount(): Boolean {
+        if (!_isFirebaseAvailable.value || auth == null) return false
+        return try {
+            val currentUser = auth?.currentUser
+            if (currentUser != null) {
+                val uid = currentUser.uid
+                firestore?.collection("users")?.document(uid)?.delete()?.await()
+                currentUser.delete().await()
+                _currentUserState.value = null
+                true
+            } else false
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to delete user account: ${e.message}")
+            false
         }
     }
 }

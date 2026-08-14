@@ -1,0 +1,54 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'SuperUser';
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      // Anyone can read user public profiles, only owners and admins can write
+      allow read: if true;
+      // Users can update their own non-role fields. Admins can update anything.
+      allow create: if isOwner(userId) || isAdmin();
+      allow update: if (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Community Posts collection
+    match /community_posts/{postId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if (isAuthenticated() && resource.data.author == request.resource.data.author) || isAdmin();
+      allow delete: if (isAuthenticated() && resource.data.author == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.email) || isAdmin();
+    }
+    
+    // Community Comments
+    match /community_comments/{commentId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update: if (isAuthenticated() && resource.data.author == request.resource.data.author) || isAdmin();
+      allow delete: if (isAuthenticated() && resource.data.author == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.email) || isAdmin();
+    }
+
+    // Audit Logs
+    match /audit_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

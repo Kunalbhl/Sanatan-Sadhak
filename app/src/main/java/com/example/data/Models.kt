@@ -6,16 +6,32 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "knowledge_articles")
 data class KnowledgeArticle(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val category: String, // Vedas & Granths, Puranas, Itihasa (Epics), Deities, Temples & Tirtha, Mantras & Stotras, Puja & Path Vidhi, Kriya & Sadhana, Festivals & Vrats, Concepts & Gyaan, Saints & Gurus
+    val category: String, // Vedas & Vedangas, Upanishads, Itihasa, Puranas, Darshana, Scriptures & Granths, Stotra & Sacred Texts, Saints & Acharyas, Spiritual Concepts, Pooja & Vidhi, Mantras & Chanting, Sadhana & Yoga, Festivals & Fasting, Temples & Sacred Sites
     val title: String,
     val summary: String,
     val content: String,
-    val relatedVideos: String, // comma-separated youtube video IDs
-    val language: String, // "en" or "hi"
+    val relatedVideos: String = "", // comma-separated youtube video IDs
+    val language: String = "en", // "en" or "hi"
     val difficulty: String = "Beginner", // Beginner, Intermediate, Advanced
     val readTimeMinutes: Int = 5,
     val relatedTopics: String = "", // comma-separated
-    val format: String = "Article" // Article, Mantra, Puja Vidhi
+    val format: String = "Article", // Article, Mantra, Pooja Vidhi, Shloka, Stotra, Scripture
+
+    // Source & Authenticity Metadata
+    val sourceName: String = "Traditional Sanatan Source", // e.g. Gita Press Gorakhpur, Choukhamba
+    val sourceType: String = "Traditional Scripture", // Traditional Scripture, Commentary, Editorial, Spiritual Discourse
+    val textReference: String = "", // e.g. Rigveda 1.1.1, Bhagavad Gita 2.47
+    val chapter: String = "",
+    val verse: String = "",
+    val edition: String = "",
+    val translator: String = "",
+    val verificationStatus: String = "VERIFIED_SOURCE", // VERIFIED_SOURCE, TRADITIONAL_REFERENCE, EDITOR_REVIEW_REQUIRED, UNVERIFIED
+
+    // Structured Content Blocks
+    val originalText: String = "", // Sanskrit / Devanagari verse or mantra
+    val translation: String = "", // Verse-by-verse or word-by-word translation
+    val aiExplanation: String = "", // Contextual Sadhak AI Mitra explanation
+    val contentType: String = "SCRIPTURE" // SCRIPTURE, TRADITIONAL_TEACHING, EXPLANATION, ARTICLE, COMMENTARY, AI_GENERATED_EXPLANATION
 )
 
 data class DetailedPanchang(
@@ -40,7 +56,17 @@ data class DetailedPanchang(
     val paksha: String = "",
     val ritu: String = "",
     val samvatYear: String = "",
-    val sunSign: String = ""
+    val sunSign: String = "",
+    val moonrise: String = "—",
+    val moonset: String = "—",
+    val ayana: String = "Uttarayana",
+    val choghadiya: String = "—",
+    val locationName: String = "New Delhi, India",
+    val sourceType: String = "CALCULATED",
+    val accuracyStatus: String = "APPROXIMATE",
+    val calculationMethod: String = "Local Simplified Ephemeris",
+    val conventionNote: String = "Lahiri Ayanamsha • Purnimanta • Chaitradi Samvat",
+    val festivalType: String = "RULE_DERIVED_OBSERVANCE"
 )
 
 data class PanchangResult(
@@ -200,6 +226,30 @@ data class SankalpaLog(
     val progressValue: Int, // e.g., 0-100 or number of rounds
     val date: String, // yyyy-MM-dd
     val timestamp: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "user_favorites")
+data class UserFavorite(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val userId: String, // email
+    val targetId: String, // ID of bhajan, temple, etc.
+    val type: String // "bhajan", "stotra", "temple"
+)
+
+@Entity(tableName = "reading_progress", primaryKeys = ["userId", "articleId"])
+data class ReadingProgress(
+    val userId: String,
+    val articleId: Int,
+    val progress: Float, // percentage or scroll position
+    val lastUpdated: Long = System.currentTimeMillis()
+)
+
+@Entity(tableName = "festivals")
+data class FestivalEntity(
+    @PrimaryKey val date: String, // YYYY-MM-DD
+    val name: String,
+    val significance: String,
+    val fastingRituals: String
 )
 
 data class DailyMantra(

@@ -79,11 +79,16 @@ object YoutubeFetcher {
                             }
                         }
                     } else {
-                        Log.e("YoutubeFetcher", "YouTube Data API error: code ${response.code}, message: ${response.message}")
+                        when (response.code) {
+                            403 -> Log.w("YoutubeFetcher", "YouTube Data API 403 Forbidden/Quota/Unauthorized. Falling back to channel RSS feed.")
+                            429 -> Log.w("YoutubeFetcher", "YouTube Data API 429 Rate Limited. Falling back to channel RSS feed.")
+                            in 500..599 -> Log.w("YoutubeFetcher", "YouTube Data API 5xx Server Error (${response.code}). Falling back to RSS feed.")
+                            else -> Log.w("YoutubeFetcher", "YouTube Data API error: code ${response.code}, message: ${response.message}")
+                        }
                     }
                 }
             } catch (e: Exception) {
-                Log.e("YoutubeFetcher", "Error fetching from YouTube Data API v3, will fall back to RSS", e)
+                Log.w("YoutubeFetcher", "Error fetching from YouTube Data API v3, will fall back to RSS", e)
             }
         }
 
@@ -101,7 +106,7 @@ object YoutubeFetcher {
                     }
                 }
             } catch (e: Exception) {
-                Log.e("YoutubeFetcher", "Error fetching RSS backup", e)
+                Log.w("YoutubeFetcher", "Error fetching RSS backup", e)
             }
         }
 
@@ -186,7 +191,7 @@ object YoutubeFetcher {
                 eventType = factory.next()
             }
         } catch (e: Exception) {
-            Log.e("YoutubeFetcher", "XML Parsing error", e)
+            Log.w("YoutubeFetcher", "XML Parsing error", e)
         }
         return videos
     }

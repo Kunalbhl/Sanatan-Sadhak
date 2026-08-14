@@ -1,0 +1,200 @@
+1891: 1 : val buttonAlpha = if (isHovered) 0.85f else 0.5f
+1892: 1 : 
+1893: 1 : LazyColumn(
+1894: 1 : state = homeListState,
+1895: 1 : modifier = Modifier
+1896: 1 : .fillMaxSize()
+1897: 1 : .testTag("home_screen_column")
+1898: 1 : .padding(horizontal = containerPadding),
+1899: 1 : verticalArrangement = Arrangement.spacedBy(gridSpacing),
+1900: 1 : contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = gridSpacing)
+1901: 2 : ) {
+1902: 2 : // Announcement Banner
+1903: 3 : item {
+1904: 3 : announcementBannerContent()
+1905: 2 : }
+1906: 2 : 
+1907: 2 : // Mobile-first layouts based on device sizes
+1908: 3 : if (isDesktop) {
+1909: 3 : // DESKTOP Breakpoint Layout: Responsive balanced grids
+1910: 3 : // Row 1: Thought of the Day + Today's Panchang
+1911: 4 : item {
+1912: 4 : Row(
+1913: 4 : modifier = Modifier.fillMaxWidth(),
+1914: 4 : horizontalArrangement = Arrangement.spacedBy(gridSpacing)
+1915: 5 : ) {
+1916: 6 : Box(modifier = Modifier.weight(1.2f)) {
+1917: 6 : thoughtCardContent()
+1918: 5 : }
+1919: 6 : Box(modifier = Modifier.weight(1f)) {
+1920: 6 : panchangCardContent()
+1921: 5 : }
+1922: 4 : }
+1923: 3 : }
+1924: 3 : 
+1925: 3 : // Row 2: Sacred Services
+1926: 4 : item {
+1927: 4 : servicesContent()
+1928: 3 : }
+1929: 3 : 
+1930: 3 : // Row 3: Daily Shloka + Daily Mantra
+1931: 4 : item {
+1932: 4 : Row(
+1933: 4 : modifier = Modifier.fillMaxWidth(),
+1934: 4 : horizontalArrangement = Arrangement.spacedBy(gridSpacing)
+1935: 5 : ) {
+1936: 6 : Box(modifier = Modifier.weight(1.2f)) {
+1937: 6 : ShlokaCard(
+1938: 6 : shloka = shlokaOfTheDay,
+1939: 6 : isEng = isEng,
+1940: 6 : onPlayTts = if (isTtsReady) { { tts?.speak(shlokaOfTheDay.verse, android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, null) } } else null
+1941: 6 : )
+1942: 5 : }
+1943: 6 : Box(modifier = Modifier.weight(0.8f)) {
+1944: 6 : MantraCard(mantra = dailyMantra, isEng = isEng)
+1945: 5 : }
+1946: 4 : }
+1947: 3 : }
+1948: 3 : 
+1949: 3 : // Row 4: Daily Darshan Featured Deity + Quick Bhakti Tools
+1950: 4 : item {
+1951: 4 : Row(
+1952: 4 : modifier = Modifier.fillMaxWidth(),
+1953: 4 : horizontalArrangement = Arrangement.spacedBy(gridSpacing)
+1954: 5 : ) {
+1955: 6 : Box(modifier = Modifier.weight(1f)) {
+1956: 6 : dailyDarshanFeaturedDeityContent()
+1957: 5 : }
+1958: 6 : Box(modifier = Modifier.weight(1f)) {
+1959: 6 : quickBhaktiToolsContent()
+1960: 5 : }
+1961: 4 : }
+1962: 3 : }
+1963: 3 : 
+1964: 3 : // Row 5: Live Darshan Gallery
+1965: 4 : item {
+1966: 4 : liveDarshanGalleryContent()
+1967: 3 : }
+1968: 3 : 
+1969: 3 : // Row 6: Video Feed + Community Highlights
+1970: 4 : item {
+1971: 4 : Row(
+1972: 4 : modifier = Modifier.fillMaxWidth(),
+1973: 4 : horizontalArrangement = Arrangement.spacedBy(gridSpacing)
+1974: 5 : ) {
+1975: 6 : Box(modifier = Modifier.weight(1f)) {
+1976: 6 : videoFeedContent()
+1977: 5 : }
+1978: 6 : Box(modifier = Modifier.weight(1f)) {
+1979: 6 : communityHighlightsContent()
+1980: 5 : }
+1981: 4 : }
+1982: 3 : }
+1983: 3 : } else if (isTablet) {
+1984: 3 : // TABLET Breakpoint Layout
+1985: 3 : // Row 1: Thought of the Day + Today's Panchang
+1986: 4 : item {
+1987: 4 : Row(
+1988: 4 : modifier = Modifier.fillMaxWidth(),
+1989: 4 : horizontalArrangement = Arrangement.spacedBy(gridSpacing)
+1990: 5 : ) {
+1991: 6 : Box(modifier = Modifier.weight(1f)) {
+1992: 6 : thoughtCardContent()
+1993: 5 : }
+1994: 6 : Box(modifier = Modifier.weight(1f)) {
+1995: 6 : panchangCardContent()
+1996: 5 : }
+1997: 4 : }
+1998: 3 : }
+1999: 3 : 
+2000: 3 : // Row 2: Sacred Services
+2001: 4 : item {
+2002: 4 : servicesContent()
+2003: 3 : }
+2004: 3 : 
+2005: 3 : // Row 3: Daily Shloka
+2006: 4 : item {
+2007: 4 : ShlokaCard(
+2008: 4 : shloka = shlokaOfTheDay,
+2009: 4 : isEng = isEng,
+2010: 4 : onPlayTts = if (isTtsReady) { { tts?.speak(shlokaOfTheDay.verse, android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, null) } } else null
+2011: 4 : )
+2012: 3 : }
+2013: 3 : 
+2014: 3 : // Row 4: Mantra Card + Quick Bhakti Tools
+2015: 4 : item {
+2016: 4 : Row(
+2017: 4 : modifier = Modifier.fillMaxWidth(),
+2018: 4 : horizontalArrangement = Arrangement.spacedBy(gridSpacing)
+2019: 5 : ) {
+2020: 6 : Box(modifier = Modifier.weight(1f)) {
+2021: 6 : MantraCard(mantra = dailyMantra, isEng = isEng)
+2022: 5 : }
+2023: 6 : Box(modifier = Modifier.weight(1f)) {
+2024: 6 : quickBhaktiToolsContent()
+2025: 5 : }
+2026: 4 : }
+2027: 3 : }
+2028: 3 : 
+2029: 3 : // Row 5: Daily Darshan Featured Deity
+2030: 4 : item {
+2031: 4 : dailyDarshanFeaturedDeityContent()
+2032: 3 : }
+2033: 3 : 
+2034: 3 : // Row 6: Live Darshan Gallery
+2035: 4 : item {
+2036: 4 : liveDarshanGalleryContent()
+2037: 3 : }
+2038: 3 : 
+2039: 3 : // Row 7: Video Feed
+2040: 4 : item {
+2041: 4 : videoFeedContent()
+2042: 3 : }
+2043: 3 : 
+2044: 3 : // Row 8: Community highlights
+2045: 4 : item {
+2046: 4 : communityHighlightsContent()
+2047: 3 : }
+2048: 3 : } else {
+2049: 3 : // MOBILE Breakpoint Layout: single column stacked
+2050: 4 : item {
+2051: 5 : Column(verticalArrangement = Arrangement.spacedBy(gridSpacing)) {
+2052: 5 : // 1. Thought of the Day (Motivational and Spiritual thoughts)
+2053: 5 : thoughtCardContent()
+2054: 5 : 
+2055: 5 : // 2. Today's Panchang
+2056: 5 : panchangCardContent()
+2057: 5 : 
+2058: 5 : // 3. Sacred Services
+2059: 5 : servicesContent()
+2060: 5 : 
+2061: 5 : // 4. Daily Shloka
+2062: 5 : ShlokaCard(
+2063: 5 : shloka = shlokaOfTheDay,
+2064: 5 : isEng = isEng,
+2065: 5 : onPlayTts = if (isTtsReady) { { tts?.speak(shlokaOfTheDay.verse, android.speech.tts.TextToSpeech.QUEUE_FLUSH, null, null) } } else null
+2066: 5 : )
+2067: 5 : 
+2068: 5 : // 5. Daily Mantra
+2069: 5 : MantraCard(mantra = dailyMantra, isEng = isEng)
+2070: 5 : 
+2071: 5 : // 6. Daily Darshan Featured Deity
+2072: 5 : dailyDarshanFeaturedDeityContent()
+2073: 5 : 
+2074: 5 : // 7. Quick Bhakti Tools
+2075: 5 : quickBhaktiToolsContent()
+2076: 5 : 
+2077: 5 : // 8. Live Darshan Gallery
+2078: 5 : liveDarshanGalleryContent()
+2079: 5 : 
+2080: 5 : // 9. Video Feed
+2081: 5 : videoFeedContent()
+2082: 5 : 
+2083: 5 : // 10. Community highlights
+2084: 5 : communityHighlightsContent()
+2085: 4 : }
+2086: 3 : }
+2087: 2 : }
+2088: 1 : }
+2089: 1 : 
+2090: 1 : // Saffron, bottom-left fixed circle button (40x40px, upward chevron, 0.5 opacity, 0.85 on hover)

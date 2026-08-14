@@ -10,7 +10,13 @@ import com.example.data.GratitudeLog
 import com.example.data.KarmaLog
 import com.example.data.KnowledgeArticle
 import com.example.data.PostComment
-import com.example.data.SadhakRepository
+import com.example.data.UserRepository
+import com.example.data.CommunityRepository
+import com.example.data.KnowledgeRepository
+import com.example.data.MantraRepository
+import com.example.data.PanchangRepository
+import com.example.data.ProfileRepository
+import com.example.data.MeditationRepository
 import com.example.data.GeminiService
 import com.example.data.AstrologyService
 import com.example.data.DailyMantra
@@ -96,46 +102,56 @@ data class DevotionalTrack(
     val descriptionHi: String,
     val artistEn: String,
     val artistHi: String,
-    val url: String
+    val url: String,
+    val category: String = "General",
+    val phoneticGuide: String? = null
 )
 
 val devotionalTracks = listOf(
-    DevotionalTrack(
-        id = 1,
-        titleEn = "Mahamrityunjaya Mantra Chants",
-        titleHi = "महामृत्युंजय मंत्र जाप",
-        descriptionEn = "Sacred sound vibrations of Lord Shiva for protection and healing.",
-        descriptionHi = "मोक्ष और आरोग्यता के लिए भगवान शिव का महामंत्र जाप।",
-        artistEn = "Aum Vedic Chants",
-        artistHi = "ॐ वैदिक साधक",
-        url = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
-    ),
-    DevotionalTrack(
-        id = 2,
-        titleEn = "Gayatri Mantra Meditation",
-        titleHi = "गायत्री मंत्र ध्यान",
-        descriptionEn = "Universal cosmic sound for divine wisdom, intellect, and light.",
-        descriptionHi = "दिव्य बुद्धि और प्रकाश के लिए सार्वभौमिक ब्रह्मांडीय मंत्र ध्यान।",
-        artistEn = "Sadhana Choir",
-        artistHi = "साधना मंडल",
-        url = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
-    ),
-    DevotionalTrack(
-        id = 3,
-        titleEn = "Divine Flute & Chant Ambient",
-        titleHi = "बांसुरी और मंत्र ध्यान",
-        descriptionEn = "Peaceful flute music with background chants for deep dhyana.",
-        descriptionHi = "गहरे ध्यान और शांति के लिए पृष्ठभूमि मंत्रों के साथ बांसुरी वादन।",
-        artistEn = "Vrindavan Devotees",
-        artistHi = "वृंदावन वंशी",
-        url = "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
-    )
+    DevotionalTrack(id = 1, titleEn = "Mahamrityunjaya Mantra", titleHi = "महामृत्युंजय मंत्र", descriptionEn = "Protection and healing", descriptionHi = "रक्षा और उपचार", artistEn = "Aum Vedic", artistHi = "ॐ वैदिक", url = "maha_mrityunjaya", category = "Chants", phoneticGuide = "Om Tryambakam Yajamahe Sugandhim Pushti-Vardhanam..."),
+    DevotionalTrack(id = 2, titleEn = "Gayatri Mantra", titleHi = "गायत्री मंत्र", descriptionEn = "Divine wisdom", descriptionHi = "दिव्य बुद्धि", artistEn = "Sadhana", artistHi = "साधना", url = "gayatri_mantra", category = "Chants", phoneticGuide = "Om Bhur Bhuvah Svah Tat Savitur Varenyam..."),
+    DevotionalTrack(id = 3, titleEn = "Hanuman Chalisa", titleHi = "श्री हनुमान चालीसा", descriptionEn = "Strength and courage", descriptionHi = "बल और साहस", artistEn = "Vrindavan Singers", artistHi = "वृंदावन", url = "hanuman_chalisa", category = "Bhajans", phoneticGuide = "Sri Guru Charana Saroja Raja..."),
+    DevotionalTrack(id = 4, titleEn = "Shiva Tandav Stotram", titleHi = "शिव तांडव स्तोत्रम्", descriptionEn = "Powerful praise", descriptionHi = "शक्तिशाली स्तुति", artistEn = "Traditional", artistHi = "परंपरागत", url = "shiva_tandav", category = "Stotras", phoneticGuide = "Jataatavee galajjala pravaha pavitha sthale..."),
+    DevotionalTrack(id = 5, titleEn = "Vishnu Sahasranamam", titleHi = "विष्णु सहस्रनाम", descriptionEn = "Thousand names", descriptionHi = "विष्णु के हजार नाम", artistEn = "Traditional", artistHi = "परंपरागत", url = "vishnu_sahasranamam", category = "Stotras", phoneticGuide = "Vishwam Vishnuh Vashatkaro..."),
+    DevotionalTrack(id = 6, titleEn = "Rameshbhai Ojha - Sampurna Vishnu Sahasranamam", titleHi = "रमेशभाई ओझा - सम्पूर्ण विष्णु सहस्रनाम", descriptionEn = "Complete thousand names of Lord Vishnu recited by Pujya Bhaishree", descriptionHi = "पूज्य भाईश्री द्वारा पाठ किया गया भगवान विष्णु के सम्पूर्ण हजार नाम", artistEn = "Rameshbhai Ojha", artistHi = "रमेशभाई ओझा", url = "vishnu_sahasranamam", category = "Rameshbhai Ojha"),
+    DevotionalTrack(id = 7, titleEn = "Rameshbhai Ojha - Sampurna Shiv Tandav Stotram", titleHi = "रमेशभाई ओझा - सम्पूर्ण शिव तांडव स्तोत्रम्", descriptionEn = "Complete Shiv Tandav Stotram recitation by Pujya Bhaishree", descriptionHi = "पूज्य भाईश्री द्वारा शिव तांडव स्तोत्रम् का सम्पूर्ण पाठ", artistEn = "Rameshbhai Ojha", artistHi = "रमेशभाई ओझा", url = "shiva_tandav", category = "Rameshbhai Ojha")
 )
 
 
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class SadhakViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository = SadhakRepository(application)
+    private val _isRefreshing = kotlinx.coroutines.flow.MutableStateFlow(false)
+    val isRefreshing: kotlinx.coroutines.flow.StateFlow<Boolean> = _isRefreshing
+
+    fun refreshHome() {
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            
+            kotlinx.coroutines.delay(1000)
+            _isRefreshing.value = false
+        }
+    }
+    
+    fun refreshGeneric() {
+        viewModelScope.launch {
+            _isRefreshing.value = true
+            kotlinx.coroutines.delay(1000)
+            _isRefreshing.value = false
+        }
+    }
+
+
+    private val userRepository = UserRepository.getInstance(application)
+    private val communityRepository = CommunityRepository(application)
+    private val knowledgeRepository = KnowledgeRepository(application)
+    private val mantraRepository = MantraRepository(application)
+    private val panchangRepository = PanchangRepository(application)
+    private val profileRepository = ProfileRepository(application)
+    private val meditationRepository = MeditationRepository(application)
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     // Current Active Screen
     private val _currentScreen = MutableStateFlow("Home") // "Home", "Knowledge", "Community", "Bhakti", "Videos", "Chat", "Profile", "Admin"
@@ -143,50 +159,87 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
 
     // Bilingual UI Toggle
 
-    private val _isEnglish = MutableStateFlow(true)
-    val isEnglish: StateFlow<Boolean> = _isEnglish
+    val isEnglish: StateFlow<Boolean> = com.example.data.AppPreferences.isEnglish
+
+
+
+
 
     // Daily Mantra and Shloka
-    private val _dailyMantra = MutableStateFlow(
-        DailyMantra(
-            title = "Thought of the Day",
-            content = "In the attitude of silence the soul finds the path in a clearer light, and what is elusive and deceptive resolves itself into crystal clearness. - Mahatma Gandhi",
-            meaning = "True clarity and understanding come from within, through silence and reflection.",
-            audioUrl = ""
-        )
-    )
-    val dailyMantra: StateFlow<DailyMantra> = _dailyMantra.asStateFlow()
 
-    fun setDailyMantra(newMantra: DailyMantra) {
-        _dailyMantra.value = newMantra
-    }
-
-    private val _shlokaOfTheDay = MutableStateFlow(
-        Shloka(
-            verse = "यदा यदा हि धर्मस्य ग्लानिर्भवति भारत।\nअभ्युत्थानमधर्मस्य तदात्मानं सृजाम्यहम्॥",
-            meaning = "Whenever righteousness declines...",
-            source = "Bhagavad Gita 4.7"
-        )
-    )
-    val shlokaOfTheDay: StateFlow<Shloka> = _shlokaOfTheDay.asStateFlow()
-
-    private val _isDarkMode = MutableStateFlow(false)
-    val isDarkMode: StateFlow<Boolean> = _isDarkMode
+    
+    
+    
+    val isDarkMode: StateFlow<Boolean> = com.example.data.AppPreferences.isDarkMode
 
     private val _hasNotifications = MutableStateFlow(false)
-    val hasNotifications: StateFlow<Boolean> = _hasNotifications.asStateFlow()
+    val hasNotifications: StateFlow<Boolean> = _hasNotifications
 
     fun setNotifications(has: Boolean) {
         _hasNotifications.value = has
     }
 
     fun toggleTheme() {
-        _isDarkMode.value = !_isDarkMode.value
+        com.example.data.AppPreferences.toggleDarkMode()
+    }
+
+    // Global Audio Player State
+    private val _globalAudioTitle = MutableStateFlow("")
+    val globalAudioTitle: StateFlow<String> = _globalAudioTitle
+
+    private val _isGlobalAudioPlaying = MutableStateFlow(false)
+    val isGlobalAudioPlaying: StateFlow<Boolean> = _isGlobalAudioPlaying
+
+    private val _globalAudioProgress = MutableStateFlow(0f)
+    val globalAudioProgress: StateFlow<Float> = _globalAudioProgress
+
+    private fun getSoundName(type: Int): String {
+        return when(type) {
+            1 -> "temple_bell"
+            2 -> "om_ambient"
+            3 -> "flute_ambient"
+            else -> "om_ambient"
+        }
+    }
+
+    fun playGlobalAudio(title: String, type: Int) {
+        pauseAudio()
+        _globalAudioTitle.value = title
+        _isGlobalAudioPlaying.value = true
+        val trackId = com.example.ui.audio.AudioTrackId.fromIndex(type)
+        com.example.ui.audio.SadhakAudioManager.playTrack(getApplication(), trackId, isLooping = true)
+    }
+
+    fun pauseGlobalAudio() {
+        _isGlobalAudioPlaying.value = false
+        com.example.ui.audio.SadhakAudioManager.pause()
+    }
+    
+    fun toggleGlobalAudio() {
+        if (_isGlobalAudioPlaying.value) {
+            pauseGlobalAudio()
+        } else {
+            pauseAudio()
+            _isGlobalAudioPlaying.value = true
+            com.example.ui.audio.SadhakAudioManager.playTrack(getApplication(), com.example.ui.audio.AudioTrackId.OM_AMBIENT, isLooping = true)
+        }
+    }
+
+    fun stopGlobalAudio() {
+        _isGlobalAudioPlaying.value = false
+        _globalAudioTitle.value = ""
+        _globalAudioProgress.value = 0f
+        com.example.ui.audio.SadhakAudioManager.stop()
     }
 
     // Theme Preference (0 = System, 1 = Light, 2 = Dark)
-    private val _themePreference = MutableStateFlow(1)
-    val themePreference: StateFlow<Int> = _themePreference
+    val themePreference: StateFlow<Int> = com.example.data.AppPreferences.themePreference
+
+    val soundEnabled: StateFlow<Boolean> = com.example.data.AppPreferences.soundEnabled
+
+    fun toggleSound() {
+        com.example.data.AppPreferences.toggleSound()
+    }
 
     // Notifications toggle state
     private val _notificationsEnabled = MutableStateFlow(true)
@@ -209,16 +262,20 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     // --- DEVOTIONAL MUSIC PLAYER ---
-    private var mediaPlayer: android.media.MediaPlayer? = null
-
-    private val _isAudioPlaying = MutableStateFlow(false)
-    val isAudioPlaying: StateFlow<Boolean> = _isAudioPlaying.asStateFlow()
+    val isAudioPlaying: StateFlow<Boolean> = com.example.ui.audio.SadhakAudioManager.isPlaying
 
     private val _currentAudioTrackIndex = MutableStateFlow(0)
-    val currentAudioTrackIndex: StateFlow<Int> = _currentAudioTrackIndex.asStateFlow()
+    val currentAudioTrackIndex: StateFlow<Int> = _currentAudioTrackIndex
 
     private val _isAudioPlayerVisible = MutableStateFlow(true)
-    val isAudioPlayerVisible: StateFlow<Boolean> = _isAudioPlayerVisible.asStateFlow()
+    val isAudioPlayerVisible: StateFlow<Boolean> = _isAudioPlayerVisible
+    
+    private val _isBottomBarVisible = MutableStateFlow(true)
+    val isBottomBarVisible: StateFlow<Boolean> = _isBottomBarVisible
+
+    fun setBottomBarVisibility(visible: Boolean) {
+        _isBottomBarVisible.value = visible
+    }
 
     fun closeAudioPlayer() {
         _isAudioPlayerVisible.value = false
@@ -232,7 +289,7 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
 
     fun toggleAudioPlay() {
         _isAudioPlayerVisible.value = true
-        if (_isAudioPlaying.value) {
+        if (isAudioPlaying.value) {
             pauseAudio()
         } else {
             playAudio()
@@ -242,17 +299,11 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
     fun playAudio() {
         viewModelScope.launch {
             try {
-                _isAudioPlaying.value = true
+                pauseGlobalAudio()
                 _isAudioPlayerVisible.value = true
-                if (mediaPlayer == null) {
-                    initMediaPlayer()
-                } else {
-                    try {
-                        mediaPlayer?.start()
-                    } catch (e: IllegalStateException) {
-                        // Media player might be in preparing state; the OnPreparedListener will start it.
-                    }
-                }
+                val track = devotionalTracks[_currentAudioTrackIndex.value]
+                val trackId = com.example.ui.audio.AudioTrackId.fromRawName(track.url) ?: com.example.ui.audio.AudioTrackId.OM_AMBIENT
+                com.example.ui.audio.SadhakAudioManager.playTrack(getApplication(), trackId, isLooping = false)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -261,8 +312,16 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
 
     fun pauseAudio() {
         try {
-            mediaPlayer?.pause()
-            _isAudioPlaying.value = false
+            com.example.ui.audio.SadhakAudioManager.pause()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+    
+    fun seekAudio(progress: Float) {
+        try {
+            com.example.ui.audio.SadhakAudioManager.seekTo(progress)
+            _globalAudioProgress.value = progress
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -292,52 +351,25 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
         _isAudioPlayerVisible.value = true
         _currentAudioTrackIndex.value = index
         stopAndReleasePlayer()
-        _isAudioPlaying.value = true
         playAudio()
     }
 
-    private fun initMediaPlayer() {
-        try {
-            mediaPlayer = android.media.MediaPlayer().apply {
-                setAudioStreamType(android.media.AudioManager.STREAM_MUSIC)
-                setDataSource(devotionalTracks[_currentAudioTrackIndex.value].url)
-                setOnPreparedListener {
-                    if (_isAudioPlaying.value) {
-                        it.start()
-                    }
-                }
-                setOnCompletionListener {
-                    nextAudioTrack()
-                }
-                prepareAsync()
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
     private fun stopAndReleasePlayer() {
-        try {
-            mediaPlayer?.stop()
-            mediaPlayer?.release()
-            mediaPlayer = null
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        com.example.ui.audio.SadhakAudioManager.stop()
     }
 
     // --- DAILY SHLOKA & PANCHANG REMINDERS ---
     private val _reminderEnabled = MutableStateFlow(false)
-    val reminderEnabled: StateFlow<Boolean> = _reminderEnabled.asStateFlow()
+    val reminderEnabled: StateFlow<Boolean> = _reminderEnabled
 
     private val _reminderHour = MutableStateFlow(8)
-    val reminderHour: StateFlow<Int> = _reminderHour.asStateFlow()
+    val reminderHour: StateFlow<Int> = _reminderHour
 
     private val _reminderMinute = MutableStateFlow(0)
-    val reminderMinute: StateFlow<Int> = _reminderMinute.asStateFlow()
+    val reminderMinute: StateFlow<Int> = _reminderMinute
 
     private val _reminderType = MutableStateFlow("Both")
-    val reminderType: StateFlow<String> = _reminderType.asStateFlow()
+    val reminderType: StateFlow<String> = _reminderType
 
     fun scheduleShlokaPanchangReminder(hour: Int, minute: Int, type: String) {
         val prefs = getApplication<android.app.Application>()
@@ -367,9 +399,19 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
         
         val initialDelay = scheduledTime.timeInMillis - now.timeInMillis
         
+        val destination = when (type) {
+            "Morning Prayer" -> "Bhakti"
+            "Panchang" -> "Calendar"
+            "Shloka" -> "Home"
+            else -> "Home"
+        }
+
         val workRequest = androidx.work.PeriodicWorkRequestBuilder<com.example.workers.NotificationWorker>(24, java.util.concurrent.TimeUnit.HOURS)
             .setInitialDelay(initialDelay, java.util.concurrent.TimeUnit.MILLISECONDS)
-            .setInputData(androidx.work.Data.Builder().putString("notification_type", type).build())
+            .setInputData(androidx.work.Data.Builder()
+                .putString("notification_type", type)
+                .putString("destination", destination)
+                .build())
             .build()
             
         androidx.work.WorkManager.getInstance(getApplication()).enqueueUniquePeriodicWork(
@@ -431,8 +473,7 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
     val selectedPostId: StateFlow<Int?> = _selectedPostId
 
     // Chatbot loading state
-    private val _isChatLoading = MutableStateFlow(false)
-    val isChatLoading: StateFlow<Boolean> = _isChatLoading
+    
 
     // Dialog control states
     private val _showLanguagePrefDialog = MutableStateFlow(false)
@@ -441,17 +482,63 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
     private val _showGuestPromoDialog = MutableStateFlow(false)
     val showGuestPromoDialog: StateFlow<Boolean> = _showGuestPromoDialog
 
-    // User Profile & Roles (linked to repository flow)
-    val userRole: StateFlow<String> = repository.userRoleState
-    val userName: StateFlow<String> = repository.userNameState
-    val userAvatar: StateFlow<Int> = repository.userAvatarState
-    val userProfileImageUri: StateFlow<String> = repository.userProfileImageUriState
-    val isPublicPostingEnabled: StateFlow<Boolean> = repository.isPublicPostingEnabled
+    fun dismissLanguagePrefDialog() {
+        _showLanguagePrefDialog.value = false
+    }
 
-    val userEmail: StateFlow<String> = repository.userEmailState
-    val userMobile: StateFlow<String> = repository.userMobileState
-    val userCity: StateFlow<String> = repository.userCityState
-    val userStateProvince: StateFlow<String> = repository.userStateProvinceState
+    fun triggerGuestPromo() {
+        _showGuestPromoDialog.value = true
+    }
+
+    fun dismissGuestPromo() {
+        _showGuestPromoDialog.value = false
+    }
+
+    fun logoutUser() {
+        userRepository.logout()
+    }
+
+    fun deleteUserAccount(onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val success = userRepository.deleteAccount()
+            onResult(success)
+        }
+    }
+
+    fun updateUserProfileDetails(fullName: String, mobileNumber: String, city: String, state: String, avatar: Int, imageUri: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            userRepository.updateUserProfile(userEmail.value, fullName, mobileNumber, city, state, avatar, imageUri)
+            onResult(true)
+        }
+    }
+
+    fun addFavoriteMantra(title: String, content: String, youtubeId: String = "") {
+        viewModelScope.launch {
+            mantraRepository.addFavoriteMantra(com.example.data.FavoriteMantra(title = title, content = content, youtubeId = youtubeId))
+        }
+    }
+
+    fun deleteFavoriteMantra(id: Int) {
+        viewModelScope.launch {
+            mantraRepository.deleteFavoriteMantra(id)
+        }
+    }
+
+    // User Profile & Roles (linked to repository flow)
+    val userRole: StateFlow<String> = userRepository.userRoleState
+    val userName: StateFlow<String> = userRepository.userNameState
+    val userAvatar: StateFlow<Int> = userRepository.userAvatarState
+    val userProfileImageUri: StateFlow<String> = userRepository.userProfileImageUriState
+    val isPublicPostingEnabled: StateFlow<Boolean> = userRepository.isPublicPostingEnabled
+
+    val favoriteMantras: StateFlow<List<com.example.data.FavoriteMantra>> = mantraRepository.getFavoriteMantras().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val bgChantEnabled: StateFlow<Boolean> = com.example.data.AppPreferences.bgChantEnabled
+    val bgChantVolume: StateFlow<Float> = com.example.data.AppPreferences.bgChantVolume
+
+    val userEmail: StateFlow<String> = userRepository.userEmailState
+    val userMobile: StateFlow<String> = userRepository.userMobileState
+    val userCity: StateFlow<String> = userRepository.userCityState
+    val userStateProvince: StateFlow<String> = userRepository.userStateProvinceState
 
     // Panchang & Daily Thought Backing States
     private val _tithiEn = MutableStateFlow("Shukla Paksha Ekadashi")
@@ -476,25 +563,25 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
     private val _detailsEn = MutableStateFlow("This day is auspicious for devotional activities.")
     private val _detailsHi = MutableStateFlow("आज का दिन भक्तिमय गतिविधियों के लिए शुभ है।")
 
-    val currentTithi: StateFlow<String> = combine(_isEnglish, _tithiEn, _tithiHi) { eng, en, hi -> if (eng) en else hi }
+    val currentTithi: StateFlow<String> = combine(com.example.data.AppPreferences.isEnglish, _tithiEn, _tithiHi) { eng, en, hi -> if (eng) en else hi }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "Shukla Paksha Ekadashi")
     
-    val currentNakshatra: StateFlow<String> = combine(_isEnglish, _nakshatraEn, _nakshatraHi) { eng, en, hi -> if (eng) en else hi }
+    val currentNakshatra: StateFlow<String> = combine(com.example.data.AppPreferences.isEnglish, _nakshatraEn, _nakshatraHi) { eng, en, hi -> if (eng) en else hi }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "Rohini Nakshatra")
 
-    val currentYoga: StateFlow<String> = combine(_isEnglish, _yogaEn, _yogaHi) { eng, en, hi -> if (eng) en else hi }
+    val currentYoga: StateFlow<String> = combine(com.example.data.AppPreferences.isEnglish, _yogaEn, _yogaHi) { eng, en, hi -> if (eng) en else hi }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "Siddha Yoga")
 
-    val currentFestival: StateFlow<String> = combine(_isEnglish, _festivalEn, _festivalHi) { eng, en, hi -> if (eng) en else hi }
+    val currentFestival: StateFlow<String> = combine(com.example.data.AppPreferences.isEnglish, _festivalEn, _festivalHi) { eng, en, hi -> if (eng) en else hi }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "Devotional Puja Muhurat")
 
-    val currentThought: StateFlow<String> = combine(_isEnglish, _thoughtEn, _thoughtHi) { eng, en, hi -> if (eng) en else hi }
+    val currentThought: StateFlow<String> = combine(com.example.data.AppPreferences.isEnglish, _thoughtEn, _thoughtHi) { eng, en, hi -> if (eng) en else hi }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "Perform action without attachment to outcomes.")
 
-    val currentKarana: StateFlow<String> = combine(_isEnglish, _karanaEn, _karanaHi) { eng, en, hi -> if (eng) en else hi }
+    val currentKarana: StateFlow<String> = combine(com.example.data.AppPreferences.isEnglish, _karanaEn, _karanaHi) { eng, en, hi -> if (eng) en else hi }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "Bava Karana")
 
-    val currentRashi: StateFlow<String> = combine(_isEnglish, _rashiEn, _rashiHi) { eng, en, hi -> if (eng) en else hi }
+    val currentRashi: StateFlow<String> = combine(com.example.data.AppPreferences.isEnglish, _rashiEn, _rashiHi) { eng, en, hi -> if (eng) en else hi }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "Taurus (Vrishabha)")
 
     val currentSunrise: StateFlow<String> = _sunrise
@@ -502,14 +589,10 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
     val currentRahukaal: StateFlow<String> = _rahukaal
     val currentAbhijeet: StateFlow<String> = _abhijeet
 
-    val currentDetails: StateFlow<String> = combine(_isEnglish, _detailsEn, _detailsHi) { eng, en, hi -> if (eng) en else hi }
+    val currentDetails: StateFlow<String> = combine(com.example.data.AppPreferences.isEnglish, _detailsEn, _detailsHi) { eng, en, hi -> if (eng) en else hi }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "This day is auspicious for devotional activities.")
 
-    val panchangSource = MutableStateFlow("Offline") // "API", "Gemini", or "Offline"
-    val todayDetailedPanchang = MutableStateFlow<DetailedPanchang?>(null)
-    val panchangError = MutableStateFlow<String?>(null)
-    val panchangTechnicalError = MutableStateFlow<String?>(null)
-    val panchangLastUpdated = MutableStateFlow<String>("")
+    
 
     val rawTithiEn: StateFlow<String> = _tithiEn
     val rawTithiHi: StateFlow<String> = _tithiHi
@@ -523,18 +606,21 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
     val rawThoughtHi: StateFlow<String> = _thoughtHi
 
     // --- ADMINISTRATIVE & PERMISSION STATE FLOWS ---
-    val isAdmin: StateFlow<Boolean> = userEmail.map { email ->
-        email == "kunalpareekusa@gmail.com" || email == "ashishpareekbhl@gmail.com"
+    val isAdmin: StateFlow<Boolean> = combine(userEmail, userRole) { email, role ->
+        email.equals("kunalpareekusa@gmail.com", ignoreCase = true) ||
+        email.equals("ashishpareekbhl@gmail.com", ignoreCase = true) ||
+        role.equals("ADMIN", ignoreCase = true) ||
+        role.equals("SuperUser", ignoreCase = true) ||
+        role.equals("ADMINISTRATOR", ignoreCase = true)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
-    val allUsers: StateFlow<List<User>> = repository.getAllUsers()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val allUsers: StateFlow<List<User>> = userRepository.getAllUsers().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     val currentUser: StateFlow<User?> = userEmail.flatMapLatest { email ->
         if (email.isEmpty()) flowOf(null)
         else {
-            repository.getAllUsers().map { users -> users.find { it.email.equals(email, ignoreCase = true) } }
+            userRepository.getAllUsers().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList()).map { users -> users.find { it.email.equals(email, ignoreCase = true) } }
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
@@ -544,43 +630,26 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
     // --- NEW REPO EXPOSURES ---
-    val instagramPosts: StateFlow<List<InstagramPost>> = repository.getInstagramPosts()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val instagramPosts: StateFlow<List<InstagramPost>> = communityRepository.getInstagramPosts().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val thoughtQuotes: StateFlow<List<ThoughtQuote>> = repository.getThoughtQuotes()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val thoughtQuotes: StateFlow<List<ThoughtQuote>> = knowledgeRepository.getThoughtQuotes().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val announcements: StateFlow<List<Announcement>> = repository.getAnnouncements()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val announcements: StateFlow<List<Announcement>> = knowledgeRepository.getAnnouncements().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // --- NOTIFICATION BELL FLOW ---
-    private val _hasNewNotifications = MutableStateFlow(false)
-    val hasNewNotifications: StateFlow<Boolean> = _hasNewNotifications
-
-    private val _isSyncingVideos = MutableStateFlow(false)
-    val isSyncingVideos: StateFlow<Boolean> = _isSyncingVideos
 
     private val _notifications = MutableStateFlow<List<com.example.data.AppNotification>>(emptyList())
     val notifications: StateFlow<List<com.example.data.AppNotification>> = _notifications
 
-    private val _bgChantEnabled = MutableStateFlow(false)
-    val bgChantEnabled: StateFlow<Boolean> = _bgChantEnabled
-
-    private val _bgChantVolume = MutableStateFlow(0.5f)
-    val bgChantVolume: StateFlow<Float> = _bgChantVolume
+    private val _hasNewNotifications = MutableStateFlow(false)
+    val hasNewNotifications: StateFlow<Boolean> = _hasNewNotifications
 
     fun toggleBgChant() {
-        _bgChantEnabled.value = !_bgChantEnabled.value
-        val context = getApplication<android.app.Application>()
-        val prefs = context.getSharedPreferences("panchang_prefs", android.content.Context.MODE_PRIVATE)
-        prefs.edit().putBoolean("bg_chant", _bgChantEnabled.value).apply()
+        com.example.data.AppPreferences.toggleBgChant()
     }
 
     fun setBgChantVolume(vol: Float) {
-        _bgChantVolume.value = vol
-        val context = getApplication<android.app.Application>()
-        val prefs = context.getSharedPreferences("panchang_prefs", android.content.Context.MODE_PRIVATE)
-        prefs.edit().putFloat("bg_chant_vol", vol).apply()
+        com.example.data.AppPreferences.setBgChantVolume(vol)
     }
 
     private val _aartiSessionLogs = MutableStateFlow<List<String>>(emptyList())
@@ -602,20 +671,14 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     init {
-        // load initial fake notifications
-        _notifications.value = listOf(
-            com.example.data.AppNotification(title = "New Video Added", message = "A new Darshan video is available.", type = "video"),
-            com.example.data.AppNotification(title = "Spiritual Article", message = "Read the latest article on Bhagavad Gita.", type = "article")
-        )
+        _notifications.value = listOf()
 
-        loadDailyPanchangAndThought()
+        
         
         // Read initial notification flag from SharedPreferences
         val context = getApplication<android.app.Application>()
         val prefs = context.getSharedPreferences("panchang_prefs", android.content.Context.MODE_PRIVATE)
         _hasNewNotifications.value = prefs.getBoolean("has_new_notifications", false)
-        _bgChantEnabled.value = prefs.getBoolean("bg_chant", false)
-        _bgChantVolume.value = prefs.getFloat("bg_chant_vol", 0.5f)
         
         _reminderEnabled.value = prefs.getBoolean("reminder_enabled", false)
         _reminderHour.value = prefs.getInt("reminder_hour", 8)
@@ -624,22 +687,28 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
         
         // Auto-login
         viewModelScope.launch {
-            val rememberedUserEmail = repository.getRememberedUserEmail()
+            val rememberedUserEmail = userRepository.getRememberedUserEmail()
             if (!rememberedUserEmail.isNullOrEmpty()) {
-                val user = repository.authenticateUserByEmailOnly(rememberedUserEmail)
+                val user = userRepository.authenticateUserByEmailOnly(rememberedUserEmail)
                 if (user != null) {
                     val isSuper = user.email.lowercase().trim() == "kunalpareekusa@gmail.com" || user.email.lowercase().trim() == "ashishpareekbhl@gmail.com"
                     val finalUser = user.copy(
                         role = if (isSuper) "SuperUser" else "Regular",
                         avatar = if (isSuper) 4 else user.avatar
                     )
-                    repository.loginAsUser(finalUser)
+                    userRepository.loginAsUser(finalUser)
                 }
             }
         }
         
         // Auto-run YouTube sync once per day on open
-        autoSyncYoutubeVideosIfNeeded()
+        
+
+        viewModelScope.launch {
+            com.example.ui.audio.SadhakAudioManager.progress.collect { p ->
+                _globalAudioProgress.value = p
+            }
+        }
     }
 
     fun markNotificationAsRead(id: String) {
@@ -663,93 +732,23 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
         prefs.edit().putBoolean("has_new_notifications", value).apply()
     }
 
-    fun autoSyncYoutubeVideosIfNeeded() {
-        viewModelScope.launch {
-            try {
-                val context = getApplication<android.app.Application>()
-                val prefs = context.getSharedPreferences("panchang_prefs", android.content.Context.MODE_PRIVATE)
-                val lastSync = prefs.getLong("last_youtube_sync_timestamp", 0L)
-                val now = System.currentTimeMillis()
-                
-                val sdf = java.text.SimpleDateFormat("yyyyMMdd", java.util.Locale.getDefault())
-                val lastSyncDate = if (lastSync == 0L) "" else sdf.format(java.util.Date(lastSync))
-                val todayDate = sdf.format(java.util.Date(now))
-                
-                if (lastSync == 0L || lastSyncDate != todayDate) {
-                    val apiKey = com.example.BuildConfig.YOUTUBE_API_KEY
-                    val fetched = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        YoutubeFetcher.fetchVideosFromChannel(apiKey)
-                    }
-                    if (fetched.isNotEmpty()) {
-                        val currentVideos = repository.getVideos().first()
-                        val existingIds = currentVideos.map { it.videoId }.toSet()
-                        val newVideos = fetched.filter { it.videoId !in existingIds }
-                        if (newVideos.isNotEmpty()) {
-                            newVideos.forEach { video ->
-                                repository.addVideo(video)
-                            }
-                            setHasNewNotifications(true)
-                        }
-                    }
-                    prefs.edit().putLong("last_youtube_sync_timestamp", now).apply()
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-
-    fun syncYoutubeVideos(onComplete: (Int) -> Unit = {}) {
-        viewModelScope.launch {
-            _isSyncingVideos.value = true
-            var addedCount = 0
-            try {
-                val apiKey = com.example.BuildConfig.YOUTUBE_API_KEY
-                val fetched = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                    YoutubeFetcher.fetchVideosFromChannel(apiKey)
-                }
-                if (fetched.isNotEmpty()) {
-                    val currentVideos = repository.getVideos().first()
-                    val existingIds = currentVideos.map { it.videoId }.toSet()
-                    val newVideos = fetched.filter { it.videoId !in existingIds }
-                    if (newVideos.isNotEmpty()) {
-                        newVideos.forEach { video ->
-                            repository.addVideo(video)
-                        }
-                        addedCount = newVideos.size
-                        setHasNewNotifications(true)
-                    }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            } finally {
-                _isSyncingVideos.value = false
-                onComplete(addedCount)
-            }
-        }
-    }
-
-    val favoriteMantras: StateFlow<List<com.example.data.FavoriteMantra>> = repository.getFavoriteMantras()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    // --- INSTAGRAM CRUD ---
     fun publishInstagramPost(url: String, caption: String) {
         viewModelScope.launch {
             val post = InstagramPost(url = url, caption = caption)
-            repository.addInstagramPost(post)
+            communityRepository.addInstagramPost(post)
             setHasNewNotifications(true)
         }
     }
 
     fun updateInstagramPost(post: InstagramPost) {
         viewModelScope.launch {
-            repository.updateInstagramPost(post)
+            communityRepository.updateInstagramPost(post)
         }
     }
 
     fun deleteInstagramPost(id: Int) {
         viewModelScope.launch {
-            repository.deleteInstagramPostById(id)
+            communityRepository.deleteInstagramPostById(id)
         }
     }
 
@@ -757,19 +756,19 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
     fun addThoughtQuote(textEn: String, textHi: String) {
         viewModelScope.launch {
             val quote = ThoughtQuote(textEn = textEn, textHi = textHi)
-            repository.addThoughtQuote(quote)
+            knowledgeRepository.addThoughtQuote(quote)
         }
     }
 
     fun updateThoughtQuote(quote: ThoughtQuote) {
         viewModelScope.launch {
-            repository.updateThoughtQuote(quote)
+            knowledgeRepository.updateThoughtQuote(quote)
         }
     }
 
     fun deleteThoughtQuote(id: Int) {
         viewModelScope.launch {
-            repository.deleteThoughtQuoteById(id)
+            knowledgeRepository.deleteThoughtQuoteById(id)
         }
     }
 
@@ -777,79 +776,66 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
     fun addAnnouncement(textEn: String, textHi: String, isVisible: Boolean = true) {
         viewModelScope.launch {
             val ann = Announcement(textEn = textEn, textHi = textHi, isVisible = isVisible)
-            repository.addAnnouncement(ann)
+            knowledgeRepository.addAnnouncement(ann)
         }
     }
 
     fun updateAnnouncement(announcement: Announcement) {
         viewModelScope.launch {
-            repository.updateAnnouncement(announcement)
+            knowledgeRepository.updateAnnouncement(announcement)
         }
     }
 
     fun deleteAnnouncement(id: Int) {
         viewModelScope.launch {
-            repository.deleteAnnouncementById(id)
+            knowledgeRepository.deleteAnnouncementById(id)
         }
     }
 
     // --- ARTICLE CRUD EXTRA ---
     fun updateKnowledgeArticle(article: KnowledgeArticle) {
         viewModelScope.launch {
-            repository.updateArticle(article)
+            knowledgeRepository.updateArticle(article)
         }
     }
 
     fun deleteKnowledgeArticle(id: Int) {
         viewModelScope.launch {
-            repository.deleteArticle(id)
+            knowledgeRepository.deleteArticle(id)
         }
     }
 
     // --- VIDEO CRUD EXTRA ---
-    fun updateBhaktiVideo(video: BhaktiVideo) {
-        viewModelScope.launch {
-            repository.updateVideo(video)
-        }
-    }
-
-    fun deleteBhaktiVideo(id: Int) {
-        viewModelScope.launch {
-            repository.deleteVideo(id)
-        }
-    }
-
-    // --- INSTAGRAM CRUD ---
     fun addInstagramPost(url: String, caption: String, category: String) {
         viewModelScope.launch {
-            repository.addInstagramPost(InstagramPost(url = url, caption = caption, category = category))
+            communityRepository.addInstagramPost(InstagramPost(url = url, caption = caption, category = category))
         }
     }
 
     // --- USER MANAGEMENT PERMISSIONS ---
     fun updateUserCanPost(email: String, canPost: Boolean) {
         viewModelScope.launch {
-            repository.updateUserCanPost(email, canPost)
+            userRepository.updateUserCanPost(email, canPost)
         }
     }
 
     fun updateUserRole(email: String, role: String) {
         viewModelScope.launch {
-            repository.updateUserRole(email, role)
+            userRepository.updateUserRole(email, role)
         }
     }
 
     // --- COMMENT DELETION EXTRA ---
     fun deletePost(id: Int) {
         viewModelScope.launch {
-            repository.deletePost(id)
+            communityRepository.deletePost(id)
         }
     }
 
 
     fun deletePostComment(id: Int) {
         viewModelScope.launch {
-            repository.deleteComment(id)
+            communityRepository.deleteComment(id)
         }
     }
 
@@ -892,7 +878,7 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
 
     // 1. Articles (Reactively updates when language, category, sort, search, format, or difficulty changes)
     val articles: StateFlow<List<KnowledgeArticle>> = combine(
-        _isEnglish as Flow<Any>,
+        com.example.data.AppPreferences.isEnglish as Flow<Any>,
         _selectedKnowledgeCategory as Flow<Any>,
         _knowledgeSortBy as Flow<Any>,
         _searchQuery as Flow<Any>,
@@ -909,7 +895,7 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
         )
     }.flatMapLatest { params ->
         val lang = if (params.eng) "en" else "hi"
-        repository.getArticles(lang).map { list ->
+        knowledgeRepository.getArticles(lang).map { list ->
             list.filter { article ->
                 (params.cat == "All" || article.category == params.cat) &&
                 (params.format == "All" || article.format == params.format) &&
@@ -924,95 +910,11 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
                 }
             )
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    // 2. Videos (Reactively updates when video category changes)
-    val videos: StateFlow<List<BhaktiVideo>> = repository.getVideos()
-        .combine(_selectedVideoCategory) { list, cat ->
-            if (cat == "All") list else list.filter { it.category.equals(cat, ignoreCase = true) }
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    // Curated dynamic playlist based on current day of the week or active festival
-    val curatedPlaylistVideos: StateFlow<List<BhaktiVideo>> = combine(
-        repository.getVideos(),
-        currentFestival
-    ) { allVideos, festival ->
-        val cal = java.util.Calendar.getInstance()
-        val dow = cal.get(java.util.Calendar.DAY_OF_WEEK) // 1=Sunday, 2=Monday, ..., 7=Saturday
-        
-        // Day of Week Keywords
-        val dayKeywords = when (dow) {
-            1 -> listOf("surya", "ram", "rama", "sun", "aarati", "aarti", "रविवार", "राम", "सूर्य")
-            2 -> listOf("shiva", "shiv", "mahadev", "bholenath", "somwar", "somvar", "shankar", "सोमवार", "शिव", "महादेव", "भोलेनाथ")
-            3 -> listOf("hanuman", "ganesh", "ganpati", "mangal", "mangalwar", "mangalvar", "हनुमान", "गणेश", "गणपति", "मंगलवार")
-            4 -> listOf("krishna", "ganesh", "ganpati", "budh", "budhwar", "budhvar", "बुधवार", "कृष्ण", "गणेश", "गणपति")
-            5 -> listOf("vishnu", "guru", "hari", "guruwar", "guruvar", "narayan", "विष्णु", "गुरु", "गुरुवार", "नारायण")
-            6 -> listOf("devi", "durga", "lakshmi", "laxmi", "shukra", "shukrawar", "shukravar", "शुक्रवार", "दुर्गा", "लक्ष्मी", "देवी")
-            7 -> listOf("hanuman", "shani", "shaniwar", "shanivar", "हनुमान", "शनि")
-            else -> emptyList()
-        }
-
-        // Active festival keywords
-        val festKeywords = if (festival.isNotEmpty()) {
-            festival.lowercase().split(" ", "-", "_")
-        } else {
-            emptyList()
-        }
-
-        // Filter and Score videos
-        val scoredVideos = allVideos.map { video ->
-            val titleLower = video.title.lowercase()
-            val descLower = video.description.lowercase()
-            var score = 0
-            
-            // Score for day of the week keywords
-            dayKeywords.forEach { kw ->
-                if (titleLower.contains(kw)) score += 5
-                if (descLower.contains(kw)) score += 2
-            }
-            
-            // Score for festival keywords (high priority)
-            festKeywords.forEach { kw ->
-                if (kw.length > 2) {
-                    if (titleLower.contains(kw)) score += 15
-                    if (descLower.contains(kw)) score += 5
-                }
-            }
-            
-            Pair(video, score)
-        }
-
-        // Return matched videos sorted by relevance, or fallback to first 6 videos
-        val matched = scoredVideos.filter { it.second > 0 }.sortedByDescending { it.second }.map { it.first }
-        if (matched.isNotEmpty()) {
-            matched
-        } else {
-            allVideos.take(6)
-        }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-    fun getCuratedPlaylistTitle(isEng: Boolean): String {
-        val cal = java.util.Calendar.getInstance()
-        val dow = cal.get(java.util.Calendar.DAY_OF_WEEK)
-        val festival = currentFestival.value
-        if (festival.isNotEmpty()) {
-            return if (isEng) "Festival Special: $festival Devotion" else "उत्सव विशेष: $festival आराधना"
-        }
-        return when (dow) {
-            1 -> if (isEng) "Sunday Special: Surya Dev & Lord Rama" else "रविवार विशेष: सूर्य देव व श्री राम आराधना"
-            2 -> if (isEng) "Monday Special: Lord Shiva Bhakti" else "सोमवार विशेष: शिव भक्ति व आराधना"
-            3 -> if (isEng) "Tuesday Special: Lord Hanuman & Ganesha" else "मंगलवार विशेष: हनुमान जी व श्री गणेश वंदना"
-            4 -> if (isEng) "Wednesday Special: Lord Ganesha & Krishna" else "बुधवार विशेष: श्री गणेश व कृष्ण आराधना"
-            5 -> if (isEng) "Thursday Special: Lord Vishnu & Guru Dev" else "गुरुवार विशेष: श्री हरि विष्णु व गुरु आराधना"
-            6 -> if (isEng) "Friday Special: Goddess Durga & Lakshmi" else "शुक्रवार विशेष: माँ दुर्गा व महालक्ष्मी उपासना"
-            7 -> if (isEng) "Saturday Special: Lord Shani Dev & Hanuman" else "शनिवार विशेष: शनि देव व संकटमोचन हनुमान"
-            else -> if (isEng) "Daily Devotional Curated" else "दैनिक भक्ति आराधना"
-        }
-    }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList<KnowledgeArticle>())
 
     // Knowledge Hub Search
     private val _recentSearches = MutableStateFlow<List<String>>(emptyList())
-    val recentSearches: StateFlow<List<String>> = _recentSearches.asStateFlow()
+    val recentSearches: StateFlow<List<String>> = _recentSearches
 
     fun addRecentSearch(query: String) {
         if (query.isBlank()) return
@@ -1024,7 +926,7 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
     }
 
     // 3. Posts (Reactively updates when sorting changes)
-    val posts: StateFlow<List<CommunityPost>> = repository.getPosts()
+    val posts: StateFlow<List<CommunityPost>> = communityRepository.getPosts()
         .combine(_communitySortBy) { list, sort ->
             val sortedList = when (sort) {
                 "Top" -> list.sortedByDescending { it.upvotes - it.downvotes }
@@ -1034,29 +936,25 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
             sortedList.sortedWith(compareByDescending { it.isPinned })
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val allComments: StateFlow<List<PostComment>> = repository.getAllComments()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val allComments: StateFlow<List<PostComment>> = communityRepository.getAllComments().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // 4. Comments for active post
     val activeComments: StateFlow<List<PostComment>> = _selectedPostId.flatMapLatest { id ->
-        repository.getComments(id ?: -1)
+        communityRepository.getComments(id ?: -1)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     // 5. Karma logs
-    val karmaLogs: StateFlow<List<KarmaLog>> = repository.getKarmaLogs()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val karmaLogs: StateFlow<List<KarmaLog>> = profileRepository.getKarmaLogs().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-    val sankalpaLogs: StateFlow<List<com.example.data.SankalpaLog>> = repository.getSankalpaLogs()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val sankalpaLogs: StateFlow<List<com.example.data.SankalpaLog>> = meditationRepository.getSankalpaLogs().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         
     fun addSankalpaLog(intention: String, progressNote: String, progressValue: Int, date: String) {
         viewModelScope.launch {
-            repository.addSankalpaLog(com.example.data.SankalpaLog(intention = intention, progressNote = progressNote, progressValue = progressValue, date = date))
+            meditationRepository.addSankalpaLog(com.example.data.SankalpaLog(intention = intention, progressNote = progressNote, progressValue = progressValue, date = date))
         }
     }
 
-    val gratitudeLogs: StateFlow<List<GratitudeLog>> = repository.getGratitudeLogs()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    val gratitudeLogs: StateFlow<List<GratitudeLog>> = profileRepository.getGratitudeLogs().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     val karmaPoints: StateFlow<Int> = combine(karmaLogs, gratitudeLogs) { k, g ->
         (k.size * 10) + (g.size * 5)
@@ -1064,27 +962,22 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
 
     val dailyStreak: StateFlow<Int> = karmaLogs.map { if (it.isNotEmpty()) it.first().streak else 0 }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0)
 
-    // 6. Gratitude logs
-
-    // 7. Chatbot messages
-    val chatMessages: StateFlow<List<ChatMessage>> = repository.getChatMessages()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     
     private val _guestQuestionCount = MutableStateFlow(0)
-    val guestQuestionCount: StateFlow<Int> = _guestQuestionCount.asStateFlow()
+    val guestQuestionCount: StateFlow<Int> = _guestQuestionCount
 
     // 8. Favorite Mantras
     // 9. Designated Super User
-    val designatedSuperUser: StateFlow<String> = repository.designatedSuperUser
+    val designatedSuperUser: StateFlow<String> = userRepository.designatedSuperUser
 
     private val _guestActionCount = MutableStateFlow(0)
-    val guestActionCount = _guestActionCount.asStateFlow()
+    val guestActionCount = _guestActionCount
 
     private val _showLoginWall = MutableStateFlow(false)
-    val showLoginWall = _showLoginWall.asStateFlow()
+    val showLoginWall = _showLoginWall
 
     private val _bhaktiTab = MutableStateFlow("Mantras")
-    val bhaktiTab = _bhaktiTab.asStateFlow()
+    val bhaktiTab = _bhaktiTab
 
     // --- INTERACTIVE ACTIONS ---
 
@@ -1111,18 +1004,54 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
         _showLoginWall.value = false
     }
 
+    private val _navigationHistory = MutableStateFlow<List<String>>(listOf("Home"))
+    val navigationHistory: StateFlow<List<String>> = _navigationHistory
+
     fun setScreen(screen: String) {
-        if (screen == "Bhakti") {
+        com.example.ui.audio.SadhakAudioManager.stop()
+        if (screen == "Bhakti" && _bhaktiTab.value !in listOf("Mantras", "Timer", "My Mantras")) {
             _bhaktiTab.value = "Mantras"
-        } else if (screen == "BhaktiTools") {
+        } else if (screen == "BhaktiTools" && _bhaktiTab.value !in listOf("Bell", "Counter", "KarmaLog", "Gratitude", "TempleFinder")) {
             _bhaktiTab.value = "Counter"
         }
+
+        // Manage navigation backstack cleanly
+        val currentHistory = _navigationHistory.value.toMutableList()
+        if (screen == "Home") {
+            _navigationHistory.value = listOf("Home")
+        } else {
+            if (currentHistory.isEmpty() || currentHistory.last() != screen) {
+                currentHistory.add(screen)
+                _navigationHistory.value = currentHistory
+            }
+        }
+
         _currentScreen.value = screen
     }
 
+    fun navigateBack(): Boolean {
+        val currentHistory = _navigationHistory.value.toMutableList()
+        if (currentHistory.size > 1) {
+            currentHistory.removeAt(currentHistory.size - 1)
+            _navigationHistory.value = currentHistory
+            
+            val prevScreen = currentHistory.last()
+            com.example.ui.audio.SadhakAudioManager.stop()
+            if (prevScreen == "Bhakti" && _bhaktiTab.value !in listOf("Mantras", "Timer", "My Mantras")) {
+                _bhaktiTab.value = "Mantras"
+            } else if (prevScreen == "BhaktiTools" && _bhaktiTab.value !in listOf("Bell", "Counter", "KarmaLog", "Gratitude", "TempleFinder")) {
+                _bhaktiTab.value = "Counter"
+            }
+            _currentScreen.value = prevScreen
+            return true
+        }
+        return false
+    }
+
     fun navigateToBhakti(tab: String) {
+        com.example.ui.audio.SadhakAudioManager.stop()
         _bhaktiTab.value = tab
-        if (tab == "Mantras" || tab == "My Mantras" || tab == "Timer") {
+        if (tab == "Mantras" || tab == "Timer" || tab == "My Mantras") {
             _currentScreen.value = "Bhakti"
         } else {
             _currentScreen.value = "BhaktiTools"
@@ -1131,11 +1060,11 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
 
 
     fun toggleLanguage() {
-        _isEnglish.value = !_isEnglish.value
+        com.example.data.AppPreferences.toggleLanguage()
     }
 
     fun setThemePreference(pref: Int) {
-        _themePreference.value = pref
+        com.example.data.AppPreferences.setThemePreference(pref)
     }
 
 
@@ -1167,7 +1096,7 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
                 content = content,
                 createdAt = System.currentTimeMillis()
             )
-            repository.addPost(newPost)
+            communityRepository.addPost(newPost)
             statsPostsCount.value += 1
         }
     }
@@ -1181,29 +1110,14 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
                 content = content,
                 createdAt = System.currentTimeMillis()
             )
-            repository.addComment(newComment)
+            communityRepository.addComment(newComment)
             
-            // Increment local comment count inside the post
-            // We can fetch and update the post locally
             val currentPosts = posts.value
             val targetPost = currentPosts.find { it.id == postId }
             if (targetPost != null) {
-                repository.updatePost(targetPost.copy(commentsCount = targetPost.commentsCount + 1))
+                communityRepository.updatePost(targetPost.copy(commentsCount = targetPost.commentsCount + 1))
             }
             statsCommentsCount.value += 1
-        }
-    }
-
-    fun addBhaktiVideo(title: String, description: String, category: String, videoId: String) {
-        viewModelScope.launch {
-            val newVideo = BhaktiVideo(
-                title = title,
-                description = description,
-                category = category,
-                videoId = videoId,
-                isCustom = true
-            )
-            repository.addVideo(newVideo)
         }
     }
 
@@ -1217,18 +1131,13 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
                 relatedVideos = "zHzPEdLJEvT",
                 language = lang
             )
-            repository.addArticle(newArticle)
+            knowledgeRepository.addArticle(newArticle)
         }
     }
 
-
-
-
-
-
     fun setPublicPosting(enabled: Boolean) {
         viewModelScope.launch {
-            repository.setPublicPostingEnabled(enabled)
+            userRepository.setPublicPostingEnabled(enabled)
         }
     }
 
@@ -1266,7 +1175,7 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
                 deed = deed,
                 streak = newStreak
             )
-            repository.addKarmaLog(log)
+            profileRepository.addKarmaLog(log)
         }
     }
 
@@ -1276,333 +1185,13 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
                 date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date()),
                 content = content
             )
-            repository.addGratitudeLog(log)
+            profileRepository.addGratitudeLog(log)
         }
     }
-
-    // --- GEMINI CHAT ACTION ---
-
-    fun sendChatPrompt(prompt: String) {
-        if (prompt.isBlank()) return
-        if (!registerGuestAction()) return
-        viewModelScope.launch {
-            // 1. Add user message
-            val userMsg = ChatMessage(sender = "user", content = prompt)
-            repository.addChatMessage(userMsg)
-            _isChatLoading.value = true
-
-            // 2. Get history to pass to Gemini
-            val currentHistory = chatMessages.value
-
-            // 3. Request Gemini response
-            val reply = GeminiService.generateResponse(currentHistory, prompt)
-
-            // 4. Add model reply
-            val modelMsg = ChatMessage(sender = "gemini", content = reply)
-            repository.addChatMessage(modelMsg)
-            _isChatLoading.value = false
-        }
-    }
-
-    fun resetChat() {
-        viewModelScope.launch {
-            repository.clearChat()
-        }
-    }
-
-    // --- PANCHANG & DAILY THOUGHT ACTIONS ---
-
-    private var lastPanchangFetchDate = ""
-
-
-
-    fun loadDailyPanchangAndThought() {
-        viewModelScope.launch {
-            val sdf = java.text.SimpleDateFormat("dd/MM/yyyy", java.util.Locale.getDefault())
-            val dateStr = sdf.format(java.util.Date())
-            
-            val prefs = getApplication<android.app.Application>()
-                .getSharedPreferences("panchang_prefs", android.content.Context.MODE_PRIVATE)
-
-            val customThoughtEn = prefs.getString("custom_thought_en", "") ?: ""
-            val customThoughtHi = prefs.getString("custom_thought_hi", "") ?: ""
-
-            if (customThoughtEn.isNotEmpty() && customThoughtHi.isNotEmpty()) {
-                _thoughtEn.value = customThoughtEn
-                _thoughtHi.value = customThoughtHi
-            } else {
-                val dailyShloka = com.example.data.GeminiService.fetchDailyShloka()
-                if (dailyShloka != null) {
-                    _thoughtEn.value = dailyShloka
-                    _thoughtHi.value = dailyShloka
-                } else {
-                    val dayIndex = (System.currentTimeMillis() / (1000 * 60 * 60 * 24)).toInt()
-                    val thoughtsEnList = listOf(
-                        "Perform action without attachment to outcomes.",
-                        "You have the right to work, but never to the fruit of work.",
-                        "When meditation is mastered, the mind is unwavering like the flame of a lamp in a windless place.",
-                        "There is nothing lost or wasted in this life.",
-                        "A person is shaped by their belief. As they believe, so they become."
-                    )
-                    val thoughtsHiList = listOf(
-                        "कर्मण्येवाधिकारस्ते मा फलेषु कदाचन। (परिणामों की आसक्ति के बिना कर्म करो।)",
-                        "तुम्हारा अधिकार कर्म पर है, उसके फलों पर नहीं।",
-                        "जिस प्रकार वायु रहित स्थान में दीपक की लौ नहीं हिलती, उसी प्रकार ध्यान में योगी का चित्त स्थिर रहता है।",
-                        "इस जीवन में कुछ भी खोता या व्यर्थ नहीं होता।",
-                        "मनुष्य अपने विश्वास से निर्मित होता है। जैसा वह विश्वास करता है, वैसा ही वह बन जाता है।"
-                    )
-                    _thoughtEn.value = thoughtsEnList[dayIndex % thoughtsEnList.size]
-                    _thoughtHi.value = thoughtsHiList[dayIndex % thoughtsHiList.size]
-                }
-            }
-
-            // Fetch Real Panchang from Free Astrology API
-            panchangError.value = null
-            
-            val cal = java.util.Calendar.getInstance()
-            val d = cal.get(java.util.Calendar.DAY_OF_MONTH)
-            val m = cal.get(java.util.Calendar.MONTH) // 0-Indexed
-            val y = cal.get(java.util.Calendar.YEAR)
-            val hh = cal.get(java.util.Calendar.HOUR_OF_DAY)
-            val mm = cal.get(java.util.Calendar.MINUTE)
-            val ss = cal.get(java.util.Calendar.SECOND)
-
-            try {
-                val dateStr = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
-                val realPanchang = com.example.data.AstrologyService.fetchRealPanchang(d, m + 1, y, hh, mm, ss)
-                if (realPanchang.data != null) {
-                    todayDetailedPanchang.value = realPanchang.data
-                    // Save to cache/repository as a history log, but never use it to skip API calls
-                    repository.savePanchang(com.example.data.PanchangEntity(
-                        date = dateStr,
-                        tithi = realPanchang.data.tithi,
-                        paksha = realPanchang.data.paksha,
-                        nakshatra = realPanchang.data.nakshatra,
-                        yoga = realPanchang.data.yoga,
-                        karana = realPanchang.data.karana,
-                        sunrise = realPanchang.data.sunrise,
-                        sunset = realPanchang.data.sunset,
-                        rahuKaal = realPanchang.data.rahukaal,
-                        abhijeet = realPanchang.data.abhijeet,
-                        festival = realPanchang.data.festival,
-                        details = realPanchang.data.details
-                    ))
-                    updatePanchangWithEntity(com.example.data.PanchangEntity(
-                        date = dateStr,
-                        tithi = realPanchang.data.tithi,
-                        paksha = realPanchang.data.paksha,
-                        nakshatra = realPanchang.data.nakshatra,
-                        yoga = realPanchang.data.yoga,
-                        karana = realPanchang.data.karana,
-                        sunrise = realPanchang.data.sunrise,
-                        sunset = realPanchang.data.sunset,
-                        rahuKaal = realPanchang.data.rahukaal,
-                        abhijeet = realPanchang.data.abhijeet,
-                        festival = realPanchang.data.festival,
-                        details = realPanchang.data.details
-                    ))
-                    panchangSource.value = "API"
-                    panchangLastUpdated.value = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault()).format(java.util.Date())
-                } else {
-                    panchangError.value = "Unable to load today's Panchang. Please check your connection or try again shortly."
-                    panchangTechnicalError.value = "Error: ${realPanchang.error}\nURL: ${realPanchang.url}\nStatus Code: ${realPanchang.statusCode}\nRequest Body: ${realPanchang.requestBody}\nRaw Response: ${realPanchang.rawResponseBody}\nToday: ${java.util.Date().toString()}"
-                }
-            } catch (e: Exception) {
-                panchangError.value = "Unable to load today's Panchang. Please check your connection or try again shortly."
-                panchangTechnicalError.value = "Exception: ${e.message}\nToday: ${java.util.Date().toString()}"
-            }
-        }
-    }
-
-    val todayDetailedPanchangForDetail = MutableStateFlow<DetailedPanchang?>(null)
-
-    fun loadDetailPanchang() {
-        viewModelScope.launch {
-            val cal = java.util.Calendar.getInstance()
-            val d = cal.get(java.util.Calendar.DAY_OF_MONTH)
-            val m = cal.get(java.util.Calendar.MONTH) // 0-Indexed
-            val y = cal.get(java.util.Calendar.YEAR)
-            val hh = cal.get(java.util.Calendar.HOUR_OF_DAY)
-            val mm = cal.get(java.util.Calendar.MINUTE)
-            val ss = cal.get(java.util.Calendar.SECOND)
-            try {
-                val realPanchang = com.example.data.AstrologyService.fetchRealPanchang(d, m + 1, y, hh, mm, ss)
-                if (realPanchang.data != null) {
-                    todayDetailedPanchangForDetail.value = realPanchang.data
-                }
-            } catch (e: Exception) {
-                android.util.Log.e("Panchang", "Failed to fetch fresh detail modal panchang", e)
-            }
-        }
-    }
-
-    fun getDetailedPanchangForDate(day: Int, month: Int, year: Int, isEng: Boolean, callback: (DetailedPanchang?) -> Unit) {
-        viewModelScope.launch {
-            // Build fresh POST body with year/month/date and hours=6, minutes=0, seconds=0
-            val realPanchang = com.example.data.AstrologyService.fetchRealPanchang(day, month + 1, year, 6, 0, 0)
-            callback(realPanchang.data)
-        }
-    }
-
-    fun updateCustomThought(en: String, hi: String) {
-        val prefs = getApplication<android.app.Application>()
-            .getSharedPreferences("panchang_prefs", android.content.Context.MODE_PRIVATE)
-        prefs.edit()
-            .putString("custom_thought_en", en)
-            .putString("custom_thought_hi", hi)
-            .apply()
-        if (en.isNotEmpty()) _thoughtEn.value = en
-        if (hi.isNotEmpty()) _thoughtHi.value = hi
-        if (en.isEmpty() && hi.isEmpty()) {
-            loadDailyPanchangAndThought()
-        }
-    }
-
-    fun updateCustomPanchang(tEn: String, tHi: String, nEn: String, nHi: String, yEn: String, yHi: String, fEn: String, fHi: String) {
-        val prefs = getApplication<Application>()
-            .getSharedPreferences("panchang_prefs", android.content.Context.MODE_PRIVATE)
-        prefs.edit()
-            .putString("tithi_en", tEn)
-            .putString("tithi_hi", tHi)
-            .putString("nakshatra_en", nEn)
-            .putString("nakshatra_hi", nHi)
-            .putString("yoga_en", yEn)
-            .putString("yoga_hi", yHi)
-            .putString("festival_en", fEn)
-            .putString("festival_hi", fHi)
-            .apply()
-
-        _tithiEn.value = tEn
-        _tithiHi.value = tHi
-        _nakshatraEn.value = nEn
-        _nakshatraHi.value = nHi
-        _yogaEn.value = yEn
-        _yogaHi.value = yHi
-        _festivalEn.value = fEn
-        _festivalHi.value = fHi
-    }
-
-    // --- AUTH ACTIONS ---
-
-    fun signupAndLogin(user: User, onResult: (Boolean, String) -> Unit) {
-        viewModelScope.launch {
-            val emailClean = user.email.lowercase().trim()
-            val isSuper = emailClean == "kunalpareekusa@gmail.com" || emailClean == "ashishpareekbhl@gmail.com"
-            val finalUser = user.copy(
-                email = emailClean,
-                role = if (isSuper) "SuperUser" else "Regular",
-                avatar = if (isSuper) 4 else 1
-            )
-            val success = repository.registerUser(finalUser)
-            if (success) {
-                repository.loginAsUser(finalUser)
-                _showLanguagePrefDialog.value = true
-                onResult(true, "Successfully Registered and Logged In!")
-            } else {
-                onResult(false, "Sadhak Email is already registered.")
-            }
-        }
-    }
-
-    fun loginCredentialBased(emailStr: String, passwordStr: String, onResult: (Boolean, String) -> Unit) {
-        viewModelScope.launch {
-            val emailClean = emailStr.lowercase().trim()
-            
-            // Check for direct SuperUser default credential creation if they register or login
-            val user = repository.authenticateUser(emailClean, passwordStr)
-            if (user != null) {
-                repository.loginAsUser(user)
-                _showLanguagePrefDialog.value = true
-                onResult(true, "Pranam! Logged in successfully.")
-            } else {
-                // If it's kunalpareekusa@gmail.com or ashishpareekbhl@gmail.com, and doesn't exist yet, we can create them dynamically to allow seamless login!
-                val isSuper = emailClean == "kunalpareekusa@gmail.com" || emailClean == "ashishpareekbhl@gmail.com"
-                if (isSuper) {
-                    val defaultSuper = User(
-                        email = emailClean,
-                        fullName = if (emailClean.contains("kunal")) "Kunal Pareek" else "Ashish Pareek",
-                        mobileNumber = "9999999999",
-                        city = "Ajmer",
-                        state = "Rajasthan",
-                        password = passwordStr, // automatically create on first login attempt to make experience seamless
-                        avatar = 4,
-                        role = "SuperUser"
-                    )
-                    repository.registerUser(defaultSuper)
-                    repository.loginAsUser(defaultSuper)
-                    _showLanguagePrefDialog.value = true
-                    onResult(true, "Pranam! Super User Account Initialized and Logged In.")
-                } else {
-                    onResult(false, "Incorrect Sadhak Email or Password.")
-                }
-            }
-        }
-    }
-
-    fun updateUserProfileDetails(fullName: String, mobileNumber: String, city: String, state: String, avatar: Int, imageUri: String, onResult: (Boolean) -> Unit) {
-        viewModelScope.launch {
-            val email = userEmail.value
-            if (email.isNotEmpty()) {
-                repository.updateUserProfile(email, fullName, mobileNumber, city, state, avatar, imageUri)
-                onResult(true)
-            } else {
-                onResult(false)
-            }
-        }
-    }
-
-    fun dismissLanguagePrefDialog() {
-        _showLanguagePrefDialog.value = false
-    }
-
-    fun triggerGuestPromo() {
-        _showGuestPromoDialog.value = true
-    }
-
-    fun dismissGuestPromo() {
-        _showGuestPromoDialog.value = false
-    }
-
-    fun logoutUser() {
-        repository.logout()
-    }
-
-    fun setDesignatedSuperUser(email: String) {
-        viewModelScope.launch {
-            repository.setDesignatedSuperUser(email)
-        }
-    }
-
-
-
-    fun addFavoriteMantra(title: String, content: String, youtubeId: String) {
-        if (!requireLoginAction()) return
-        viewModelScope.launch {
-            val newMantra = com.example.data.FavoriteMantra(
-                title = title,
-                content = content,
-                youtubeId = youtubeId
-            )
-            repository.addFavoriteMantra(newMantra)
-        }
-    }
-
-    fun deleteFavoriteMantra(id: Int) {
-        viewModelScope.launch {
-            repository.deleteFavoriteMantra(id)
-        }
-    }
-
-    val isLoading = MutableStateFlow(false)
-
-
-
-
-
 
     fun signUp(email: String, pass: String, name: String, city: String, state: String, mobile: String = "", onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
-            isLoading.value = true
+            _isLoading.value = true
             val emailClean = email.lowercase().trim()
             val isSuper = emailClean == "kunalpareekusa@gmail.com" || emailClean == "ashishpareekbhl@gmail.com"
             val newUser = com.example.data.User(
@@ -1616,11 +1205,11 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
                 role = if (isSuper) "SuperUser" else "Regular",
                 profileImageUri = ""
             )
-            val success = repository.registerUser(newUser)
-            isLoading.value = false
+            val success = userRepository.registerUser(newUser)
+            _isLoading.value = false
             if (success) {
-                repository.loginAsUser(newUser)
-                repository.setRememberedUser(newUser.email)
+                userRepository.loginAsUser(newUser)
+                userRepository.setRememberedUser(newUser.email)
                 _showLanguagePrefDialog.value = true
                 onResult(true, "Successfully Registered and Logged In!")
             } else {
@@ -1631,22 +1220,22 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
 
     fun login(email: String, pass: String, rememberMe: Boolean = false, onResult: (Boolean, String) -> Unit) {
         viewModelScope.launch {
-            isLoading.value = true
+            _isLoading.value = true
             val emailClean = email.lowercase().trim()
             
-            val user = repository.authenticateUser(emailClean, pass)
-            isLoading.value = false
+            val user = userRepository.authenticateUser(emailClean, pass)
+            _isLoading.value = false
             if (user != null) {
                 val isSuper = user.email.lowercase().trim() == "kunalpareekusa@gmail.com" || user.email.lowercase().trim() == "ashishpareekbhl@gmail.com"
                 val finalUser = user.copy(
                     role = if (isSuper) "SuperUser" else "Regular",
                     avatar = if (isSuper) 4 else user.avatar
                 )
-                repository.loginAsUser(finalUser)
+                userRepository.loginAsUser(finalUser)
                 if (rememberMe) {
-                    repository.setRememberedUser(finalUser.email)
+                    userRepository.setRememberedUser(finalUser.email)
                 } else {
-                    repository.clearRememberedUser()
+                    userRepository.clearRememberedUser()
                 }
                 _showLanguagePrefDialog.value = true
                 onResult(true, "Pranam! Logged in successfully.")
@@ -1664,12 +1253,12 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
                         avatar = 4,
                         role = "SuperUser"
                     )
-                    repository.registerUser(defaultSuper)
-                    repository.loginAsUser(defaultSuper)
+                    userRepository.registerUser(defaultSuper)
+                    userRepository.loginAsUser(defaultSuper)
                     if (rememberMe) {
-                        repository.setRememberedUser(defaultSuper.email)
+                        userRepository.setRememberedUser(defaultSuper.email)
                     } else {
-                        repository.clearRememberedUser()
+                        userRepository.clearRememberedUser()
                     }
                     _showLanguagePrefDialog.value = true
                     onResult(true, "Pranam! Super User Account Initialized.")
@@ -1680,7 +1269,6 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
         }
     }
 
-    
     fun upvotePost(post: com.example.data.CommunityPost) {
         if (userRole.value == "Guest") return
         val email = userEmail.value
@@ -1709,7 +1297,7 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
             downvotedByEmails = downvotedList.joinToString(",")
         )
         viewModelScope.launch {
-            repository.updatePost(updatedPost)
+            communityRepository.updatePost(updatedPost)
         }
     }
 
@@ -1730,7 +1318,7 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
             newDownvotes++
             if (upvotedList.contains(email)) {
                 upvotedList.remove(email)
-                newUpvotes--
+                newDownvotes--
             }
         }
         
@@ -1741,7 +1329,7 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
             downvotedByEmails = downvotedList.joinToString(",")
         )
         viewModelScope.launch {
-            repository.updatePost(updatedPost)
+            communityRepository.updatePost(updatedPost)
         }
     }
 
@@ -1749,7 +1337,7 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
         if (isAdmin.value) {
             val updatedPost = post.copy(isPinned = !post.isPinned)
             viewModelScope.launch {
-                repository.updatePost(updatedPost)
+                communityRepository.updatePost(updatedPost)
             }
         }
     }
@@ -1757,55 +1345,7 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
     fun deletePost(post: com.example.data.CommunityPost) {
         if (isAdmin.value || post.author == userName.value) {
             viewModelScope.launch {
-                repository.deletePost(post.id)
-            }
-        }
-    }
-
-    fun sendMessage(prompt: String) {
-        viewModelScope.launch {
-            if (userRole.value == "Guest") {
-                if (_guestQuestionCount.value >= 10) {
-                    _showLoginWall.value = true
-                    return@launch
-                }
-                _guestQuestionCount.value += 1
-            }
-            _isChatLoading.value = true
-            val userMsg = com.example.data.ChatMessage(sender = "user", content = prompt)
-            repository.addChatMessage(userMsg)
-            
-            val reply = getMockChatResponse(prompt)
-            
-            val modelMsg = com.example.data.ChatMessage(sender = "gemini", content = reply)
-            repository.addChatMessage(modelMsg)
-            _isChatLoading.value = false
-        }
-    }
-
-    private fun getMockChatResponse(prompt: String): String {
-        val p = prompt.lowercase()
-        return when {
-            p.contains("panchang") -> {
-                "Today's Panchang highlights an auspicious Tithi and Nakshatra, creating a favorable energy for starting new spiritual practices. The planetary alignments suggest dedicating time to meditation and inner reflection.\n\nTry this today: Light a diya during Sandhya time and chant the Gayatri Mantra.\n[CHIP:View Daily Panchang:Home]\n[FOLLOWUP:How do I start a daily puja?]\n[FOLLOWUP:Tell me about Mahadev]"
-            }
-            p.contains("karma") -> {
-                "Karma is the universal principle of cause and effect, where your actions, thoughts, and intentions shape your spiritual journey. It is not a system of punishment, but a path of learning and balancing. Nishkama Karma, performing your duties without attachment to the results, is considered the highest form of action.\n\nTry this today: Perform one act of kindness without expecting anything in return.\n[CHIP:Explore Karma & Dharma:Knowledge]\n[FOLLOWUP:Explain Dharma simply]\n[FOLLOWUP:What is Nishkama Karma?]"
-            }
-            p.contains("mahadev") || p.contains("shiva") -> {
-                "Mahadev, the Supreme Being in Shaivism, represents the pure consciousness that transcends space and time. He is the destroyer of ignorance and ego, clearing the path for new creation and spiritual enlightenment. His ascetic form reminds us to find peace within, detached from material desires.\n\nTry this today: Offer a simple prayer of gratitude to Mahadev for the breath of life.\n[CHIP:Read about Mahadev:Knowledge]\n[CHIP:Shiva Aarti:Bhakti]\n[FOLLOWUP:What does the Trishul symbolize?]\n[FOLLOWUP:Tell me about Parvati Mata]"
-            }
-            p.contains("gita") || p.contains("shloka") -> {
-                "As shared in the Bhagavad Gita, Chapter 2: 'You have a right to perform your prescribed duty, but you are not entitled to the fruits of action.' This teaching, known as Karma Yoga, encourages us to act with dedication while surrendering the outcome to the Divine.\n\nTry this today: When facing a task, focus entirely on doing it well, without worrying about success or failure.\n[CHIP:Read Bhagavad Gita:Knowledge]\n[FOLLOWUP:Explain Karma Yoga]\n[FOLLOWUP:What does Chapter 3 say?]"
-            }
-            p.contains("puja") -> {
-                "Starting a daily puja is a beautiful way to center yourself. Begin by setting aside a small, clean space. Light a diya or incense, offer fresh flowers or water, and recite a simple mantra or prayer. Consistency and devotion are more important than complex rituals.\n\nTry this today: Spend 5 minutes in your quiet space simply breathing and feeling the Divine presence.\n[CHIP:Daily Rituals Guide:Knowledge]\n[CHIP:Explore Mantras:Bhakti]\n[FOLLOWUP:What is the best time for Puja?]\n[FOLLOWUP:How to use a Mala?]"
-            }
-            p.contains("sindari") || p.contains("balaji") -> {
-                "Sindari ke Balaji is a revered form of Lord Hanuman, known for his immense strength, unwavering devotion to Lord Rama, and his power to dispel negative energies and grant boons to his devotees. Temples dedicated to Him often draw large crowds seeking blessings for courage and protection.\n\nTry this today: Chant 'Om Shri Hanumate Namah' to invoke His strength when you feel anxious.\n[CHIP:Read about Hanumanji:Knowledge]\n[CHIP:Hanuman Chalisa:Bhakti]\n[FOLLOWUP:Tell me a story about Hanuman]\n[FOLLOWUP:How to overcome fear?]"
-            }
-            else -> {
-                "I appreciate your question. My purpose as Sadhak Mitra is to guide you on your spiritual path through the wisdom of Sanatan Dharma. While I cannot answer that directly, I can share teachings on inner peace, devotion, or understanding life's challenges through a dharmic lens. How can I assist your spiritual journey today?\n[FOLLOWUP:Explain Karma simply]\n[FOLLOWUP:Tell me about Mahadev]"
+                communityRepository.deletePost(post.id)
             }
         }
     }
@@ -1823,7 +1363,7 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
                 upEmails.add(email)
                 downEmails.remove(email)
             }
-            repository.updatePost(post.copy(upvotes = upEmails.size, downvotes = downEmails.size, upvotedByEmails = upEmails.joinToString(","), downvotedByEmails = downEmails.joinToString(",")))
+            communityRepository.updatePost(post.copy(upvotes = upEmails.size, downvotes = downEmails.size, upvotedByEmails = upEmails.joinToString(","), downvotedByEmails = downEmails.joinToString(",")))
         }
     }
 
@@ -1840,23 +1380,21 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
                 downEmails.add(email)
                 upEmails.remove(email)
             }
-            repository.updatePost(post.copy(upvotes = upEmails.size, downvotes = downEmails.size, upvotedByEmails = upEmails.joinToString(","), downvotedByEmails = downEmails.joinToString(",")))
+            communityRepository.updatePost(post.copy(upvotes = upEmails.size, downvotes = downEmails.size, upvotedByEmails = upEmails.joinToString(","), downvotedByEmails = downEmails.joinToString(",")))
         }
     }
 
     fun pinPost(post: com.example.data.CommunityPost) {
         viewModelScope.launch {
-            repository.updatePost(post.copy(isPinned = !post.isPinned))
+            communityRepository.updatePost(post.copy(isPinned = !post.isPinned))
         }
     }
-
 
     fun deleteComment(id: Int) {
         viewModelScope.launch {
-            repository.deleteComment(id)
+            communityRepository.deleteComment(id)
         }
     }
-
 
     fun toggleLikeComment(comment: com.example.data.PostComment) {
         viewModelScope.launch {
@@ -1871,7 +1409,7 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
                 upEmails.add(email)
                 downEmails.remove(email)
             }
-            repository.updateComment(comment.copy(upvotes = upEmails.size, downvotes = downEmails.size, upvotedByEmails = upEmails.joinToString(","), downvotedByEmails = downEmails.joinToString(",")))
+            communityRepository.updateComment(comment.copy(upvotes = upEmails.size, downvotes = downEmails.size, upvotedByEmails = upEmails.joinToString(","), downvotedByEmails = downEmails.joinToString(",")))
         }
     }
 
@@ -1888,26 +1426,22 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
                 downEmails.add(email)
                 upEmails.remove(email)
             }
-            repository.updateComment(comment.copy(upvotes = upEmails.size, downvotes = downEmails.size, upvotedByEmails = upEmails.joinToString(","), downvotedByEmails = downEmails.joinToString(",")))
+            communityRepository.updateComment(comment.copy(upvotes = upEmails.size, downvotes = downEmails.size, upvotedByEmails = upEmails.joinToString(","), downvotedByEmails = downEmails.joinToString(",")))
         }
     }
 
-    private fun updatePanchangWithEntity(panchang: com.example.data.PanchangEntity) {
-        _tithiEn.value = panchang.tithi
-        _tithiHi.value = panchang.tithi
-        _nakshatraEn.value = panchang.nakshatra
-        _nakshatraHi.value = panchang.nakshatra
-        _yogaEn.value = panchang.yoga
-        _yogaHi.value = panchang.yoga
-        _karanaEn.value = panchang.karana
-        _karanaHi.value = panchang.karana
-        _sunrise.value = panchang.sunrise
-        _sunset.value = panchang.sunset
-        _rahukaal.value = panchang.rahuKaal
-        _abhijeet.value = panchang.abhijeet
-        _festivalEn.value = panchang.festival
-        _festivalHi.value = panchang.festival
-        _detailsEn.value = panchang.details
-        _detailsHi.value = panchang.details
-    }
+    // --- USER FAVORITES FUNCTIONS ---
+    fun getUserFavorites(userId: String): Flow<List<com.example.data.UserFavorite>> = profileRepository.getUserFavorites(userId)
+    fun addUserFavorite(favorite: com.example.data.UserFavorite) = viewModelScope.launch { profileRepository.addUserFavorite(favorite) }
+    fun deleteUserFavorite(userId: String, targetId: String, type: String) = viewModelScope.launch { profileRepository.deleteUserFavorite(userId, targetId, type) }
+
+    // --- READING PROGRESS FUNCTIONS ---
+    suspend fun getReadingProgress(userId: String, articleId: Int): com.example.data.ReadingProgress? = knowledgeRepository.getReadingProgress(userId, articleId)
+    fun saveReadingProgress(progress: com.example.data.ReadingProgress) = viewModelScope.launch { knowledgeRepository.saveReadingProgress(progress) }
+
+    // --- FESTIVAL FUNCTIONS ---
+    suspend fun getFestival(date: String): com.example.data.FestivalEntity? = panchangRepository.getFestival(date)
+    fun saveFestival(festival: com.example.data.FestivalEntity) = viewModelScope.launch { panchangRepository.saveFestival(festival) }
+    fun getAllFestivals(): Flow<List<com.example.data.FestivalEntity>> = panchangRepository.getAllFestivals()
 }
+

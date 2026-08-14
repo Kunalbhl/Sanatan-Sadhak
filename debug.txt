@@ -1,0 +1,600 @@
+
+
+    fun setPublicPosting(enabled: Boolean) {
+        viewModelScope.launch {
+            repository.setPublicPostingEnabled(enabled)
+        }
+    }
+
+    // --- KARMA & GRATITUDE WRITERS ---
+
+    fun logKarmaDeed(deed: String) {
+        viewModelScope.launch {
+            val dateFormat = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+            val todayDate = java.util.Date()
+            val today = dateFormat.format(todayDate)
+            
+            val lastLogs = karmaLogs.value
+            val lastLog = lastLogs.firstOrNull()
+
+            val newStreak = if (lastLog != null) {
+                if (lastLog.date == today) {
+                    lastLog.streak // Already logged today
+                } else {
+                    val lastDate = dateFormat.parse(lastLog.date)
+                    val diffInMs = todayDate.time - (lastDate?.time ?: 0)
+                    val diffInDays = diffInMs / (1000 * 60 * 60 * 24)
+                    
+                    if (diffInDays == 1L) {
+                        lastLog.streak + 1
+                    } else {
+                        1
+                    }
+                }
+            } else {
+                1
+            }
+
+            val log = KarmaLog(
+                date = today,
+                deed = deed,
+                streak = newStreak
+            )
+            repository.addKarmaLog(log)
+        }
+    }
+
+    fun logGratitude(content: String) {
+        viewModelScope.launch {
+            val log = GratitudeLog(
+                date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date()),
+                content = content
+            )
+            repository.addGratitudeLog(log)
+        }
+    }
+
+    // --- GEMINI CHAT ACTION ---
+
+    fun sendChatPrompt(prompt: String) {
+        if (prompt.isBlank()) return
+        if (!registerGuestAction()) return
+        viewModelScope.launch {
+            // 1. Add user message
+            val userMsg = ChatMessage(sender = "user", content = prompt)
+            repository.addChatMessage(userMsg)
+            _isChatLoading.value = true
+
+            // 2. Get history to pass to Gemini
+            val currentHistory = chatMessages.value
+
+            // 3. Request Gemini response
+            val reply = GeminiService.generateResponse(currentHistory, prompt, com.example.data.AppPreferences.isEnglish.value)
+
+            // 4. Add model reply
+            val modelMsg = ChatMessage(sender = "gemini", content = reply)
+            repository.addChatMessage(modelMsg)
+            _isChatLoading.value = false
+        }
+    }
+
+    fun resetChat() {
+        viewModelScope.launch {
+            repository.clearChat()
+        }
+    }
+
+     catch (e: Exception) {
+                panchangError.value = "Unable to load today's Panchang. Please check your connection or try again shortly."
+                panchangTechnicalError.value = "Exception: ${e.message}"
+            }
+        }
+    }
+
+     catch (e: Exception) {
+                android.util.Log.e("Panchang", "Failed to fetch fresh detail modal panchang", e)
+            }
+        }
+    }
+
+     catch (e: Exception) {
+                callback(null)
+            }
+        }
+    }
+
+    fun updateCustomThought(en: String, hi: String) {
+        val prefs = getApplication<android.app.Application>()
+            .getSharedPreferences("panchang_prefs", android.content.Context.MODE_PRIVATE)
+        prefs.edit()
+            .putString("custom_thought_en", en)
+            .putString("custom_thought_hi", hi)
+            .apply()
+        if (en.isNotEmpty()) _thoughtEn.value = en
+        if (hi.isNotEmpty()) _thoughtHi.value = hi
+        if (en.isEmpty() && hi.isEmpty()) {
+            loadDailyPanchangAndThought()
+        }
+    }
+
+    fun updateCustomPanchang(tEn: String, tHi: String, nEn: String, nHi: String, yEn: String, yHi: String, fEn: String, fHi: String) {
+        val prefs = getApplication<Application>()
+            .getSharedPreferences("panchang_prefs", android.content.Context.MODE_PRIVATE)
+        prefs.edit()
+            .putString("tithi_en", tEn)
+            .putString("tithi_hi", tHi)
+            .putString("nakshatra_en", nEn)
+            .putString("nakshatra_hi", nHi)
+            .putString("yoga_en", yEn)
+            .putString("yoga_hi", yHi)
+            .putString("festival_en", fEn)
+            .putString("festival_hi", fHi)
+            .apply()
+
+        _tithiEn.value = tEn
+        _tithiHi.value = tHi
+        _nakshatraEn.value = nEn
+        _nakshatraHi.value = nHi
+        _yogaEn.value = yEn
+        _yogaHi.value = yHi
+        _festivalEn.value = fEn
+        _festivalHi.value = fHi
+    }
+
+    // --- AUTH ACTIONS ---
+
+    fun signupAndLogin(user: User, onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            val emailClean = user.email.lowercase().trim()
+            val isSuper = emailClean == "kunalpareekusa@gmail.com" || emailClean == "ashishpareekbhl@gmail.com"
+            val finalUser = user.copy(
+                email = emailClean,
+                role = if (isSuper) "SuperUser" else "Regular",
+                avatar = if (isSuper) 4 else 1
+            )
+            val success = repository.registerUser(finalUser)
+            if (success) {
+                repository.loginAsUser(finalUser)
+                _showLanguagePrefDialog.value = true
+                onResult(true, "Successfully Registered and Logged In!")
+            } else {
+                onResult(false, "Sadhak Email is already registered.")
+            }
+        }
+    }
+
+    fun loginCredentialBased(emailStr: String, passwordStr: String, onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            val emailClean = emailStr.lowercase().trim()
+            
+            // Check for direct SuperUser default credential creation if they register or login
+            val user = repository.authenticateUser(emailClean, passwordStr)
+            if (user != null) {
+                repository.loginAsUser(user)
+                _showLanguagePrefDialog.value = true
+                onResult(true, "Pranam! Logged in successfully.")
+            } else {
+                // If it's kunalpareekusa@gmail.com or ashishpareekbhl@gmail.com, and doesn't exist yet, we can create them dynamically to allow seamless login!
+                val isSuper = emailClean == "kunalpareekusa@gmail.com" || emailClean == "ashishpareekbhl@gmail.com"
+                if (isSuper) {
+                    val defaultSuper = User(
+                        email = emailClean,
+                        fullName = if (emailClean.contains("kunal")) "Kunal Pareek" else "Ashish Pareek",
+                        mobileNumber = "9999999999",
+                        city = "Ajmer",
+                        state = "Rajasthan",
+                        password = passwordStr, // automatically create on first login attempt to make experience seamless
+                        avatar = 4,
+                        role = "SuperUser"
+                    )
+                    repository.registerUser(defaultSuper)
+                    repository.loginAsUser(defaultSuper)
+                    _showLanguagePrefDialog.value = true
+                    onResult(true, "Pranam! Super User Account Initialized and Logged In.")
+                } else {
+                    onResult(false, "Incorrect Sadhak Email or Password.")
+                }
+            }
+        }
+    }
+
+    fun updateUserProfileDetails(fullName: String, mobileNumber: String, city: String, state: String, avatar: Int, imageUri: String, onResult: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            val email = userEmail.value
+            if (email.isNotEmpty()) {
+                repository.updateUserProfile(email, fullName, mobileNumber, city, state, avatar, imageUri)
+                onResult(true)
+            } else {
+                onResult(false)
+            }
+        }
+    }
+
+    fun dismissLanguagePrefDialog() {
+        _showLanguagePrefDialog.value = false
+    }
+
+    fun triggerGuestPromo() {
+        _showGuestPromoDialog.value = true
+    }
+
+    fun dismissGuestPromo() {
+        _showGuestPromoDialog.value = false
+    }
+
+    fun logoutUser() {
+        repository.logout()
+    }
+
+    fun setDesignatedSuperUser(email: String) {
+        viewModelScope.launch {
+            repository.setDesignatedSuperUser(email)
+        }
+    }
+
+
+
+    fun addFavoriteMantra(title: String, content: String, youtubeId: String) {
+        if (!requireLoginAction()) return
+        viewModelScope.launch {
+            val newMantra = com.example.data.FavoriteMantra(
+                title = title,
+                content = content,
+                youtubeId = youtubeId
+            )
+            repository.addFavoriteMantra(newMantra)
+        }
+    }
+
+    fun deleteFavoriteMantra(id: Int) {
+        viewModelScope.launch {
+            repository.deleteFavoriteMantra(id)
+        }
+    }
+
+    val isLoading = MutableStateFlow(false)
+
+
+
+
+
+
+    fun signUp(email: String, pass: String, name: String, city: String, state: String, mobile: String = "", onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            isLoading.value = true
+            val emailClean = email.lowercase().trim()
+            val isSuper = emailClean == "kunalpareekusa@gmail.com" || emailClean == "ashishpareekbhl@gmail.com"
+            val newUser = com.example.data.User(
+                email = emailClean,
+                fullName = name,
+                mobileNumber = mobile,
+                city = city,
+                state = state,
+                password = pass,
+                avatar = if (isSuper) 4 else 1,
+                role = if (isSuper) "SuperUser" else "Regular",
+                profileImageUri = ""
+            )
+            val success = repository.registerUser(newUser)
+            isLoading.value = false
+            if (success) {
+                repository.loginAsUser(newUser)
+                repository.setRememberedUser(newUser.email)
+                _showLanguagePrefDialog.value = true
+                onResult(true, "Successfully Registered and Logged In!")
+            } else {
+                onResult(false, "Sadhak Email is already registered.")
+            }
+        }
+    }
+
+    fun login(email: String, pass: String, rememberMe: Boolean = false, onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            isLoading.value = true
+            val emailClean = email.lowercase().trim()
+            
+            val user = repository.authenticateUser(emailClean, pass)
+            isLoading.value = false
+            if (user != null) {
+                val isSuper = user.email.lowercase().trim() == "kunalpareekusa@gmail.com" || user.email.lowercase().trim() == "ashishpareekbhl@gmail.com"
+                val finalUser = user.copy(
+                    role = if (isSuper) "SuperUser" else "Regular",
+                    avatar = if (isSuper) 4 else user.avatar
+                )
+                repository.loginAsUser(finalUser)
+                if (rememberMe) {
+                    repository.setRememberedUser(finalUser.email)
+                } else {
+                    repository.clearRememberedUser()
+                }
+                _showLanguagePrefDialog.value = true
+                onResult(true, "Pranam! Logged in successfully.")
+            } else {
+                // Check if it's super user to create them dynamically
+                val isSuper = emailClean == "kunalpareekusa@gmail.com" || emailClean == "ashishpareekbhl@gmail.com"
+                if (isSuper) {
+                    val defaultSuper = com.example.data.User(
+                        email = emailClean,
+                        fullName = if (emailClean.contains("kunal")) "Kunal Pareek" else "Ashish Pareek",
+                        mobileNumber = "9999999999",
+                        city = "Ajmer",
+                        state = "Rajasthan",
+                        password = pass,
+                        avatar = 4,
+                        role = "SuperUser"
+                    )
+                    repository.registerUser(defaultSuper)
+                    repository.loginAsUser(defaultSuper)
+                    if (rememberMe) {
+                        repository.setRememberedUser(defaultSuper.email)
+                    } else {
+                        repository.clearRememberedUser()
+                    }
+                    _showLanguagePrefDialog.value = true
+                    onResult(true, "Pranam! Super User Account Initialized.")
+                } else {
+                    onResult(false, "Incorrect Sadhak Email/Mobile or Password.")
+                }
+            }
+        }
+    }
+
+    
+    fun upvotePost(post: com.example.data.CommunityPost) {
+        if (userRole.value == "Guest") return
+        val email = userEmail.value
+        val upvotedList = post.upvotedByEmails.split(",").filter { it.isNotEmpty() }.toMutableList()
+        val downvotedList = post.downvotedByEmails.split(",").filter { it.isNotEmpty() }.toMutableList()
+        
+        var newUpvotes = post.upvotes
+        var newDownvotes = post.downvotes
+
+        if (upvotedList.contains(email)) {
+            upvotedList.remove(email)
+            newUpvotes--
+        } else {
+            upvotedList.add(email)
+            newUpvotes++
+            if (downvotedList.contains(email)) {
+                downvotedList.remove(email)
+                newDownvotes--
+            }
+        }
+        
+        val updatedPost = post.copy(
+            upvotes = newUpvotes,
+            downvotes = newDownvotes,
+            upvotedByEmails = upvotedList.joinToString(","),
+            downvotedByEmails = downvotedList.joinToString(",")
+        )
+        viewModelScope.launch {
+            repository.updatePost(updatedPost)
+        }
+    }
+
+    fun downvotePost(post: com.example.data.CommunityPost) {
+        if (userRole.value == "Guest") return
+        val email = userEmail.value
+        val upvotedList = post.upvotedByEmails.split(",").filter { it.isNotEmpty() }.toMutableList()
+        val downvotedList = post.downvotedByEmails.split(",").filter { it.isNotEmpty() }.toMutableList()
+        
+        var newUpvotes = post.upvotes
+        var newDownvotes = post.downvotes
+
+        if (downvotedList.contains(email)) {
+            downvotedList.remove(email)
+            newDownvotes--
+        } else {
+            downvotedList.add(email)
+            newDownvotes++
+            if (upvotedList.contains(email)) {
+                upvotedList.remove(email)
+                newUpvotes--
+            }
+        }
+        
+        val updatedPost = post.copy(
+            upvotes = newUpvotes,
+            downvotes = newDownvotes,
+            upvotedByEmails = upvotedList.joinToString(","),
+            downvotedByEmails = downvotedList.joinToString(",")
+        )
+        viewModelScope.launch {
+            repository.updatePost(updatedPost)
+        }
+    }
+
+    fun togglePinPost(post: com.example.data.CommunityPost) {
+        if (isAdmin.value) {
+            val updatedPost = post.copy(isPinned = !post.isPinned)
+            viewModelScope.launch {
+                repository.updatePost(updatedPost)
+            }
+        }
+    }
+
+    fun deletePost(post: com.example.data.CommunityPost) {
+        if (isAdmin.value || post.author == userName.value) {
+            viewModelScope.launch {
+                repository.deletePost(post.id)
+            }
+        }
+    }
+
+    fun sendMessage(prompt: String) {
+        viewModelScope.launch {
+            if (userRole.value == "Guest") {
+                if (_guestQuestionCount.value >= 10) {
+                    _showLoginWall.value = true
+                    return@launch
+                }
+                _guestQuestionCount.value += 1
+            }
+            _isChatLoading.value = true
+            val userMsg = com.example.data.ChatMessage(sender = "user", content = prompt)
+            repository.addChatMessage(userMsg)
+            
+            val apiKey = com.example.BuildConfig.GEMINI_API_KEY
+            val reply = if (apiKey.isEmpty() || apiKey == "MY_GEMINI_API_KEY" || apiKey == "null") {
+                getMockChatResponse(prompt, com.example.data.AppPreferences.isEnglish.value)
+            } else {
+                com.example.data.GeminiService.generateResponse(chatMessages.value, prompt, com.example.data.AppPreferences.isEnglish.value)
+            }
+            
+            val modelMsg = com.example.data.ChatMessage(sender = "gemini", content = reply)
+            repository.addChatMessage(modelMsg)
+            _isChatLoading.value = false
+        }
+    }
+
+    private fun getMockChatResponse(prompt: String, isEnglish: Boolean): String {
+        val p = prompt.lowercase()
+        if (isEnglish) {
+            return when {
+                p.contains("panchang") -> {
+                    "Today's Panchang highlights an auspicious Tithi and Nakshatra, creating a favorable energy for starting new spiritual practices. The planetary alignments suggest dedicating time to meditation and inner reflection.\n\nTry this today: Light a diya during Sandhya time and chant the Gayatri Mantra.\n[CHIP:View Daily Panchang:Home]\n[FOLLOWUP:How do I start a daily puja?]\n[FOLLOWUP:Tell me about Mahadev]"
+                }
+                p.contains("karma") -> {
+                    "Karma is the universal principle of cause and effect, where your actions, thoughts, and intentions shape your spiritual journey. It is not a system of punishment, but a path of learning and balancing. Nishkama Karma, performing your duties without attachment to the results, is considered the highest form of action.\n\nTry this today: Perform one act of kindness without expecting anything in return.\n[CHIP:Explore Karma & Dharma:Knowledge]\n[FOLLOWUP:Explain Dharma simply]\n[FOLLOWUP:What is Nishkama Karma?]"
+                }
+                p.contains("mahadev") || p.contains("shiva") -> {
+                    "Mahadev, the Supreme Being in Shaivism, represents the pure consciousness that transcends space and time. He is the destroyer of ignorance and ego, clearing the path for new creation and spiritual enlightenment. His ascetic form reminds us to find peace within, detached from material desires.\n\nTry this today: Offer a simple prayer of gratitude to Mahadev for the breath of life.\n[CHIP:Read about Mahadev:Knowledge]\n[CHIP:Shiva Aarti:Bhakti]\n[FOLLOWUP:What does the Trishul symbolize?]\n[FOLLOWUP:Tell me about Parvati Mata]"
+                }
+                p.contains("gita") || p.contains("shloka") -> {
+                    "As shared in the Bhagavad Gita, Chapter 2: 'You have a right to perform your prescribed duty, but you are not entitled to the fruits of action.' This teaching, known as Karma Yoga, encourages us to act with dedication while surrendering the outcome to the Divine.\n\nTry this today: When facing a task, focus entirely on doing it well, without worrying about success or failure.\n[CHIP:Read Bhagavad Gita:Knowledge]\n[FOLLOWUP:Explain Karma Yoga]\n[FOLLOWUP:What does Chapter 3 say?]"
+                }
+                p.contains("puja") -> {
+                    "Starting a daily puja is a beautiful way to center yourself. Begin by setting aside a small, clean space. Light a diya or incense, offer fresh flowers or water, and recite a simple mantra or prayer. Consistency and devotion are more important than complex rituals.\n\nTry this today: Spend 5 minutes in your quiet space simply breathing and feeling the Divine presence.\n[CHIP:Daily Rituals Guide:Knowledge]\n[CHIP:Explore Mantras:Bhakti]\n[FOLLOWUP:What is the best time for Puja?]\n[FOLLOWUP:How to use a Mala?]"
+                }
+                p.contains("sindari") || p.contains("balaji") -> {
+                    "Sindari ke Balaji is a revered form of Lord Hanuman, known for his immense strength, unwavering devotion to Lord Rama, and his power to dispel negative energies and grant boons to his devotees. Temples dedicated to Him often draw large crowds seeking blessings for courage and protection.\n\nTry this today: Chant 'Om Shri Hanumate Namah' to invoke His strength when you feel anxious.\n[CHIP:Read about Hanumanji:Knowledge]\n[CHIP:Hanuman Chalisa:Bhakti]\n[FOLLOWUP:Tell me a story about Hanuman]\n[FOLLOWUP:How to overcome fear?]"
+                }
+                else -> {
+                    "I appreciate your question. My purpose as Sadhak Mitra is to guide you on your spiritual path through the wisdom of Sanatan Dharma. While I cannot answer that directly, I can share teachings on inner peace, devotion, or understanding life's challenges through a dharmic lens. How can I assist your spiritual journey today?\n[FOLLOWUP:Explain Karma simply]\n[FOLLOWUP:Tell me about Mahadev]"
+                }
+            }
+        } else {
+            return when {
+                p.contains("panchang") || p.contains("पंचांग") -> {
+                    "आज का पंचांग एक अत्यंत शुभ तिथि और नक्षत्र को दर्शाता है, जो नई आध्यात्मिक प्रथाओं को शुरू करने के लिए अनुकूल ऊर्जा का निर्माण करता है। ग्रह संरेखण ध्यान और आंतरिक चिंतन के लिए समय समर्पित करने का सुझाव देते हैं।\n\nआज ही इसे आजमाएं: संध्या के समय एक दीया जलाएं और गायत्री मंत्र का जाप करें।\n[CHIP:दैनिक पंचांग देखें:Home]\n[FOLLOWUP:मैं दैनिक पूजा कैसे शुरू करूँ?]\n[FOLLOWUP:मुझे महादेव के बारे में बताएं]"
+                }
+                p.contains("karma") || p.contains("कर्म") -> {
+                    "कर्म कारण और प्रभाव का सार्वभौमिक सिद्धांत है, जहां आपके कार्य, विचार और इरादे आपकी आध्यात्मिक यात्रा को आकार देते हैं। यह सजा की प्रणाली नहीं है, बल्कि सीखने और संतुलन का मार्ग है। निष्काम कर्म, बिना किसी फल की आसक्ति के अपने कर्तव्यों का पालन करना, कर्म का सर्वोच्च रूप माना जाता है।\n\nआज ही इसे आजमाएं: बिना किसी बदले की उम्मीद के किसी के लिए दयालुता का कार्य करें।\n[CHIP:कर्म और धर्म जानें:Knowledge]\n[FOLLOWUP:धर्म को सरलता से समझाएं]\n[FOLLOWUP:निष्काम कर्म क्या है?]"
+                }
+                p.contains("mahadev") || p.contains("shiva") || p.contains("महादेव") || p.contains("शिव") -> {
+                    "महादेव, शैव मत में सर्वोच्च सत्ता हैं, जो शुद्ध चेतना का प्रतिनिधित्व करते हैं जो स्थान और समय से परे है। वह अज्ञानता और अहंकार के विनाशक हैं, जो नए निर्माण और आध्यात्मिक ज्ञान के मार्ग को साफ करते हैं। उनका तपस्वी रूप हमें भौतिक इच्छाओं से विरक्त होकर भीतर शांति खोजने की याद दिलाता है।\n\nआज ही इसे आजमाएं: जीवन की श्वास के लिए महादेव को कृतज्ञता की एक सरल प्रार्थना अर्पित करें।\n[CHIP:महादेव के बारे में पढ़ें:Knowledge]\n[CHIP:शिव आरती:Bhakti]\n[FOLLOWUP:त्रिशूल किसका प्रतीक है?]\n[FOLLOWUP:पार्वती माता के बारे में बताएं]"
+                }
+                p.contains("gita") || p.contains("shloka") || p.contains("गीता") || p.contains("श्लोक") -> {
+                    "जैसा कि भगवद गीता के अध्याय 2 में साझा किया गया है: 'आपको अपने निर्धारित कर्तव्य का पालन करने का अधिकार है, लेकिन आप कर्म के फल के अधिकारी नहीं हैं।' यह सीख, जिसे कर्म योग के रूप में जाना जाता है, हमें परिणाम को ईश्वर को समर्पित करते हुए समर्पण के साथ कार्य करने के लिए प्रोत्साहित करती है।\n\nआज ही इसे आजमाएं: जब किसी कार्य का सामना हो, तो सफलता या विफलता की चिंता किए बिना उस पर पूरा ध्यान केंद्रित करें।\n[CHIP:भगवद गीता पढ़ें:Knowledge]\n[FOLLOWUP:कर्म योग समझाएं]\n[FOLLOWUP:अध्याय 3 क्या कहता है?]"
+                }
+                p.contains("puja") || p.contains("पूजा") -> {
+                    "दैनिक पूजा शुरू करना खुद को केंद्रित करने का एक सुंदर तरीका है। एक छोटा, स्वच्छ स्थान अलग रखकर शुरुआत करें। एक दीया या अगरबत्ती जलाएं, ताजे फूल या जल अर्पित करें और एक सरल मंत्र या प्रार्थना का जाप करें। जटिल अनुष्ठानों की तुलना में निरंतरता और भक्ति अधिक महत्वपूर्ण हैं।\n\nआज ही इसे आजमाएं: अपने शांत स्थान पर केवल 5 मिनट सांस लेने और दिव्य उपस्थिति को महसूस करने में बिताएं।\n[CHIP:दैनिक अनुष्ठान मार्गदर्शिका:Knowledge]\n[CHIP:मंत्रों का अन्वेषण करें:Bhakti]\n[FOLLOWUP:पूजा के लिए सबसे अच्छा समय क्या है?]\n[FOLLOWUP:माला का उपयोग कैसे करें?]"
+                }
+                p.contains("sindari") || p.contains("balaji") || p.contains("सिंदरी") || p.contains("बालाजी") -> {
+                    "सिंदरी के बालाजी भगवान हनुमान के एक अत्यंत पूजनीय रूप हैं, जो अपनी असीम शक्ति, भगवान राम के प्रति अटूट भक्ति और नकारात्मक ऊर्जा को दूर करने और अपने भक्तों को वरदान देने की शक्ति के लिए जाने जाते हैं। उन्हें समर्पित मंदिरों में अक्सर साहस और सुरक्षा के लिए आशीर्वाद लेने वालों की भारी भीड़ उमड़ती है।\n\nआज ही इसे आजमाएं: जब आप चिंतित महसूस करें तो उनकी शक्ति का आह्वान करने के लिए 'ओम श्री हनुमते नमः' का जाप करें।\n[CHIP:हनुमानजी के बारे में पढ़ें:Knowledge]\n[CHIP:हनुमान चालीसा:Bhakti]\n[FOLLOWUP:हनुमानजी की एक कहानी सुनाएं]\n[FOLLOWUP:भय पर विजय कैसे पाएं?]"
+                }
+                else -> {
+                    "मैं आपके प्रश्न की सराहना करता हूँ। साधक मित्र के रूप में मेरा उद्देश्य सनातन धर्म के ज्ञान के माध्यम से आपकी आध्यात्मिक यात्रा में आपका मार्गदर्शन करना है। यद्यपि मैं सीधे इसका उत्तर नहीं दे सकता, लेकिन मैं आंतरिक शांति, भक्ति, या धर्म के दृष्टिकोण से जीवन की चुनौतियों को समझने पर सीख साझा कर सकता हूँ। आज मैं आपकी आध्यात्मिक यात्रा में किस प्रकार सहायता कर सकता हूँ?\n[FOLLOWUP:कर्म को सरलता से समझाएं]\n[FOLLOWUP:मुझे महादेव के बारे में बताएं]"
+                }
+            }
+        }
+    }
+
+    fun toggleLikePost(post: com.example.data.CommunityPost) {
+        viewModelScope.launch {
+            val email = userEmail.value
+            if (email.isEmpty()) return@launch
+            var upEmails = post.upvotedByEmails.split(",").filter { it.isNotEmpty() }.toMutableList()
+            var downEmails = post.downvotedByEmails.split(",").filter { it.isNotEmpty() }.toMutableList()
+            
+            if (upEmails.contains(email)) {
+                upEmails.remove(email)
+            } else {
+                upEmails.add(email)
+                downEmails.remove(email)
+            }
+            repository.updatePost(post.copy(upvotes = upEmails.size, downvotes = downEmails.size, upvotedByEmails = upEmails.joinToString(","), downvotedByEmails = downEmails.joinToString(",")))
+        }
+    }
+
+    fun toggleDislikePost(post: com.example.data.CommunityPost) {
+        viewModelScope.launch {
+            val email = userEmail.value
+            if (email.isEmpty()) return@launch
+            var upEmails = post.upvotedByEmails.split(",").filter { it.isNotEmpty() }.toMutableList()
+            var downEmails = post.downvotedByEmails.split(",").filter { it.isNotEmpty() }.toMutableList()
+            
+            if (downEmails.contains(email)) {
+                downEmails.remove(email)
+            } else {
+                downEmails.add(email)
+                upEmails.remove(email)
+            }
+            repository.updatePost(post.copy(upvotes = upEmails.size, downvotes = downEmails.size, upvotedByEmails = upEmails.joinToString(","), downvotedByEmails = downEmails.joinToString(",")))
+        }
+    }
+
+    fun pinPost(post: com.example.data.CommunityPost) {
+        viewModelScope.launch {
+            repository.updatePost(post.copy(isPinned = !post.isPinned))
+        }
+    }
+
+
+    fun deleteComment(id: Int) {
+        viewModelScope.launch {
+            repository.deleteComment(id)
+        }
+    }
+
+
+    fun toggleLikeComment(comment: com.example.data.PostComment) {
+        viewModelScope.launch {
+            val email = userEmail.value
+            if (email.isEmpty()) return@launch
+            var upEmails = comment.upvotedByEmails.split(",").filter { it.isNotEmpty() }.toMutableList()
+            var downEmails = comment.downvotedByEmails.split(",").filter { it.isNotEmpty() }.toMutableList()
+            
+            if (upEmails.contains(email)) {
+                upEmails.remove(email)
+            } else {
+                upEmails.add(email)
+                downEmails.remove(email)
+            }
+            repository.updateComment(comment.copy(upvotes = upEmails.size, downvotes = downEmails.size, upvotedByEmails = upEmails.joinToString(","), downvotedByEmails = downEmails.joinToString(",")))
+        }
+    }
+
+    fun toggleDislikeComment(comment: com.example.data.PostComment) {
+        viewModelScope.launch {
+            val email = userEmail.value
+            if (email.isEmpty()) return@launch
+            var upEmails = comment.upvotedByEmails.split(",").filter { it.isNotEmpty() }.toMutableList()
+            var downEmails = comment.downvotedByEmails.split(",").filter { it.isNotEmpty() }.toMutableList()
+            
+            if (downEmails.contains(email)) {
+                downEmails.remove(email)
+            } else {
+                downEmails.add(email)
+                upEmails.remove(email)
+            }
+            repository.updateComment(comment.copy(upvotes = upEmails.size, downvotes = downEmails.size, upvotedByEmails = upEmails.joinToString(","), downvotedByEmails = downEmails.joinToString(",")))
+        }
+    }
+
+    // --- USER FAVORITES FUNCTIONS ---
+    fun getUserFavorites(userId: String): Flow<List<com.example.data.UserFavorite>> = repository.getUserFavorites(userId)
+    fun addUserFavorite(favorite: com.example.data.UserFavorite) = viewModelScope.launch { repository.addUserFavorite(favorite) }
+    fun deleteUserFavorite(userId: String, targetId: String, type: String) = viewModelScope.launch { repository.deleteUserFavorite(userId, targetId, type) }
+
+    // --- READING PROGRESS FUNCTIONS ---
+    suspend fun getReadingProgress(userId: String, articleId: Int): com.example.data.ReadingProgress? = repository.getReadingProgress(userId, articleId)
+    fun saveReadingProgress(progress: com.example.data.ReadingProgress) = viewModelScope.launch { repository.saveReadingProgress(progress) }
+
+    // --- FESTIVAL FUNCTIONS ---
+    suspend fun getFestival(date: String): com.example.data.FestivalEntity? = repository.getFestival(date)
+    fun saveFestival(festival: com.example.data.FestivalEntity) = viewModelScope.launch { repository.saveFestival(festival) }
+    fun getAllFestivals(): Flow<List<com.example.data.FestivalEntity>> = repository.getAllFestivals()
+
+    
+}

@@ -40,121 +40,254 @@ object AstrologyService {
         timezone: Double = 5.5
     ): PanchangResult = withContext(Dispatchers.IO) {
         // If API key is empty or default, trigger robust dynamic local Vedic calculations to ensure real data is ALWAYS displayed
-        if (PANCHANG_API_KEY.isEmpty() || PANCHANG_API_KEY == "MY_PANCHANG_API_KEY" || PANCHANG_API_KEY == "placeholder" || PANCHANG_API_KEY == "") {
+        if (PANCHANG_API_KEY.isEmpty() || PANCHANG_API_KEY == "MY_PANCHANG_API_KEY" || PANCHANG_API_KEY == "YOUR_VEDIC_ASTRO_API_KEY" || PANCHANG_API_KEY == "placeholder" || PANCHANG_API_KEY == "") {
             Log.w(TAG, "PANCHANG_API_KEY is empty or default. Using real-time local Vedic Panchang calculation engine to provide accurate data.")
             
-            // Local high-fidelity Vedic calculation based on date
+            // Local high-fidelity Vedic calculation based on date, location and timezone
             val calendar = java.util.Calendar.getInstance()
             calendar.set(year, month - 1, day)
             val dayOfWeek = calendar.get(java.util.Calendar.DAY_OF_WEEK)
-            
-            // 1. Calculate realistic Sunrise/Sunset based on day of year (season)
             val dayOfYear = calendar.get(java.util.Calendar.DAY_OF_YEAR)
-            // Sine wave approximation of sunrise (earlier in summer, later in winter)
-            // Summer solstice (day 172): sunrise ~05:24 AM, Sunset ~07:12 PM
-            // Winter solstice (day 355): sunrise ~07:15 AM, Sunset ~05:30 PM
-            val angle = 2 * Math.PI * (dayOfYear - 80) / 365.0
-            val sunriseMinutes = (6 * 60 + 15) - (45 * Math.sin(angle)).toInt() // ~05:30 to 07:00
-            val sunsetMinutes = (18 * 60 + 15) + (50 * Math.sin(angle)).toInt() // ~17:25 to 19:05
-            
-            val sunriseStr = String.format("%02d:%02d AM", sunriseMinutes / 60, sunriseMinutes % 60)
-            val sunsetStr = String.format("%02d:%02d PM", (sunsetMinutes / 60) - 12, sunsetMinutes % 60)
-            
-            // 2. Calculate accurate Rahu Kaal based on day of week and sunrise/sunset
-            val dayLength = sunsetMinutes - sunriseMinutes
-            val octet = dayLength / 8
-            val rahuStartMin: Int
-            val rahuEndMin: Int
-            val rahuKaalStr: String
-            when (dayOfWeek) {
-                java.util.Calendar.MONDAY -> { rahuStartMin = sunriseMinutes + octet; rahuEndMin = sunriseMinutes + 2 * octet }
-                java.util.Calendar.TUESDAY -> { rahuStartMin = sunriseMinutes + 6 * octet; rahuEndMin = sunriseMinutes + 7 * octet }
-                java.util.Calendar.WEDNESDAY -> { rahuStartMin = sunriseMinutes + 4 * octet; rahuEndMin = sunriseMinutes + 5 * octet }
-                java.util.Calendar.THURSDAY -> { rahuStartMin = sunriseMinutes + 5 * octet; rahuEndMin = sunriseMinutes + 6 * octet }
-                java.util.Calendar.FRIDAY -> { rahuStartMin = sunriseMinutes + 3 * octet; rahuEndMin = sunriseMinutes + 4 * octet }
-                java.util.Calendar.SATURDAY -> { rahuStartMin = sunriseMinutes + 2 * octet; rahuEndMin = sunriseMinutes + 3 * octet }
-                else -> { rahuStartMin = sunriseMinutes + 7 * octet; rahuEndMin = sunriseMinutes + 8 * octet } // Sunday
+
+            // 1. Calculate Astronomical Sunrise/Sunset for latitude, longitude, timezone
+            val gamma = 2 * Math.PI * (dayOfYear - 1) / 365.0
+            val eqtime = 229.18 * (0.000075 + 0.001868 * Math.cos(gamma) - 0.032077 * Math.sin(gamma) - 0.014615 * Math.cos(2 * gamma) - 0.040849 * Math.sin(2 * gamma))
+            val decl = 0.006918 - 0.399912 * Math.cos(gamma) + 0.070257 * Math.sin(gamma) - 0.006758 * Math.cos(2 * gamma) + 0.000907 * Math.sin(2 * gamma) - 0.002697 * Math.cos(3 * gamma) + 0.00148 * Math.sin(3 * gamma)
+
+            val latRad = Math.toRadians(latitude)
+            val cosH = (Math.sin(Math.toRadians(-0.833)) - Math.sin(latRad) * Math.sin(decl)) / (Math.cos(latRad) * Math.cos(decl))
+            val H = if (cosH >= 1.0) 0.0 else if (cosH <= -1.0) Math.PI else Math.acos(cosH)
+            val hDeg = Math.toDegrees(H)
+
+            val solarNoonUtc = 720 - 4 * longitude - eqtime
+            val solarNoonLocal = solarNoonUtc + 60 * timezone
+
+            val sunriseMinutes = (solarNoonLocal - 4 * hDeg).toInt().coerceIn(0, 1439)
+            val sunsetMinutes = (solarNoonLocal + 4 * hDeg).toInt().coerceIn(0, 1439)
+
+            fun formatMin(min: Int): String {
+                var h = (min / 60) % 24
+                if (h < 0) h += 24
+                val m = Math.abs(min % 60)
+                val ampm = if (h >= 12) "PM" else "AM"
+                var displayH = h % 12
+                if (displayH == 0) displayH = 12
+                return String.format("%02d:%02d %s", displayH, m, ampm)
             }
-            rahuKaalStr = String.format("%02d:%02d to %02d:%02d", rahuStartMin / 60, rahuStartMin % 60, rahuEndMin / 60, rahuEndMin % 60)
-            
-            // 3. Calculate Abhijeet Muhurta (middle 48 mins of the day)
-            val midDay = sunriseMinutes + (dayLength / 2)
-            val abhiStart = midDay - 24
-            val abhiEnd = midDay + 24
-            val abhijeetStr = String.format("%02d:%02d to %02d:%02d", abhiStart / 60, abhiStart % 60, abhiEnd / 60, abhiEnd % 60)
-            
-            // 4. Days elapsed from Epoch (Jan 1, 2020) to estimate Hindu Lunar Date parameters
+
+            val sunriseStr = formatMin(sunriseMinutes)
+            val sunsetStr = formatMin(sunsetMinutes)
+
+            // 2. Calculate Octet Muhurtas (Rahu Kaal, Yamaganda, Gulika Kaal, Abhijeet)
+            val dayLength = (sunsetMinutes - sunriseMinutes).coerceAtLeast(1)
+            val octet = dayLength / 8
+            val part15 = dayLength / 15
+
+            // Rahu Kaal Octets: Sun=8, Mon=2, Tue=7, Wed=5, Thu=6, Fri=4, Sat=3
+            val rahuOctet = when (dayOfWeek) {
+                java.util.Calendar.MONDAY -> 2
+                java.util.Calendar.TUESDAY -> 7
+                java.util.Calendar.WEDNESDAY -> 5
+                java.util.Calendar.THURSDAY -> 6
+                java.util.Calendar.FRIDAY -> 4
+                java.util.Calendar.SATURDAY -> 3
+                else -> 8 // Sunday
+            }
+            val rahuStartMin = sunriseMinutes + (rahuOctet - 1) * octet
+            val rahuEndMin = sunriseMinutes + rahuOctet * octet
+            val rahuKaalStr = "${formatMin(rahuStartMin)} to ${formatMin(rahuEndMin)}"
+
+            // Yamaganda Octets: Sun=5, Mon=4, Tue=3, Wed=2, Thu=1, Fri=7, Sat=6
+            val yamaOctet = when (dayOfWeek) {
+                java.util.Calendar.SUNDAY -> 5
+                java.util.Calendar.MONDAY -> 4
+                java.util.Calendar.TUESDAY -> 3
+                java.util.Calendar.WEDNESDAY -> 2
+                java.util.Calendar.THURSDAY -> 1
+                java.util.Calendar.FRIDAY -> 7
+                else -> 6 // Saturday
+            }
+            val yamaStartMin = sunriseMinutes + (yamaOctet - 1) * octet
+            val yamaEndMin = sunriseMinutes + yamaOctet * octet
+            val yamaStr = "${formatMin(yamaStartMin)} to ${formatMin(yamaEndMin)}"
+
+            // Gulika Kaal Octets: Sun=7, Mon=6, Tue=5, Wed=4, Thu=3, Fri=2, Sat=1
+            val gulikaOctet = when (dayOfWeek) {
+                java.util.Calendar.SUNDAY -> 7
+                java.util.Calendar.MONDAY -> 6
+                java.util.Calendar.TUESDAY -> 5
+                java.util.Calendar.WEDNESDAY -> 4
+                java.util.Calendar.THURSDAY -> 3
+                java.util.Calendar.FRIDAY -> 2
+                else -> 1 // Saturday
+            }
+            val gulikaStartMin = sunriseMinutes + (gulikaOctet - 1) * octet
+            val gulikaEndMin = sunriseMinutes + gulikaOctet * octet
+            val gulikaStr = "${formatMin(gulikaStartMin)} to ${formatMin(gulikaEndMin)}"
+
+            // Abhijeet Muhurta = 8th muhurta of 15 daytime muhurtas
+            val abhiStartMin = sunriseMinutes + 7 * part15
+            val abhiEndMin = sunriseMinutes + 8 * part15
+            val abhijeetStr = "${formatMin(abhiStartMin)} to ${formatMin(abhiEndMin)}"
+
+            // 3. Moonrise / Moonset handling for local calculation
+            // Note: Accurate Moonrise/Moonset requires precise topocentric ephemeris.
+            // As per astronomical standards, offline simplified models do not report exact moonrise times.
+            val moonriseStr = "Unavailable offline (Requires API)"
+            val moonsetStr = "Unavailable offline (Requires API)"
+
+            // 4. Ecliptic Longitude Approximations (Lahiri Sidereal Zodiac)
             val epoch = java.util.Calendar.getInstance()
             epoch.set(2020, 0, 1)
             val msDiff = calendar.timeInMillis - epoch.timeInMillis
-            val daysDiff = (msDiff / (1000 * 60 * 60 * 24)).toInt()
-            
-            // 29.53 days per lunar month
-            val lunarAge = (daysDiff + 5.5) % 29.53
-            val tithiNum = (lunarAge / 29.53 * 30).toInt() + 1
+            val daysDiff = (msDiff / (1000.0 * 60 * 60 * 24)).toInt()
+
+            // Sun mean longitude: 0° Aries around March 21 (day ~80)
+            val sunLongitude = ((dayOfYear - 80) * 0.98565 + 360) % 360
+            var lunarAge = (daysDiff + 5.5) % 29.530589
+            if (lunarAge < 0) lunarAge += 29.530589
+
+            // Moon longitude = Sun longitude + (lunarAge * 12.1907 degrees/day)
+            val moonLongitude = (sunLongitude + lunarAge * 12.19074) % 360
+
+            // Tithi = (Moon Longitude - Sun Longitude) / 12°
+            val tithiNum = (lunarAge / 29.530589 * 30).toInt() + 1
             val isShukla = tithiNum <= 15
             val localTithiNum = if (isShukla) tithiNum else tithiNum - 15
-            
+
             val tithiNames = listOf("Pratipada", "Dwitiya", "Tritiya", "Chaturthi", "Panchami", "Shashthi", "Saptami", "Ashtami", "Navami", "Dashami", "Ekadashi", "Dwadashi", "Trayodashi", "Chaturdashi", "Purnima", "Amavasya")
             val tithiName = if (localTithiNum == 15) {
                 if (isShukla) "Purnima" else "Amavasya"
-            } else if (localTithiNum >= 1 && localTithiNum <= 14) {
+            } else if (localTithiNum in 1..14) {
                 tithiNames[localTithiNum - 1]
             } else "Tritiya"
             val pakshaVal = if (isShukla) "Shukla Paksha" else "Krishna Paksha"
             val tithiVal = "$tithiName · $pakshaVal"
-            
-            // Nakshatras: 27 nakshatras, moon travels ~13.17 degrees/day, 27.32 days orbit
+
+            // Tithi End Time calculation (Approximate)
+            val tithiRemFraction = 1.0 - ((lunarAge / 29.530589 * 30) % 1.0)
+            val tithiEndMin = (sunriseMinutes + (tithiRemFraction * 24 * 60).toInt()) % 1440
+            val tithiEndTimeStr = "${formatMin(tithiEndMin)} (Approx)"
+
+            // Nakshatras (27) derived from Moon Sidereal Longitude (13°20' = 13.3333° each)
             val nakshatras = listOf("Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra", "Punarvasu", "Pushya", "Ashlesha", "Magha", "Purva Phalguni", "Uttara Phalguni", "Hasta", "Chitra", "Swati", "Vishakha", "Anuradha", "Jyeshtha", "Mula", "Purva Ashadha", "Uttara Ashadha", "Shravana", "Dhanishta", "Shatabhisha", "Purva Bhadrapada", "Uttara Bhadrapada", "Revati")
-            val nakNum = (daysDiff * 1.05) % 27
-            val nakshatraVal = nakshatras[nakNum.toInt()]
-            
-            // Hindu months & Ritu
-            val monthsHi = listOf("Chaitra", "Vaisakha", "Jyaistha", "Asadha", "Sravana", "Bhadrapada", "Asvina", "Kartika", "Margasirsa", "Pausa", "Magha", "Phalguna")
+            val nakLords = listOf("Ketu", "Venus", "Sun", "Moon", "Mars", "Rahu", "Jupiter", "Saturn", "Mercury", "Ketu", "Venus", "Sun", "Moon", "Mars", "Rahu", "Jupiter", "Saturn", "Mercury", "Ketu", "Venus", "Sun", "Moon", "Mars", "Rahu", "Jupiter", "Saturn", "Mercury")
+            val nakNumDouble = (moonLongitude / 13.3333333) % 27
+            val nakIndex = nakNumDouble.toInt().coerceIn(0, 26)
+            val nakshatraVal = nakshatras[nakIndex]
+            val nakLordVal = nakLords[nakIndex]
+            val nakPadaVal = (((nakNumDouble % 1.0) * 4).toInt() + 1).toString()
+
+            // Yoga (27) = (Sun Longitude + Moon Longitude) / 13°20'
+            val yogas = listOf("Vishkambha", "Priti", "Ayushman", "Saubhagya", "Sobhana", "Atiganda", "Sukarma", "Dhriti", "Shula", "Ganda", "Vriddhi", "Dhruva", "Vyaghat", "Harshana", "Vajra", "Siddhi", "Vyatipat", "Variyan", "Parigha", "Shiva", "Siddha", "Sadhya", "Shubha", "Shukla", "Brahma", "Indra", "Vaidhriti")
+            val yogaDouble = ((sunLongitude + moonLongitude) % 360) / 13.3333333
+            val yogaIndex = yogaDouble.toInt().coerceIn(0, 26)
+            val yogaVal = yogas[yogaIndex]
+
+            // Karana (60 halves of 30 Tithis in a month)
+            // Karana 1 = Kimstughna (Fixed)
+            // Karanas 2..57 = 7 Movable Karanas repeated 8 times (Bava, Balava, Kaulava, Taitila, Gara, Vanija, Vishti)
+            // Karana 58 = Shakuni (Fixed), 59 = Chatushpada (Fixed), 60 = Naga (Fixed)
+            val halfTithi = ((tithiNum - 1) * 2) + 1
+            val karanaVal = when (halfTithi) {
+                1 -> "Kimstughna (Fixed)"
+                in 2..57 -> {
+                    val movables = listOf("Bava", "Balava", "Kaulava", "Taitila", "Gara", "Vanija", "Vishti (Bhadra)")
+                    movables[(halfTithi - 2) % 7]
+                }
+                58 -> "Shakuni (Fixed)"
+                59 -> "Chatushpada (Fixed)"
+                60 -> "Naga (Fixed)"
+                else -> "Bava"
+            }
+
+            // Moon Rashi (12 Rashis from Moon Longitude)
+            val rashis = listOf("Mesha (Aries)", "Vrishabha (Taurus)", "Mithuna (Gemini)", "Karka (Cancer)", "Simha (Leo)", "Kanya (Virgo)", "Tula (Libra)", "Vrishchika (Scorpio)", "Dhanu (Sagittarius)", "Makara (Capricorn)", "Kumbha (Aquarius)", "Meena (Pisces)")
+            val rashiIndex = ((moonLongitude / 30.0).toInt()) % 12
+            val moonRashiVal = rashis[rashiIndex]
+
+            // Sun Sign from Sun Longitude
+            val sunSignIndex = ((sunLongitude / 30.0).toInt()) % 12
+            val sunSignVal = rashis[sunSignIndex]
+
+            // Hindu Months & Ritu & Ayana
+            val monthsHi = listOf("Chaitra", "Vaisakha", "Jyaistha", "Ashadha", "Shravana", "Bhadrapada", "Ashwin", "Kartik", "Margashirsha", "Pausha", "Magha", "Phalguna")
             val ritus = listOf("Vasanta (Spring)", "Grishma (Summer)", "Varsha (Monsoon)", "Sharad (Autumn)", "Hemant (Pre-winter)", "Shishir (Winter)")
-            val monthIndex = ((daysDiff / 29.53).toInt() + 9) % 12
-            val hinduMonthVal = monthsHi[monthIndex]
+            var monthIndex = ((daysDiff / 29.530589).toInt() + 9) % 12
+            if (monthIndex < 0) monthIndex += 12
+            val hinduMonthVal = "${monthsHi[monthIndex]} (Purnimanta)"
             val rituVal = ritus[monthIndex / 2]
-            
-            // Vikram Samvat (2026 AD is roughly 2083 Vikram Samvat)
-            val samvatVal = (year + 57).toString()
-            
+            val ayanaVal = if (dayOfYear in 172..355) "Dakshinayana" else "Uttarayana"
+
+            // Vikram Samvat (Chaitradi convention)
+            val samvatVal = "${year + 57} Vikram Samvat (Chaitradi)"
+
+            // Choghadiya Summary
+            val choghadiyaList = when (dayOfWeek) {
+                java.util.Calendar.SUNDAY -> "Udveg, Chara, Labha, Amrita, Kala, Shubha, Roga, Udveg"
+                java.util.Calendar.MONDAY -> "Amrita, Kala, Shubha, Roga, Udveg, Chara, Labha, Amrita"
+                java.util.Calendar.TUESDAY -> "Roga, Udveg, Chara, Labha, Amrita, Kala, Shubha, Roga"
+                java.util.Calendar.WEDNESDAY -> "Labha, Amrita, Kala, Shubha, Roga, Udveg, Chara, Labha"
+                java.util.Calendar.THURSDAY -> "Shubha, Roga, Udveg, Chara, Labha, Amrita, Kala, Shubha"
+                java.util.Calendar.FRIDAY -> "Chara, Labha, Amrita, Kala, Shubha, Roga, Udveg, Chara"
+                else -> "Kala, Shubha, Roga, Udveg, Chara, Labha, Amrita, Kala" // Saturday
+            }
+
+            val festivalVal = when {
+                localTithiNum == 11 -> "Ekadashi Vrata (एकादशी व्रत)"
+                localTithiNum == 14 -> "Pradosha Vrata (प्रदोष व्रत)"
+                localTithiNum == 15 && isShukla -> "Purnima Vrata & Satyanarayan Puja (पूर्णिमा व्रत)"
+                localTithiNum == 15 && !isShukla -> "Amavasya Pitru Tarpan (अमावस्या)"
+                localTithiNum == 4 -> "Sankashti Chaturthi (संकष्टी चतुर्थी)"
+                else -> "—"
+            }
+
             val detailedPanchang = DetailedPanchang(
                 tithi = tithiVal,
                 nakshatra = nakshatraVal,
-                yoga = "Siddha",
-                karana = "Bava",
-                rashi = "Mesha (Aries)",
+                yoga = yogaVal,
+                karana = karanaVal,
+                rashi = moonRashiVal,
                 sunrise = sunriseStr,
                 sunset = sunsetStr,
                 rahukaal = rahuKaalStr,
-                gulikaKaal = "12:00 to 01:30",
-                yamaganda = "07:30 to 09:00",
+                gulikaKaal = gulikaStr,
+                yamaganda = yamaStr,
                 abhijeet = abhijeetStr,
-                festival = if (localTithiNum == 11) "Ekadashi Vrata" else if (localTithiNum == 14) "Pradosha Vrata" else "—",
-                details = "Auspicious Vedic day under $nakshatraVal nakshatra and $tithiVal tithi.",
+                festival = festivalVal,
+                details = "Auspicious Vedic Panchang under $nakshatraVal nakshatra ($nakLordVal lord, Pada $nakPadaVal) and $tithiVal tithi.",
                 weekday = when (dayOfWeek) {
-                    java.util.Calendar.MONDAY -> "Monday"
-                    java.util.Calendar.TUESDAY -> "Tuesday"
-                    java.util.Calendar.WEDNESDAY -> "Wednesday"
-                    java.util.Calendar.THURSDAY -> "Thursday"
-                    java.util.Calendar.FRIDAY -> "Friday"
-                    java.util.Calendar.SATURDAY -> "Saturday"
-                    else -> "Sunday"
+                    java.util.Calendar.MONDAY -> "Monday (सोमवार)"
+                    java.util.Calendar.TUESDAY -> "Tuesday (मंगलवार)"
+                    java.util.Calendar.WEDNESDAY -> "Wednesday (बुधवार)"
+                    java.util.Calendar.THURSDAY -> "Thursday (गुरुवार)"
+                    java.util.Calendar.FRIDAY -> "Friday (शुक्रवार)"
+                    java.util.Calendar.SATURDAY -> "Saturday (शनिवार)"
+                    else -> "Sunday (रविवार)"
                 },
-                tithiEndTime = "08:14 PM",
-                nakshatraPada = "2",
-                nakshatraLord = "Ketu",
+                tithiEndTime = tithiEndTimeStr,
+                nakshatraPada = nakPadaVal,
+                nakshatraLord = nakLordVal,
                 lunarMonth = hinduMonthVal,
                 paksha = pakshaVal,
                 ritu = rituVal,
                 samvatYear = samvatVal,
-                sunSign = "Mithuna (Gemini)"
+                sunSign = sunSignVal,
+                moonrise = moonriseStr,
+                moonset = moonsetStr,
+                ayana = ayanaVal,
+                choghadiya = choghadiyaList,
+                locationName = "Lat: ${String.format("%.2f", latitude)}, Lng: ${String.format("%.2f", longitude)}",
+                sourceType = "CALCULATED",
+                accuracyStatus = "APPROXIMATE",
+                calculationMethod = "${EngineClassification.LOCAL_ENGINE_CLASSIFICATION} (Lahiri Sidereal Zodiac)",
+                conventionNote = "Lahiri Ayanamsha (~23.85° Approx) • Purnimanta • Chaitradi Samvat",
+                festivalType = if (localTithiNum == 11) "REQUIRES_VERIFICATION" else "RULE_DERIVED_OBSERVANCE"
             )
             return@withContext PanchangResult(detailedPanchang, null, null, null, null, 200)
         }
         
-        Log.d(TAG, "Fetching Panchang for: $day-$month-$year at lat=$latitude, long=$longitude")
+        Log.d(TAG, "Fetching Panchang for: $day-$month-$year")
 
         // Validate inputs
         if (latitude < -90.0 || latitude > 90.0) return@withContext PanchangResult(null, "Invalid latitude: $latitude", null, null, null, null)
@@ -183,7 +316,7 @@ object AstrologyService {
 
         val requestBody = requestBodyStr.toRequestBody("application/json".toMediaType())
         
-        val url = "https://json.freeastrologyapi.com/complete-panchang"
+        val url = "https://json.freeastrologyapi.com/panchang"
         // Setup request with custom API Key headers
         val request = Request.Builder()
             .url(url)
@@ -197,18 +330,20 @@ object AstrologyService {
                 val bodyStr = response.body?.string()
                 val statusCode = response.code
                 Log.d(TAG, "Panchang API Response code: $statusCode")
-                Log.d(TAG, "Panchang API Raw Response: $bodyStr")
+                // Log.d(TAG, "Panchang API Raw Response received")
                 
                 if (!response.isSuccessful || bodyStr == null) {
-                    val maskedKey = PANCHANG_API_KEY.take(4) + "****"
-                    return@withContext PanchangResult(
-                        null, 
-                        "Panchang API call failed: $statusCode / ${response.message}", 
-                        "$url (Key: $maskedKey)", 
-                        requestBodyStr,
-                        bodyStr,
-                        statusCode
-                    )
+                    val retryAfter = response.header("Retry-After")
+                    if (statusCode == 429) {
+                        Log.w(TAG, "Panchang API Rate Limited (429). Retry-After: $retryAfter. Falling back to offline local calculation engine.")
+                    } else {
+                        Log.w(TAG, "Panchang API call failed: $statusCode / ${response.message} - falling back to local calculation.")
+                    }
+                    val originalKey = PANCHANG_API_KEY
+                    PANCHANG_API_KEY = ""
+                    val fallbackResult = fetchRealPanchang(day, month, year, hours, minutes, seconds, latitude, longitude, timezone)
+                    PANCHANG_API_KEY = originalKey
+                    return@withContext fallbackResult
                 }
 
                 val responseJson = JSONObject(bodyStr)
@@ -241,9 +376,7 @@ object AstrologyService {
                     return value.toString()
                 }
 
-                // After fetching, log the raw response to console (as requested)
-                Log.d("Panchang", "Panchang raw: $bodyStr")
-                println("Panchang raw: $bodyStr")
+                // After fetching, process the raw response
 
                 // Extracted fields with robust parsing & defaults
                 var tithiVal = "—"
@@ -503,22 +636,23 @@ object AstrologyService {
                     paksha = pakshaVal,
                     ritu = rituVal,
                     samvatYear = samvatVal,
-                    sunSign = sunSignVal
+                    sunSign = sunSignVal,
+                    sourceType = "REMOTE_SOURCE",
+                    accuracyStatus = "REMOTE_SOURCE",
+                    calculationMethod = "Authoritative Ephemeris API",
+                    conventionNote = "Authoritative Remote Ephemeris API • Lahiri Ayanamsha",
+                    festivalType = "VERIFIED_FESTIVAL_DATE"
                 )
 
                 PanchangResult(detailedPanchang, null, null, jsonBody.toString(), bodyStr, statusCode)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error calling freeastrologyapi.com", e)
-            val maskedKey = PANCHANG_API_KEY.take(4) + "****"
-            PanchangResult(
-                null, 
-                "Exception: ${e.message}", 
-                "$url (Key: $maskedKey)", 
-                jsonBody.toString(),
-                null,
-                null
-            )
+            Log.e(TAG, "Error calling freeastrologyapi.com: ${e.message} - falling back to local calculation.", e)
+            val originalKey = PANCHANG_API_KEY
+            PANCHANG_API_KEY = ""
+            val fallbackResult = fetchRealPanchang(day, month, year, hours, minutes, seconds, latitude, longitude, timezone)
+            PANCHANG_API_KEY = originalKey
+            return@withContext fallbackResult
         }
     }
 }

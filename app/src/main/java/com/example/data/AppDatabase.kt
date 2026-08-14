@@ -207,6 +207,39 @@ interface AnnouncementDao {
     suspend fun deleteById(id: Int)
 }
 
+@Dao
+interface UserFavoriteDao {
+    @Query("SELECT * FROM user_favorites WHERE userId = :userId")
+    fun getFavorites(userId: String): Flow<List<UserFavorite>>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertFavorite(favorite: UserFavorite)
+
+    @Query("DELETE FROM user_favorites WHERE userId = :userId AND targetId = :targetId AND type = :type")
+    suspend fun deleteFavorite(userId: String, targetId: String, type: String)
+}
+
+@Dao
+interface ReadingProgressDao {
+    @Query("SELECT * FROM reading_progress WHERE userId = :userId AND articleId = :articleId LIMIT 1")
+    suspend fun getProgress(userId: String, articleId: Int): ReadingProgress?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertProgress(progress: ReadingProgress)
+}
+
+@Dao
+interface FestivalDao {
+    @Query("SELECT * FROM festivals WHERE date = :date LIMIT 1")
+    suspend fun getFestival(date: String): FestivalEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertFestival(festival: FestivalEntity)
+
+    @Query("SELECT * FROM festivals")
+    fun getAllFestivals(): Flow<List<FestivalEntity>>
+}
+
 @Database(
     entities = [
         SankalpaLog::class,
@@ -224,9 +257,12 @@ interface AnnouncementDao {
         InstagramPost::class,
         ThoughtQuote::class,
         Announcement::class,
-        PanchangEntity::class
+        PanchangEntity::class,
+        UserFavorite::class,
+        ReadingProgress::class,
+        FestivalEntity::class
     ],
-    version = 14,
+    version = 18,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -245,6 +281,27 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun thoughtQuoteDao(): ThoughtQuoteDao
     abstract fun announcementDao(): AnnouncementDao
     abstract fun panchangDao(): PanchangDao
+    abstract fun userFavoriteDao(): UserFavoriteDao
+    abstract fun readingProgressDao(): ReadingProgressDao
+    abstract fun festivalDao(): FestivalDao
+
+    companion object {
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
+
+        fun getInstance(context: android.content.Context): AppDatabase {
+            return INSTANCE ?: synchronized(this) {
+                val instance = androidx.room.Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "sanatan_sadhak_db"
+                )
+                .build()
+                INSTANCE = instance
+                instance
+            }
+        }
+    }
 }
 
 @Dao

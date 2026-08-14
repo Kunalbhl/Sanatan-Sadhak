@@ -24,4 +24,9 @@ dependencyResolutionManagement {
 
 rootProject.name = "Sanatan Sadhak"
 
+// Dynamic optimization for AI Studio container environment
+if (System.getenv("AI_STUDIO_AGENT") != null) {
+    System.setProperty("kotlin.compiler.execution.strategy", "in-process")
+}
+
 include(":app")

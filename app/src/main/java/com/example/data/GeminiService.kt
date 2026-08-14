@@ -23,11 +23,15 @@ object GeminiService {
 
     private const val MODEL_NAME = "gemini-3.5-flash"
 
-    suspend fun generateResponse(chatHistory: List<ChatMessage>, prompt: String): String = withContext(Dispatchers.IO) {
+    suspend fun generateResponse(chatHistory: List<ChatMessage>, prompt: String, isEnglish: Boolean): String = withContext(Dispatchers.IO) {
         val apiKey = BuildConfig.GEMINI_API_KEY
         if (apiKey.isEmpty() || apiKey == "MY_GEMINI_API_KEY") {
             Log.e(TAG, "API Key is missing or default placeholder")
-            return@withContext "Pranam! I am 'Sadhak Mitra', your spiritual guide. To enable live AI-guided conversations with me, please configure your actual GEMINI_API_KEY in the Secrets panel of Google AI Studio. For now, let me share this sacred wisdom: 'Set your heart on your work, but never on its reward. Work selflessly for the divine, and you shall find true, everlasting happiness (Nishkama Karma).'"
+            if (isEnglish) {
+                return@withContext "Pranam! I am 'Sadhak Mitra', your spiritual guide. To enable live AI-guided conversations with me, please configure your actual GEMINI_API_KEY in the Secrets panel of Google AI Studio. For now, let me share this sacred wisdom: 'Set your heart on your work, but never on its reward. Work selflessly for the divine, and you shall find true, everlasting happiness (Nishkama Karma).'"
+            } else {
+                return@withContext "प्रणाम! मैं 'साधक मित्र' हूं, आपका आध्यात्मिक मार्गदर्शक। मेरे साथ लाइव AI-संचालित बातचीत शुरू करने के लिए, कृपया Google AI Studio के Secrets पैनल में अपनी वास्तविक GEMINI_API_KEY कॉन्फ़िगर करें। तब तक, मैं आपके साथ यह पवित्र ज्ञान साझा करता हूँ: 'अपने कर्म पर ध्यान लगाओ, उसके फल पर नहीं। ईश्वर के लिए निस्वार्थ भाव से कार्य करो, और तुम्हें सच्ची, शाश्वत प्रसन्नता प्राप्त होगी (निष्काम कर्म)।'"
+            }
         }
 
         val url = "https://generativelanguage.googleapis.com/v1beta/models/$MODEL_NAME:generateContent?key=$apiKey"
@@ -39,7 +43,8 @@ object GeminiService {
             // System instruction
             val systemInstruction = JSONObject()
             val sysParts = JSONArray()
-            val sysPart = JSONObject().put("text", "You are 'Sadhak Mitra', a wise, peaceful, calm, and deeply knowledgeable spiritual guide dedicated to Sanatan Dharma, Bhakti, Karma, and inner happiness. Answer in a warm, respectful, non-commercial, temple-like tone. Speak in simple language, bilingual (mix of Hindi/Sanskrit terms and English) based on what the user asks. Address doubts gently, quote Gita shlokas with translation when appropriate, and encourage daily gratitude and positive Karma.")
+            val preferredLanguage = if (isEnglish) "English" else "Hindi (Primary)"
+            val sysPart = JSONObject().put("text", "You are 'Sadhak Mitra', a wise, peaceful, calm, and deeply knowledgeable spiritual guide dedicated to Sanatan Dharma, Bhakti, Karma, and inner happiness. Answer in a warm, respectful, non-commercial, temple-like tone. Speak in simple language, primarily in $preferredLanguage. Address doubts gently, quote Gita shlokas with translation when appropriate, and encourage daily gratitude and positive Karma. CRITICAL: Never represent generated content as scripture, verified quotation, or historical fact without a verified source. Do not fabricate Sanskrit quotations. If you provide a scriptural answer, structure it clearly by separating: SOURCE TEXT, TRADITIONAL INTERPRETATION, and AI GENERATED EXPLANATION. If uncertain, clearly state that source verification is required.")
             sysParts.put(sysPart)
             systemInstruction.put("parts", sysParts)
             root.put("systemInstruction", systemInstruction)
@@ -82,7 +87,7 @@ object GeminiService {
             client.newCall(request).execute().use { response ->
                 val bodyStr = response.body?.string()
                 if (!response.isSuccessful || bodyStr == null) {
-                    Log.e(TAG, "Request failed code: ${response.code}, body: $bodyStr")
+                    Log.e(TAG, "Request failed code: ${response.code}")
                     return@withContext "Apologies, dear Sadhak. I was unable to connect to the divine knowledge network at this moment. Let us chant 'Om Namah Shivaya' together. (Error: ${response.code})"
                 }
 
@@ -191,7 +196,7 @@ object GeminiService {
         if (apiKey.isEmpty() || apiKey == "MY_GEMINI_API_KEY") {
             return@withContext null
         }
-        val url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=$apiKey"
+        val url = "https://generativelanguage.googleapis.com/v1beta/models/$MODEL_NAME:generateContent?key=$apiKey"
         try {
             val root = JSONObject()
             val contentsArray = JSONArray()

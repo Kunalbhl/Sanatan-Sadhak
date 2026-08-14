@@ -1,0 +1,498 @@
+app/src/main/java/com/example/di/AppContainer.kt:13:    val meditationRepository = MeditationRepository(application)
+app/src/main/java/com/example/ui/screens/sadhana/MantraDetailScreen.kt:70:    val isPlaying by com.example.ui.components.AudioEngine.isPlaying.collectAsState()
+app/src/main/java/com/example/ui/screens/sadhana/MantraDetailScreen.kt:71:    val isBuffering by com.example.ui.components.AudioEngine.isBuffering.collectAsState()
+app/src/main/java/com/example/ui/screens/sadhana/MantraDetailScreen.kt:72:    val progress by com.example.ui.components.AudioEngine.progress.collectAsState()
+app/src/main/java/com/example/ui/screens/sadhana/MantraDetailScreen.kt:73:    val currentPos by com.example.ui.components.AudioEngine.currentPositionStr.collectAsState()
+app/src/main/java/com/example/ui/screens/sadhana/MantraDetailScreen.kt:74:    val totalDur by com.example.ui.components.AudioEngine.durationStr.collectAsState()
+app/src/main/java/com/example/ui/screens/sadhana/MantraDetailScreen.kt:87:            com.example.ui.components.AudioEngine.stopAmbientSound()
+app/src/main/java/com/example/ui/screens/sadhana/MantraDetailScreen.kt:159:                // Audio Player Simulation
+app/src/main/java/com/example/ui/screens/sadhana/MantraDetailScreen.kt:180:                                        com.example.ui.components.AudioEngine.pauseAmbientSound()
+app/src/main/java/com/example/ui/screens/sadhana/MantraDetailScreen.kt:182:                                        com.example.ui.components.AudioEngine.playAmbientSound(2, 0.8f)
+app/src/main/java/com/example/ui/screens/sadhana/MantraDetailScreen.kt:205:                                text = if (isEnglish) "Buffering audio..." else "ऑडियो लोड हो रहा है...",
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:7:import androidx.compose.ui.draw.shadow
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:142:import androidx.compose.ui.draw.clip
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:143:import androidx.compose.ui.draw.scale
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:173:import androidx.compose.ui.graphics.drawscope.Stroke
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:179:import androidx.compose.ui.draw.scale
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:284:fun AartiBellWidget(isEng: Boolean) {
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:287:    var bellCount by remember { mutableStateOf(0) }
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:288:    val bellLogs = remember { mutableStateListOf<String>() }
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:335:                text = if (isEng) "Sacred Aarti Bell" else "दिव्य आरती घंटी",
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:342:                text = "${if (isEng) "Total Rings" else "कुल आरती नाद"}: $bellCount",
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:358:                        bellCount += 1
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:361:                        // Play original temple bell sound
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:362:                        playTempleBellSound()
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:367:                        val logMsg = if (isEng) "Bell Rung at $timeStr (Ring #$bellCount)" else "आरती घंटी नाद समय $timeStr (संख्या #$bellCount)"
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:368:                        bellLogs.add(0, logMsg)
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:395:                // Rotating / swinging Gold Temple Bell icon/drawing
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:410:                        drawCircle(
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:417:                        // Bell crown / body top
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:428:                        drawPath(
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:436:                        drawCircle(
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:442:                        drawLine(
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:450:                    // Golden sacred OM character inside the bell
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:470:                    text = if (isEng) "Bell Ring Logs" else "घंटी नाद इतिहास",
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:473:                if (bellLogs.isNotEmpty()) {
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:474:                    TextButton(onClick = { bellLogs.clear() }) {
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:491:                if (bellLogs.isEmpty()) {
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:494:                            text = if (isEng) "Tap the bell to hear original sound and see logs" else "घंटी को स्पर्श करके दिव्य ध्वनि और इतिहास देखें",
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:503:                        items(bellLogs) { log ->
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:532:fun playTempleBellSound() {
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:563:            val audioTrack = android.media.AudioTrack(
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:564:                android.media.AudioManager.STREAM_MUSIC,
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:566:                android.media.AudioFormat.CHANNEL_OUT_MONO,
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:567:                android.media.AudioFormat.ENCODING_PCM_16BIT,
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:569:                android.media.AudioTrack.MODE_STATIC
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:571:            audioTrack.write(buffer, 0, buffer.size)
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:572:            audioTrack.play()
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:574:            audioTrack.stop()
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:575:            audioTrack.release()
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:642:                subtitle = if (isEng) "Daily rituals, calming meditation, and sacred chants" else "दैनिक अनुष्ठान, शांत ध्यान और पवित्र मंत्र",
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:678:                "Timer" -> MeditationTimerView(viewModel, isEng)
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:709:    val activeTab = if (selectedToolSubTab == "Bell" || selectedToolSubTab == "KarmaLog" || selectedToolSubTab == "Gratitude" || selectedToolSubTab == "Counter" || selectedToolSubTab == "TempleFinder") {
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:712:        "Bell"
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:729:            // Sub Navigation Tabs: Bell, Counter, KarmaLog, Gratitude, TempleFinder
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:737:                val tabs = listOf("Bell", "Counter", "KarmaLog", "Gratitude", "TempleFinder")
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:740:                        "Bell" -> if (isEng) "Aarti Bell" else "आरती घंटी"
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:759:                "Bell" -> AartiBellWidget(isEng = isEng)
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:818:            placeholder = {
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:819:                Text(text = if (isEnglish) "Search mantras, prayers, aartis..." else "खोजें: मंत्र, प्रार्थना, आरती...")
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:1016:fun MeditationTimerView(viewModel: SadhakViewModel, isEnglish: Boolean) {
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:1023:    var selectedSoundIndex by remember { mutableStateOf(1) } // Default to Temple Bells
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:1027:    // Ambient Sound Playback logic
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:1030:            AmbientSoundPlayer.playSound(selectedSoundIndex, backgroundVolume)
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:1032:            AmbientSoundPlayer.stopSound()
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:1087:                    text = if (isEnglish) "Dhyana & Breath Meditation" else "ध्यान एवं प्राणायाम",
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:1223:                        Pair("Temple Bells 🔔", "घंटी 🔔"),
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:1225:                        Pair("Cosmic Flute 🪈", "बांसुरी 🪈"),
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:1233:                        text = if (isEnglish) "Playing Ambient Sound: $soundName" else "पृष्ठभूमि ध्वनि सक्रिय: $soundName",
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:1306:                        text = if (isEnglish) "Choose Calming Ambient Sound:" else "शांत ध्यान संगीत चुनें:",
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:1315:                        Pair("Temple Bells 🔔", "घंटी 🔔"),
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:1317:                        Pair("Cosmic Flute 🪈", "बांसुरी 🪈"),
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:1339:                                modifier = Modifier.testTag("meditation_sound_option_$index")
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:1349:                // Ambient Sound Volume Slider
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:1368:                                text = if (isEnglish) "Ambient Volume: ${(backgroundVolume * 100).toInt()}%" else "ध्वनि स्तर: ${(backgroundVolume * 100).toInt()}%",
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:1383:                            modifier = Modifier.fillMaxWidth().testTag("ambient_volume_slider")
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:1455:                    placeholder = {
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:1557:                    placeholder = {
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:1801:                title = if (isEnglish) "Guided Dhyan (Meditation)" else "ध्यान साधना एवं प्राणायाम",
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:1802:                shortDescription = if (isEnglish) "Breathing rhythms & temple bell sounds" else "श्वसन चक्र और मंदिर की घंटियों के साथ ध्यान",
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:1805:                testTag = "tile_dhyan_meditation"
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:1810:                shortDescription = if (isEnglish) "Authentic chants, audio pronunciation & meanings" else "प्रामाणिक पाठ, उच्चारण व अर्थ",
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:1882:                            text = if (isEnglish) "Dhyan Meditation Goal" else "ध्यान साधना लक्ष्य",
+app/src/main/java/com/example/ui/screens/sadhana/SadhanaScreens.kt:2042:                        placeholder = { Text(text = if (isEnglish) "E.g., Completed 1 Mala Gayatri Japa" else "उदा. १ माला गायत्री जाप पूर्ण किया") },
+app/src/main/java/com/example/ui/screens/home/HomeScreen.kt:47:import androidx.compose.material.icons.filled.MusicNote
+app/src/main/java/com/example/ui/screens/home/HomeScreen.kt:79:import androidx.compose.ui.draw.clip
+app/src/main/java/com/example/ui/screens/home/HomeScreen.kt:162:            if (status == TextToSpeech.SUCCESS) {
+app/src/main/java/com/example/ui/screens/home/HomeScreen.kt:649:                QuickActionItem(if (isEng) "Meditation" else "ध्यान", Icons.Default.SelfImprovement, "Bhakti"),
+app/src/main/java/com/example/ui/screens/home/HomeScreen.kt:747:                    desc = if (isEng) "Aarti, Chalisa & Stotra Sangrah" else "आरती, चालीसा एवं स्तोत्र संग्रह",
+app/src/main/java/com/example/ui/screens/home/HomeScreen.kt:748:                    icon = Icons.Default.MusicNote,
+app/src/main/java/com/example/ui/screens/home/HomeScreen.kt:759:                    desc = if (isEng) "Meditation & Mindful Peace" else "ध्यान, प्राणायाम एवं मानस शांति",
+app/src/main/java/com/example/ui/screens/home/HomeScreen.kt:794:                    title = if (isEng) "Audio" else "भक्ति ऑडियो",
+app/src/main/java/com/example/ui/screens/home/HomeScreen.kt:795:                    desc = if (isEng) "Sacred Chants & Audio Player" else "मंत्र, भजन एवं आरती ध्वनि",
+app/src/main/java/com/example/ui/screens/home/HomeScreen.kt:996:                        text = if (isEng) "Start mantra recitation, meditation, or Stotra japa to elevate your inner peace." else "मंत्र जप, ध्यान एवं स्तोत्र पाठ से अपनी आध्यात्मिक चेतना व ऊर्जा बढ़ाएं।",
+app/src/main/java/com/example/ui/screens/home/HomeScreen.kt:1275:                            text = if (isEng) "Watch Darshan, Aarti, and discourses" else "दर्शन, आरती व संत प्रवचन वीडियो देखें",
+app/src/main/java/com/example/ui/screens/video/VideoScreens.kt:3:import androidx.compose.ui.draw.shadow
+app/src/main/java/com/example/ui/screens/video/VideoScreens.kt:138:import androidx.compose.ui.draw.clip
+app/src/main/java/com/example/ui/screens/video/VideoScreens.kt:139:import androidx.compose.ui.draw.scale
+app/src/main/java/com/example/ui/screens/video/VideoScreens.kt:169:import androidx.compose.ui.graphics.drawscope.Stroke
+app/src/main/java/com/example/ui/screens/video/VideoScreens.kt:175:import androidx.compose.ui.draw.scale
+app/src/main/java/com/example/ui/screens/video/VideoScreens.kt:254:                    "Puja" -> if (isEng) "Puja & Aarti" else "पूजा व आरती (Puja)"
+app/src/main/java/com/example/ui/screens/community/CommunityScreens.kt:5:import androidx.compose.ui.draw.shadow
+app/src/main/java/com/example/ui/screens/community/CommunityScreens.kt:140:import androidx.compose.ui.draw.clip
+app/src/main/java/com/example/ui/screens/community/CommunityScreens.kt:141:import androidx.compose.ui.draw.scale
+app/src/main/java/com/example/ui/screens/community/CommunityScreens.kt:171:import androidx.compose.ui.graphics.drawscope.Stroke
+app/src/main/java/com/example/ui/screens/community/CommunityScreens.kt:177:import androidx.compose.ui.draw.scale
+app/src/main/java/com/example/ui/screens/community/CommunityScreens.kt:417:                                                style = MaterialTheme.typography.labelLarge.copy(
+app/src/main/java/com/example/ui/screens/community/CommunityScreens.kt:898:                        style = MaterialTheme.typography.labelLarge.copy(
+app/src/main/java/com/example/ui/screens/community/CommunityScreens.kt:979:                                    style = MaterialTheme.typography.labelLarge.copy(
+app/src/main/java/com/example/ui/screens/community/CommunityScreens.kt:1035:                placeholder = {
+app/src/main/java/com/example/ui/screens/community/CommunityScreens.kt:1063:// --- SACRED AARTI BELL CHIME ENGINE & WIDGET ---
+app/src/main/java/com/example/ui/screens/profile/ProfileScreens.kt:3:import androidx.compose.ui.draw.shadow
+app/src/main/java/com/example/ui/screens/profile/ProfileScreens.kt:138:import androidx.compose.ui.draw.clip
+app/src/main/java/com/example/ui/screens/profile/ProfileScreens.kt:139:import androidx.compose.ui.draw.scale
+app/src/main/java/com/example/ui/screens/profile/ProfileScreens.kt:169:import androidx.compose.ui.graphics.drawscope.Stroke
+app/src/main/java/com/example/ui/screens/profile/ProfileScreens.kt:175:import androidx.compose.ui.draw.scale
+app/src/main/java/com/example/ui/screens/profile/ProfileScreens.kt:502:                                    viewModel.signUp(emailInput, passInput, nameInput, cityInput, stateInput, mobileInput) { success, msg ->
+app/src/main/java/com/example/ui/screens/profile/ProfileScreens.kt:503:                                        if (!success) statusText = msg
+app/src/main/java/com/example/ui/screens/profile/ProfileScreens.kt:506:                                    viewModel.login(emailInput, passInput, rememberMe) { success, msg ->
+app/src/main/java/com/example/ui/screens/profile/ProfileScreens.kt:507:                                        if (!success) statusText = msg
+app/src/main/java/com/example/ui/screens/profile/ProfileScreens.kt:960:                                viewModel.updateUserProfileDetails(editName, editMobile, editCity, editState, editAvatar, editImageUri) { success ->
+app/src/main/java/com/example/ui/screens/profile/ProfileScreens.kt:961:                                    if (success) onBack()
+app/src/main/java/com/example/ui/screens/profile/ProfileScreens.kt:1380:                    text = if (isEng) "Set daily reminders for morning or evening prayers/meditation." else "सुबह या शाम की प्रार्थना/ध्यान के लिए दैनिक अनुस्मारक सेट करें।",
+app/src/main/java/com/example/ui/screens/common/CommonScreens.kt:21:import androidx.compose.ui.draw.shadow
+app/src/main/java/com/example/ui/screens/common/CommonScreens.kt:46:import androidx.compose.ui.draw.clip
+app/src/main/java/com/example/ui/screens/common/CommonScreens.kt:166:                        Pair("Mantras & Aarti", Icons.Default.PlayArrow to "Explore Mantras"),
+app/src/main/java/com/example/ui/screens/common/CommonScreens.kt:247:                            placeholder = { Text("Ask Sadhak Mitra...", fontSize = 14.sp) },
+app/src/main/java/com/example/ui/screens/common/SharedComponents.kt:3:import androidx.compose.ui.draw.shadow
+app/src/main/java/com/example/ui/screens/common/SharedComponents.kt:139:import androidx.compose.ui.draw.clip
+app/src/main/java/com/example/ui/screens/common/SharedComponents.kt:140:import androidx.compose.ui.draw.scale
+app/src/main/java/com/example/ui/screens/common/SharedComponents.kt:170:import androidx.compose.ui.graphics.drawscope.Stroke
+app/src/main/java/com/example/ui/screens/common/SharedComponents.kt:176:import androidx.compose.ui.draw.scale
+app/src/main/java/com/example/ui/screens/panchang/CalendarScreens.kt:64:import androidx.compose.ui.draw.clip
+app/src/main/java/com/example/ui/screens/panchang/CalendarScreens.kt:330:                                            if (d.sourceType == "REMOTE_SOURCE") SadhakThemeColors.success.copy(alpha = 0.15f)
+app/src/main/java/com/example/ui/screens/panchang/CalendarScreens.kt:339:                                            color = if (d.sourceType == "REMOTE_SOURCE") SadhakThemeColors.success else MaterialTheme.colorScheme.onSecondaryContainer
+app/src/main/java/com/example/ui/screens/panchang/CalendarScreens.kt:493:                                    Icon(Icons.Default.CheckCircle, "Auspicious", tint = SadhakThemeColors.success, modifier = Modifier.size(16.dp))
+app/src/main/java/com/example/ui/screens/panchang/CalendarScreens.kt:497:                                Text(d.abhijeet, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = SadhakThemeColors.success))
+app/src/main/java/com/example/ui/screens/knowledge/KnowledgeScreens.kt:3:import androidx.compose.ui.draw.clip
+app/src/main/java/com/example/ui/screens/knowledge/KnowledgeScreens.kt:5:import androidx.compose.ui.draw.shadow
+app/src/main/java/com/example/ui/screens/knowledge/KnowledgeScreens.kt:140:import androidx.compose.ui.draw.clip
+app/src/main/java/com/example/ui/screens/knowledge/KnowledgeScreens.kt:141:import androidx.compose.ui.draw.scale
+app/src/main/java/com/example/ui/screens/knowledge/KnowledgeScreens.kt:171:import androidx.compose.ui.graphics.drawscope.Stroke
+app/src/main/java/com/example/ui/screens/knowledge/KnowledgeScreens.kt:177:import androidx.compose.ui.draw.scale
+app/src/main/java/com/example/ui/screens/knowledge/KnowledgeScreens.kt:325:                            placeholder = {
+app/src/main/java/com/example/ui/screens/knowledge/KnowledgeScreens.kt:1238:                                placeholder = {
+app/src/main/java/com/example/ui/screens/AmbientSoundPlayer.kt:3:import android.media.AudioAttributes
+app/src/main/java/com/example/ui/screens/AmbientSoundPlayer.kt:4:import android.media.MediaPlayer
+app/src/main/java/com/example/ui/screens/AmbientSoundPlayer.kt:7:object AmbientSoundPlayer {
+app/src/main/java/com/example/ui/screens/AmbientSoundPlayer.kt:8:    private var mediaPlayer: MediaPlayer? = null
+app/src/main/java/com/example/ui/screens/AmbientSoundPlayer.kt:14:            mediaPlayer?.setVolume(volume, volume)
+app/src/main/java/com/example/ui/screens/AmbientSoundPlayer.kt:16:            Log.e("AmbientSoundPlayer", "Error setting volume", e)
+app/src/main/java/com/example/ui/screens/AmbientSoundPlayer.kt:21:        if (currentSoundType == soundType && mediaPlayer != null) {
+app/src/main/java/com/example/ui/screens/AmbientSoundPlayer.kt:26:                    mediaPlayer?.start()
+app/src/main/java/com/example/ui/screens/AmbientSoundPlayer.kt:27:                } catch(e: Exception) { android.util.Log.e("Audio", "Error", e) }
+app/src/main/java/com/example/ui/screens/AmbientSoundPlayer.kt:37:            1 -> "https://archive.org/download/TempleBellHugeSoundBible.com695883450/Temple%20Bell%20Huge-SoundBible.com-695883450.mp3"
+app/src/main/java/com/example/ui/screens/AmbientSoundPlayer.kt:39:            3 -> "https://archive.org/download/beautiful-indian-music-for-meditation-and-yoga-relaxing-bansuri-flute-music/Beautiful%20Indian%20Music%20For%20Meditation%20And%20Yoga%20Relaxing%20Bansuri%20Flute%20Music.mp3"
+app/src/main/java/com/example/ui/screens/AmbientSoundPlayer.kt:51:            mediaPlayer = MediaPlayer().apply {
+app/src/main/java/com/example/ui/screens/AmbientSoundPlayer.kt:52:                setAudioAttributes(
+app/src/main/java/com/example/ui/screens/AmbientSoundPlayer.kt:53:                    AudioAttributes.Builder()
+app/src/main/java/com/example/ui/screens/AmbientSoundPlayer.kt:54:                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+app/src/main/java/com/example/ui/screens/AmbientSoundPlayer.kt:55:                        .setUsage(AudioAttributes.USAGE_MEDIA)
+app/src/main/java/com/example/ui/screens/AmbientSoundPlayer.kt:65:                        } catch(e: Exception) { android.util.Log.e("Audio", "Error", e) }
+app/src/main/java/com/example/ui/screens/AmbientSoundPlayer.kt:71:            Log.e("AmbientSoundPlayer", "Error playing ambient sound", e)
+app/src/main/java/com/example/ui/screens/AmbientSoundPlayer.kt:78:            mediaPlayer?.reset()
+app/src/main/java/com/example/ui/screens/AmbientSoundPlayer.kt:79:            mediaPlayer?.release()
+app/src/main/java/com/example/ui/screens/AmbientSoundPlayer.kt:81:            Log.e("AmbientSoundPlayer", "Error stopping ambient sound", e)
+app/src/main/java/com/example/ui/screens/AmbientSoundPlayer.kt:83:            mediaPlayer = null
+app/src/main/java/com/example/ui/screens/TempleFinderScreen.kt:29:import androidx.compose.ui.draw.clip
+app/src/main/java/com/example/ui/screens/TempleFinderScreen.kt:168:        significanceEn = "The idol is not kept under open display; curtains are drawn every few minutes to prevent Bihari Ji's intense eyes from overwhelming devotees.",
+app/src/main/java/com/example/ui/screens/TempleFinderScreen.kt:190:        significanceEn = "The temple has spectacular colored lighting sequences at night and an outdoor musical fountain depicting the sweet pastimes of Shri Radha Krishna.",
+app/src/main/java/com/example/ui/screens/TempleFinderScreen.kt:707:            placeholder = { Text(if (isEng) "Search temples by name or deity..." else "मंदिर या देवता के नाम से खोजें...") },
+app/src/main/java/com/example/ui/screens/GlobalChantPlayer.kt:3:import android.media.AudioFormat
+app/src/main/java/com/example/ui/screens/GlobalChantPlayer.kt:4:import android.media.AudioManager
+app/src/main/java/com/example/ui/screens/GlobalChantPlayer.kt:5:import android.media.AudioTrack
+app/src/main/java/com/example/ui/screens/GlobalChantPlayer.kt:20:            val bufferSize = AudioTrack.getMinBufferSize(
+app/src/main/java/com/example/ui/screens/GlobalChantPlayer.kt:22:                AudioFormat.CHANNEL_OUT_MONO,
+app/src/main/java/com/example/ui/screens/GlobalChantPlayer.kt:23:                AudioFormat.ENCODING_PCM_16BIT
+app/src/main/java/com/example/ui/screens/GlobalChantPlayer.kt:26:            val audioTrack = AudioTrack(
+app/src/main/java/com/example/ui/screens/GlobalChantPlayer.kt:27:                AudioManager.STREAM_MUSIC,
+app/src/main/java/com/example/ui/screens/GlobalChantPlayer.kt:29:                AudioFormat.CHANNEL_OUT_MONO,
+app/src/main/java/com/example/ui/screens/GlobalChantPlayer.kt:30:                AudioFormat.ENCODING_PCM_16BIT,
+app/src/main/java/com/example/ui/screens/GlobalChantPlayer.kt:32:                AudioTrack.MODE_STREAM
+app/src/main/java/com/example/ui/screens/GlobalChantPlayer.kt:35:            audioTrack.play()
+app/src/main/java/com/example/ui/screens/GlobalChantPlayer.kt:55:                    audioTrack.write(buffer, 0, buffer.size)
+app/src/main/java/com/example/ui/screens/GlobalChantPlayer.kt:58:                audioTrack.stop()
+app/src/main/java/com/example/ui/screens/GlobalChantPlayer.kt:59:                audioTrack.release()
+app/src/main/java/com/example/ui/screens/InstagramUpdatesScreen.kt:29:import androidx.compose.ui.draw.clip
+app/src/main/java/com/example/ui/screens/InstagramUpdatesScreen.kt:117:                            "Follow daily live visual feeds, darshan updates, aartis and announcements from major shrines."
+app/src/main/java/com/example/ui/screens/CounterView.kt:18:import androidx.compose.ui.draw.clip
+app/src/main/java/com/example/ui/screens/CounterView.kt:21:import androidx.compose.ui.graphics.drawscope.Stroke
+app/src/main/java/com/example/ui/screens/CounterView.kt:78:                    com.example.ui.screens.AmbientSoundPlayer.playSound(1, 0.8f) // Ring Majestic Temple Bell!
+app/src/main/java/com/example/ui/screens/CounterView.kt:90:                    com.example.ui.screens.AmbientSoundPlayer.playSound(1, 0.8f) // Ring Majestic Temple Bell!
+app/src/main/java/com/example/ui/screens/CounterView.kt:140:        // Mala Completion Haptic (every beadsPerMala chants)
+app/src/main/java/com/example/ui/screens/CounterView.kt:156:            // Special success vibration pattern
+app/src/main/java/com/example/ui/screens/CounterView.kt:338:                                placeholder = { Text(text = if (isEng) "Type your custom mantra here..." else "अपना मंत्र यहाँ लिखें...") },
+app/src/main/java/com/example/ui/screens/CounterView.kt:375:                            drawCircle(
+app/src/main/java/com/example/ui/screens/CounterView.kt:384:                            drawArc(
+app/src/main/java/com/example/ui/screens/CounterView.kt:593:                            drawCircle(
+app/src/main/java/com/example/ui/screens/CounterView.kt:599:                            drawArc(
+app/src/main/java/com/example/ui/screens/CounterView.kt:877:                        // Mala completion vibration
+app/src/main/java/com/example/ui/screens/CounterView.kt:923:    // Celebratory Success Target Dialogue
+app/src/main/java/com/example/ui/screens/VedicLibraryScreen.kt:55:                        viewModel.changeAudioTrack(index)
+app/src/main/java/com/example/ui/screens/AdminControlCenterScreen.kt:20:import androidx.compose.ui.draw.clip
+app/src/main/java/com/example/ui/screens/AdminControlCenterScreen.kt:88:                        Box(modifier = Modifier.size(8.dp).background(SadhakThemeColors.success, CircleShape))
+app/src/main/java/com/example/ui/screens/AdminControlCenterScreen.kt:353:            placeholder = { Text(if (isEng) "Search articles by title/category..." else "शीर्षक/श्रेणी से खोजें...") },
+app/src/main/java/com/example/ui/screens/AdminControlCenterScreen.kt:376:                                    color = if (art.verificationStatus == "VERIFIED_SOURCE") SadhakThemeColors.success.copy(alpha = 0.15f) else SadhakThemeColors.warning.copy(alpha = 0.15f),
+app/src/main/java/com/example/ui/screens/AdminControlCenterScreen.kt:384:                                        color = if (art.verificationStatus == "VERIFIED_SOURCE") SadhakThemeColors.success else SadhakThemeColors.warning
+app/src/main/java/com/example/ui/screens/AdminControlCenterScreen.kt:432:                    onSuccess = { showAddDialog = false; errorMsg = null },
+app/src/main/java/com/example/ui/designsystem/SadhakSearchBar.kt:28:import androidx.compose.ui.draw.clip
+app/src/main/java/com/example/ui/designsystem/SadhakSearchBar.kt:43:    placeholder: String = "खोजें (Search scriptures, mantras...)",
+app/src/main/java/com/example/ui/designsystem/SadhakSearchBar.kt:77:                    text = placeholder,
+app/src/main/java/com/example/ui/designsystem/SadhakSectionHeader.kt:71:                    style = MaterialTheme.typography.labelLarge.copy(
+app/src/main/java/com/example/ui/designsystem/SadhakChip.kt:21:import androidx.compose.ui.draw.clip
+app/src/main/java/com/example/ui/designsystem/SadhakChip.kt:89:                style = MaterialTheme.typography.labelLarge.copy(
+app/src/main/java/com/example/ui/designsystem/SadhakCard.kt:15:import androidx.compose.ui.draw.clip
+app/src/main/java/com/example/ui/designsystem/SadhakStates.kt:204:    successContent: @Composable (T) -> Unit
+app/src/main/java/com/example/ui/designsystem/SadhakStates.kt:210:        is UiState.Success -> {
+app/src/main/java/com/example/ui/designsystem/SadhakStates.kt:211:            successContent(state.data)
+app/src/main/java/com/example/ui/designsystem/SadhakButtons.kt:27:import androidx.compose.ui.draw.clip
+app/src/main/java/com/example/ui/designsystem/SadhakFeatureTile.kt:24:import androidx.compose.ui.draw.alpha
+app/src/main/java/com/example/ui/designsystem/SadhakFeatureTile.kt:25:import androidx.compose.ui.draw.clip
+app/src/main/java/com/example/ui/viewmodel/CommunityViewModel.kt:48:        if (list.isEmpty()) UiState.Empty else UiState.Success(list)
+app/src/main/java/com/example/ui/viewmodel/KnowledgeViewModel.kt:162:        if (list.isEmpty()) UiState.Empty else UiState.Success(list)
+app/src/main/java/com/example/ui/viewmodel/MantraViewModel.kt:23:        if (list.isEmpty()) UiState.Empty else UiState.Success(list)
+app/src/main/java/com/example/ui/viewmodel/AiMitraViewModel.kt:76:                    "Today's Panchang highlights an auspicious Tithi and Nakshatra, creating a favorable energy for starting new spiritual practices. The planetary alignments suggest dedicating time to meditation and inner reflection.\n\nTry this today: Light a diya during Sandhya time and chant the Gayatri Mantra.\n[CHIP:View Daily Panchang:Home]\n[FOLLOWUP:How do I start a daily puja?]\n[FOLLOWUP:Tell me about Mahadev]"
+app/src/main/java/com/example/ui/viewmodel/AiMitraViewModel.kt:82:                    "Mahadev, the Supreme Being in Shaivism, represents the pure consciousness that transcends space and time. He is the destroyer of ignorance and ego, clearing the path for new creation and spiritual enlightenment. His ascetic form reminds us to find peace within, detached from material desires.\n\nTry this today: Offer a simple prayer of gratitude to Mahadev for the breath of life.\n[CHIP:Read about Mahadev:Knowledge]\n[CHIP:Shiva Aarti:Bhakti]\n[FOLLOWUP:What does the Trishul symbolize?]\n[FOLLOWUP:Tell me about Parvati Mata]"
+app/src/main/java/com/example/ui/viewmodel/AiMitraViewModel.kt:85:                    "As shared in the Bhagavad Gita, Chapter 2: 'You have a right to perform your prescribed duty, but you are not entitled to the fruits of action.' This teaching, known as Karma Yoga, encourages us to act with dedication while surrendering the outcome to the Divine.\n\nTry this today: When facing a task, focus entirely on doing it well, without worrying about success or failure.\n[CHIP:Read Bhagavad Gita:Knowledge]\n[FOLLOWUP:Explain Karma Yoga]\n[FOLLOWUP:What does Chapter 3 say?]"
+app/src/main/java/com/example/ui/viewmodel/AiMitraViewModel.kt:87:                p.contains("puja") || p.contains("meditation") -> {
+app/src/main/java/com/example/ui/viewmodel/AiMitraViewModel.kt:91:                    "Sindari ke Balaji is a revered form of Lord Hanuman, known for his immense strength, unwavering devotion to Lord Rama, and his power to dispel negative energies and grant boons to his devotees. Temples dedicated to Him often draw large crowds seeking blessings for courage and protection.\n\nTry this today: Chant 'Om Shri Hanumate Namah' to invoke His strength when you feel anxious.\n[CHIP:Read about Hanumanji:Knowledge]\n[CHIP:Hanuman Chalisa:Bhakti]\n[FOLLOWUP:Tell me a story about Hanuman]\n[FOLLOWUP:How to overcome fear?]"
+app/src/main/java/com/example/ui/viewmodel/AiMitraViewModel.kt:111:                p.contains("puja") || p.contains("meditation") || p.contains("पूजा") || p.contains("ध्यान") -> {
+app/src/main/java/com/example/ui/viewmodel/HomeViewModel.kt:72:                audioUrl = ""
+app/src/main/java/com/example/ui/viewmodel/HomeViewModel.kt:78:                audioUrl = ""
+app/src/main/java/com/example/ui/viewmodel/HomeViewModel.kt:84:                audioUrl = ""
+app/src/main/java/com/example/ui/viewmodel/VideoViewModel.kt:41:                "Puja" -> list.filter { it.category.contains("Puja", ignoreCase = true) || it.category.contains("Aarti", ignoreCase = true) || it.category.contains("Abhishek", ignoreCase = true) }
+app/src/main/java/com/example/ui/viewmodel/VideoViewModel.kt:57:            1 -> listOf("surya", "ram", "rama", "sun", "aarati", "aarti", "रविवार", "राम", "सूर्य")
+app/src/main/java/com/example/ui/viewmodel/VideoViewModel.kt:62:            6 -> listOf("devi", "durga", "lakshmi", "laxmi", "shukra", "shukrawar", "shukravar", "शुक्रवार", "दुर्गा", "लक्ष्मी", "देवी")
+app/src/main/java/com/example/ui/viewmodel/SearchViewModel.kt:64:            UiState.Success(results)
+app/src/main/java/com/example/ui/viewmodel/TempleViewModel.kt:42:        if (list.isEmpty()) UiState.Empty else UiState.Success(list)
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:19:import com.example.data.MeditationRepository
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:151:    private val meditationRepository = MeditationRepository(application)
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:186:    // Global Audio Player State
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:187:    private val _globalAudioTitle = MutableStateFlow("")
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:188:    val globalAudioTitle: StateFlow<String> = _globalAudioTitle
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:190:    private val _isGlobalAudioPlaying = MutableStateFlow(false)
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:191:    val isGlobalAudioPlaying: StateFlow<Boolean> = _isGlobalAudioPlaying
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:193:    private val _globalAudioProgress = MutableStateFlow(0f)
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:194:    val globalAudioProgress: StateFlow<Float> = _globalAudioProgress
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:196:    fun playGlobalAudio(title: String, type: Int) {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:197:        pauseAudio()
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:198:        _globalAudioTitle.value = title
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:199:        _isGlobalAudioPlaying.value = true
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:200:        com.example.ui.components.AudioEngine.playAmbientSound(type, 1.0f)
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:203:    fun pauseGlobalAudio() {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:204:        _isGlobalAudioPlaying.value = false
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:205:        com.example.ui.components.AudioEngine.pauseAmbientSound()
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:208:    fun toggleGlobalAudio() {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:209:        if (_isGlobalAudioPlaying.value) {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:210:            pauseGlobalAudio()
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:212:            pauseAudio()
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:213:            _isGlobalAudioPlaying.value = true
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:214:            com.example.ui.components.AudioEngine.playAmbientSound(2, 1.0f)
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:218:    fun stopGlobalAudio() {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:219:        _isGlobalAudioPlaying.value = false
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:220:        _globalAudioTitle.value = ""
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:221:        _globalAudioProgress.value = 0f
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:222:        com.example.ui.components.AudioEngine.stopAmbientSound()
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:248:    // --- DEVOTIONAL MUSIC PLAYER ---
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:249:    private var mediaPlayer: android.media.MediaPlayer? = null
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:251:    private val _isAudioPlaying = MutableStateFlow(false)
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:252:    val isAudioPlaying: StateFlow<Boolean> = _isAudioPlaying
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:254:    private val _currentAudioTrackIndex = MutableStateFlow(0)
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:255:    val currentAudioTrackIndex: StateFlow<Int> = _currentAudioTrackIndex
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:257:    private val _isAudioPlayerVisible = MutableStateFlow(true)
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:258:    val isAudioPlayerVisible: StateFlow<Boolean> = _isAudioPlayerVisible
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:267:    fun closeAudioPlayer() {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:268:        _isAudioPlayerVisible.value = false
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:269:        pauseAudio()
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:273:    fun showAudioPlayer() {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:274:        _isAudioPlayerVisible.value = true
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:277:    fun toggleAudioPlay() {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:278:        _isAudioPlayerVisible.value = true
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:279:        if (_isAudioPlaying.value) {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:280:            pauseAudio()
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:282:            playAudio()
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:286:    fun playAudio() {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:289:                pauseGlobalAudio()
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:290:                _isAudioPlaying.value = true
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:291:                _isAudioPlayerVisible.value = true
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:292:                if (mediaPlayer == null) {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:293:                    initMediaPlayer()
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:296:                        mediaPlayer?.start()
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:307:    fun pauseAudio() {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:309:            mediaPlayer?.pause()
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:310:            _isAudioPlaying.value = false
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:316:    fun seekAudio(progress: Float) {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:318:            mediaPlayer?.let { player ->
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:323:                    _globalAudioProgress.value = progress
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:331:    fun nextAudioTrack() {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:333:            var nextIndex = _currentAudioTrackIndex.value + 1
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:337:            changeAudioTrack(nextIndex)
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:341:    fun prevAudioTrack() {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:343:            var prevIndex = _currentAudioTrackIndex.value - 1
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:347:            changeAudioTrack(prevIndex)
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:351:    fun changeAudioTrack(index: Int) {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:352:        _isAudioPlayerVisible.value = true
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:353:        _currentAudioTrackIndex.value = index
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:355:        _isAudioPlaying.value = true
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:356:        playAudio()
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:359:    private fun initMediaPlayer() {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:361:            mediaPlayer = android.media.MediaPlayer().apply {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:362:                setAudioAttributes(
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:363:                    android.media.AudioAttributes.Builder()
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:364:                        .setContentType(android.media.AudioAttributes.CONTENT_TYPE_MUSIC)
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:365:                        .setUsage(android.media.AudioAttributes.USAGE_MEDIA)
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:368:                setDataSource(devotionalTracks[_currentAudioTrackIndex.value].url)
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:370:                    if (_isAudioPlaying.value) {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:374:                setOnCompletionListener {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:375:                    nextAudioTrack()
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:378:                    _isAudioPlaying.value = false
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:390:            mediaPlayer?.let { player ->
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:400:            mediaPlayer = null
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:546:            val success = userRepository.deleteAccount()
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:547:            onResult(success)
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:640:    val rawTithiEn: StateFlow<String> = _tithiEn
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:641:    val rawTithiHi: StateFlow<String> = _tithiHi
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:642:    val rawNakshatraEn: StateFlow<String> = _nakshatraEn
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:643:    val rawNakshatraHi: StateFlow<String> = _nakshatraHi
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:644:    val rawYogaEn: StateFlow<String> = _yogaEn
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:645:    val rawYogaHi: StateFlow<String> = _yogaHi
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:646:    val rawFestivalEn: StateFlow<String> = _festivalEn
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:647:    val rawFestivalHi: StateFlow<String> = _festivalHi
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:648:    val rawThoughtEn: StateFlow<String> = _thoughtEn
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:649:    val rawThoughtHi: StateFlow<String> = _thoughtHi
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:682:    // --- NOTIFICATION BELL FLOW ---
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:698:    private val _aartiSessionLogs = MutableStateFlow<List<String>>(emptyList())
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:699:    val aartiSessionLogs: StateFlow<List<String>> = _aartiSessionLogs
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:700:    private val _currentSessionAartiCount = MutableStateFlow(0)
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:701:    val currentSessionAartiCount: StateFlow<Int> = _currentSessionAartiCount
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:704:    fun incrementAartiBell() {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:705:        _currentSessionAartiCount.value += 1
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:706:        val count = _currentSessionAartiCount.value
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:707:        val msg = "Session ($sessionStartTimeStr): You rung bell $count times"
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:708:        val currentLogs = _aartiSessionLogs.value.toMutableList()
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:713:        _aartiSessionLogs.value = currentLogs
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:753:                if (_isAudioPlaying.value) {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:755:                        val player = mediaPlayer
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:760:                                _globalAudioProgress.value = pos / dur
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:1007:    val sankalpaLogs: StateFlow<List<com.example.data.SankalpaLog>> = meditationRepository.getSankalpaLogs().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:1011:            meditationRepository.addSankalpaLog(com.example.data.SankalpaLog(intention = intention, progressNote = progressNote, progressValue = progressValue, date = date))
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:1069:        com.example.ui.components.AudioEngine.stopAmbientSound()
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:1070:        com.example.ui.screens.AmbientSoundPlayer.stopSound()
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:1073:        } else if (screen == "BhaktiTools" && _bhaktiTab.value !in listOf("Bell", "Counter", "KarmaLog", "Gratitude", "TempleFinder")) {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:1098:            com.example.ui.components.AudioEngine.stopAmbientSound()
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:1099:            com.example.ui.screens.AmbientSoundPlayer.stopSound()
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:1102:            } else if (prevScreen == "BhaktiTools" && _bhaktiTab.value !in listOf("Bell", "Counter", "KarmaLog", "Gratitude", "TempleFinder")) {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:1112:        com.example.ui.components.AudioEngine.stopAmbientSound()
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:1113:        com.example.ui.screens.AmbientSoundPlayer.stopSound()
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:1269:            val success = userRepository.registerUser(newUser)
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:1271:            if (success) {
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:1275:                onResult(true, "Successfully Registered and Logged In!")
+app/src/main/java/com/example/ui/viewmodel/SadhakViewModel.kt:1302:                onResult(true, "Pranam! Logged in successfully.")
+app/src/main/java/com/example/ui/viewmodel/ProfileViewModel.kt:15:    private val meditationRepository = MeditationRepository(application)
+app/src/main/java/com/example/ui/viewmodel/ProfileViewModel.kt:32:    val sankalpaLogs: StateFlow<List<SankalpaLog>> = meditationRepository.getSankalpaLogs()
+app/src/main/java/com/example/ui/viewmodel/ProfileViewModel.kt:78:            meditationRepository.addSankalpaLog(
+app/src/main/java/com/example/ui/viewmodel/AdminViewModel.kt:94:        onSuccess: () -> Unit,
+app/src/main/java/com/example/ui/viewmodel/AdminViewModel.kt:123:            onSuccess()
+app/src/main/java/com/example/ui/viewmodel/MeditationViewModel.kt:6:import com.example.data.MeditationRepository
+app/src/main/java/com/example/ui/viewmodel/MeditationViewModel.kt:14:class MeditationViewModel(application: Application) : AndroidViewModel(application) {
+app/src/main/java/com/example/ui/viewmodel/MeditationViewModel.kt:16:    private val repository = MeditationRepository(application)
+app/src/main/java/com/example/ui/viewmodel/MeditationViewModel.kt:28:    private val _selectedSoundIndex = MutableStateFlow(1) // Temple Bells default
+app/src/main/java/com/example/ui/viewmodel/MeditationViewModel.kt:31:    private val _ambientVolume = MutableStateFlow(0.7f)
+app/src/main/java/com/example/ui/viewmodel/MeditationViewModel.kt:32:    val ambientVolume: StateFlow<Float> = _ambientVolume
+app/src/main/java/com/example/ui/viewmodel/MeditationViewModel.kt:51:    fun setAmbientVolume(vol: Float) {
+app/src/main/java/com/example/ui/viewmodel/MeditationViewModel.kt:52:        _ambientVolume.value = vol
+app/src/main/java/com/example/ui/viewmodel/MeditationViewModel.kt:76:                    deed = "Dhyana Meditation Completed ($completedMins mins)",
+app/src/main/java/com/example/ui/viewmodel/AppViewModelProvider.kt:16:        initializer { MeditationViewModel(sadhakApplication()) }
+app/src/main/java/com/example/ui/components/AudioEngine.kt:3:import android.media.AudioAttributes
+app/src/main/java/com/example/ui/components/AudioEngine.kt:4:import android.media.MediaPlayer
+app/src/main/java/com/example/ui/components/AudioEngine.kt:11:object AudioEngine {
+app/src/main/java/com/example/ui/components/AudioEngine.kt:12:    private var mediaPlayer: MediaPlayer? = null
+app/src/main/java/com/example/ui/components/AudioEngine.kt:35:            mediaPlayer?.setVolume(volume, volume)
+app/src/main/java/com/example/ui/components/AudioEngine.kt:37:            Log.e("AudioEngine", "Error setting volume", e)
+app/src/main/java/com/example/ui/components/AudioEngine.kt:52:                mediaPlayer?.let { mp ->
+app/src/main/java/com/example/ui/components/AudioEngine.kt:62:                    } catch(e: Exception) { android.util.Log.e("Audio", "Error", e) }
+app/src/main/java/com/example/ui/components/AudioEngine.kt:69:    fun playAmbientSound(soundType: Int, volume: Float = 1.0f) {
+app/src/main/java/com/example/ui/components/AudioEngine.kt:70:        if (currentSoundType == soundType && mediaPlayer != null) {
+app/src/main/java/com/example/ui/components/AudioEngine.kt:74:                    mediaPlayer?.start()
+app/src/main/java/com/example/ui/components/AudioEngine.kt:77:                } catch(e: Exception) { android.util.Log.e("Audio", "Error", e) }
+app/src/main/java/com/example/ui/components/AudioEngine.kt:79:                pauseAmbientSound()
+app/src/main/java/com/example/ui/components/AudioEngine.kt:84:        stopAmbientSound()
+app/src/main/java/com/example/ui/components/AudioEngine.kt:96:            1 -> "https://archive.org/download/TempleBellHugeSoundBible.com695883450/Temple%20Bell%20Huge-SoundBible.com-695883450.mp3"
+app/src/main/java/com/example/ui/components/AudioEngine.kt:98:            3 -> "https://archive.org/download/beautiful-indian-music-for-meditation-and-yoga-relaxing-bansuri-flute-music/Beautiful%20Indian%20Music%20For%20Meditation%20And%20Yoga%20Relaxing%20Bansuri%20Flute%20Music.mp3"
+app/src/main/java/com/example/ui/components/AudioEngine.kt:111:            mediaPlayer = MediaPlayer().apply {
+app/src/main/java/com/example/ui/components/AudioEngine.kt:112:                setAudioAttributes(
+app/src/main/java/com/example/ui/components/AudioEngine.kt:113:                    AudioAttributes.Builder()
+app/src/main/java/com/example/ui/components/AudioEngine.kt:114:                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+app/src/main/java/com/example/ui/components/AudioEngine.kt:115:                        .setUsage(AudioAttributes.USAGE_MEDIA)
+app/src/main/java/com/example/ui/components/AudioEngine.kt:133:                    } catch(e: Exception) { android.util.Log.e("Audio", "Error", e) }
+app/src/main/java/com/example/ui/components/AudioEngine.kt:145:            Log.e("AudioEngine", "Error playing ambient sound", e)
+app/src/main/java/com/example/ui/components/AudioEngine.kt:150:    fun pauseAmbientSound() {
+app/src/main/java/com/example/ui/components/AudioEngine.kt:152:            if (mediaPlayer?.isPlaying == true) {
+app/src/main/java/com/example/ui/components/AudioEngine.kt:153:                mediaPlayer?.pause()
+app/src/main/java/com/example/ui/components/AudioEngine.kt:157:        } catch(e: Exception) { android.util.Log.e("Audio", "Error", e) }
+app/src/main/java/com/example/ui/components/AudioEngine.kt:160:    fun stopAmbientSound() {
+app/src/main/java/com/example/ui/components/AudioEngine.kt:166:            mediaPlayer?.reset()
+app/src/main/java/com/example/ui/components/AudioEngine.kt:167:            mediaPlayer?.release()
+app/src/main/java/com/example/ui/components/AudioEngine.kt:169:            Log.e("AudioEngine", "Error stopping ambient sound", e)
+app/src/main/java/com/example/ui/components/AudioEngine.kt:171:            mediaPlayer = null
+app/src/main/java/com/example/ui/components/AudioEngine.kt:177:        mediaPlayer?.let { mp ->
+app/src/main/java/com/example/ui/components/AudioEngine.kt:186:            } catch(e: Exception) { android.util.Log.e("Audio", "Error", e) }
+app/src/main/java/com/example/ui/components/AartiBellButton.kt:3:import android.media.MediaPlayer
+app/src/main/java/com/example/ui/components/AartiBellButton.kt:19:fun AartiBellButton(modifier: Modifier = Modifier) {
+app/src/main/java/com/example/ui/components/AartiBellButton.kt:24:            // Placeholder for bell sound. 
+app/src/main/java/com/example/ui/components/AartiBellButton.kt:25:            // The user needs to add "temple_bell.mp3" to res/raw
+app/src/main/java/com/example/ui/components/AartiBellButton.kt:26:            // val mediaPlayer = MediaPlayer.create(context, R.raw.temple_bell)
+app/src/main/java/com/example/ui/components/AartiBellButton.kt:27:            // mediaPlayer.start()
+app/src/main/java/com/example/ui/components/AartiBellButton.kt:28:            // mediaPlayer.setOnCompletionListener { it.release() }
+app/src/main/java/com/example/ui/components/AartiBellButton.kt:34:            contentDescription = "Aarti Bell",
+app/src/main/java/com/example/ui/components/CommonComponents.kt:27:import androidx.compose.ui.draw.clip
+app/src/main/java/com/example/ui/components/CommonComponents.kt:51:        // Draw Flame first (higher up)
+app/src/main/java/com/example/ui/components/CommonComponents.kt:57:        drawPath(
+app/src/main/java/com/example/ui/components/CommonComponents.kt:65:        // Draw Diya Bowl
+app/src/main/java/com/example/ui/components/CommonComponents.kt:77:        drawPath(
+app/src/main/java/com/example/ui/theme/Color.kt:62:    val success: Color,
+app/src/main/java/com/example/ui/theme/Color.kt:90:    success = SageGreen,
+app/src/main/java/com/example/ui/theme/Color.kt:118:    success = Color(0xFF81C784),
+app/src/main/java/com/example/ui/theme/Type.kt:94:    labelLarge = TextStyle(
+app/src/main/java/com/example/ui/common/UiState.kt:5:    data class Success<out T>(val data: T) : UiState<T>
+app/src/main/java/com/example/data/AdminRepository.kt:84:                PoojaStep(4, "Aarti & Prayer", "Perform camphor aarti and seek forgiveness for any shortcomings.", "Karpur Gauram Karunavataram", 5, true)
+app/src/main/java/com/example/data/AdminRepository.kt:100:        SamagriItem("s_3", "Camphor (Karpur)", "कपूर", "कर्पूरम्", "Pure white camphor for Aarti", "1", "pack", true, "All", "Ghee lamp", "Traditional")
+app/src/main/java/com/example/data/UserRepository.kt:145:            val success = firebaseService.signUpWithEmail(user.email.lowercase().trim(), user.password)
+app/src/main/java/com/example/data/UserRepository.kt:146:            if (success) {
+app/src/main/java/com/example/data/UserRepository.kt:221:        val success = firebaseService.deleteUserAccount()
+app/src/main/java/com/example/data/UserRepository.kt:223:        return success
+app/src/main/java/com/example/data/ApiError.kt:28:    data class Success<out T>(val data: T, val isAuthoritative: Boolean = true) : ApiResult<T>()
+app/src/main/java/com/example/data/AstrologyService.kt:19:    // Configurable API key (placeholder by default, reads from BuildConfig if set)
+app/src/main/java/com/example/data/AstrologyService.kt:29:     * Returns a DetailedPanchang on success, or null on error.
+app/src/main/java/com/example/data/AstrologyService.kt:43:        if (PANCHANG_API_KEY.isEmpty() || PANCHANG_API_KEY == "MY_PANCHANG_API_KEY" || PANCHANG_API_KEY == "YOUR_VEDIC_ASTRO_API_KEY" || PANCHANG_API_KEY == "placeholder" || PANCHANG_API_KEY == "") {
+app/src/main/java/com/example/data/AstrologyService.kt:333:                // Log.d(TAG, "Panchang API Raw Response received")
+app/src/main/java/com/example/data/AstrologyService.kt:335:                if (!response.isSuccessful || bodyStr == null) {
+app/src/main/java/com/example/data/AstrologyService.kt:379:                // After fetching, process the raw response
+app/src/main/java/com/example/data/YoutubeFetcher.kt:16:        var success = false
+app/src/main/java/com/example/data/YoutubeFetcher.kt:22:                            !apiKey.contains("PLACEHOLDER")
+app/src/main/java/com/example/data/YoutubeFetcher.kt:29:                    if (response.isSuccessful) {
+app/src/main/java/com/example/data/YoutubeFetcher.kt:77:                                success = true
+app/src/main/java/com/example/data/YoutubeFetcher.kt:78:                                Log.i("YoutubeFetcher", "Successfully synced ${list.size} videos from YouTube Data API v3.")
+app/src/main/java/com/example/data/YoutubeFetcher.kt:96:        if (!success) {
+app/src/main/java/com/example/data/YoutubeFetcher.kt:101:                    if (response.isSuccessful) {
+app/src/main/java/com/example/data/YoutubeFetcher.kt:202:            combined.contains("aarti") || combined.contains("abhishek") || combined.contains("आरती") || combined.contains("अभिषेक") -> "Aarti & Abhishek"
+app/src/main/java/com/example/data/GeminiService.kt:29:            Log.e(TAG, "API Key is missing or default placeholder")
+app/src/main/java/com/example/data/GeminiService.kt:89:                if (!response.isSuccessful || bodyStr == null) {
+app/src/main/java/com/example/data/GeminiService.kt:164:                if (response.isSuccessful && bodyStr != null) {
+app/src/main/java/com/example/data/GeminiService.kt:214:            if (!response.isSuccessful) return@withContext null
+app/src/main/java/com/example/data/AdminModels.kt:78:    val audioUrl: String = "",
+app/src/main/java/com/example/data/AdminModels.kt:105:    val syncStatus: String = "SUCCESS"
+app/src/main/java/com/example/data/AdminModels.kt:112:    val category: String, // Daily Panchang, Daily Mantra, Daily Shloka, Festival, Vrat, Sadhana, Meditation, New Video, Community, Knowledge
+app/src/main/java/com/example/data/MeditationRepository.kt:6:class MeditationRepository(context: Context) {
+app/src/main/java/com/example/data/FirebaseService.kt:35:            Log.d(tag, "Firebase successfully initialized.")
+app/src/main/java/com/example/data/Models.kt:77:    val rawResponseBody: String?,
+app/src/main/java/com/example/data/Models.kt:122:    val category: String, // Darshan & Puja, Aarti & Abhishek, Temple Visits, Devotional Stories
+app/src/main/java/com/example/data/Models.kt:259:    val audioUrl: String
+app/src/main/java/com/example/workers/NotificationWorker.kt:58:            .setSmallIcon(android.R.drawable.ic_dialog_info)
+app/src/main/java/com/example/workers/NotificationWorker.kt:68:        return Result.success()
+app/src/main/java/com/example/MainActivity.kt:9:import androidx.compose.ui.draw.alpha
+app/src/main/java/com/example/MainActivity.kt:52:import androidx.compose.material.icons.filled.MusicNote
+app/src/main/java/com/example/MainActivity.kt:83:import androidx.compose.ui.draw.clip
+app/src/main/java/com/example/MainActivity.kt:87:import androidx.compose.ui.graphics.drawscope.Stroke
+app/src/main/java/com/example/MainActivity.kt:190:                                val isPlayerVisible by viewModel.isAudioPlayerVisible.collectAsState()
+app/src/main/java/com/example/MainActivity.kt:192:                                    PersistentAudioPlayer(viewModel = viewModel, isEnglish = isEng)
+app/src/main/java/com/example/MainActivity.kt:446:                                            "Please register or log in with your Sadhak account to unlock full spiritual articles, sacred chanting counters, guided meditation volume adjustments, community discussions, and Guide AI."
+app/src/main/java/com/example/MainActivity.kt:535:                // Notification Bell icon
+app/src/main/java/com/example/MainActivity.kt:536:                IconButton(onClick = onNotificationClick, modifier = Modifier.testTag("notification_bell_button")) {
+app/src/main/java/com/example/MainActivity.kt:627:        // Draw Trishula (Trident) using Canvas
+app/src/main/java/com/example/MainActivity.kt:633:            drawLine(
+app/src/main/java/com/example/MainActivity.kt:645:            drawPath(
+app/src/main/java/com/example/MainActivity.kt:656:            drawPath(
+app/src/main/java/com/example/MainActivity.kt:664:            drawCircle(
+app/src/main/java/com/example/MainActivity.kt:669:            drawCircle(
+app/src/main/java/com/example/MainActivity.kt:761:fun PersistentAudioPlayer(viewModel: SadhakViewModel, isEnglish: Boolean) {
+app/src/main/java/com/example/MainActivity.kt:762:    val isPlaying by viewModel.isAudioPlaying.collectAsState()
+app/src/main/java/com/example/MainActivity.kt:763:    val currentIndex by viewModel.currentAudioTrackIndex.collectAsState()
+app/src/main/java/com/example/MainActivity.kt:770:            title = { Text(if (isEnglish) "Audio Queue" else "ऑडियो कतार") },
+app/src/main/java/com/example/MainActivity.kt:787:                                        viewModel.changeAudioTrack(devotionalTracks.indexOf(itemTrack))
+app/src/main/java/com/example/MainActivity.kt:794:                                    imageVector = Icons.Default.MusicNote,
+app/src/main/java/com/example/MainActivity.kt:848:                    val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition(label = "music_rotation")
+app/src/main/java/com/example/MainActivity.kt:881:                            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+app/src/main/java/com/example/MainActivity.kt:915:                        onClick = { viewModel.prevAudioTrack() }
+app/src/main/java/com/example/MainActivity.kt:927:                        onClick = { viewModel.toggleAudioPlay() },
+app/src/main/java/com/example/MainActivity.kt:946:                        onClick = { viewModel.nextAudioTrack() }
+app/src/main/java/com/example/MainActivity.kt:956:                    // Close / Hide Audio Player Button
+app/src/main/java/com/example/MainActivity.kt:958:                        onClick = { viewModel.closeAudioPlayer() }
+app/src/main/java/com/example/MainActivity.kt:971:            val progress by viewModel.globalAudioProgress.collectAsState()
+app/src/main/java/com/example/MainActivity.kt:974:                onValueChange = { viewModel.seekAudio(it) },
+app/src/main/java/com/example/MainActivity.kt:993:        drawRect(
+app/src/main/java/com/example/MainActivity.kt:999:        drawRect(
+app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml:3:    <background android:drawable="@drawable/ic_launcher_background" />
+app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml:4:    <foreground android:drawable="@drawable/ic_launcher_foreground" />
+app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml:3:    <background android:drawable="@drawable/ic_launcher_background" />
+app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml:4:    <foreground android:drawable="@drawable/ic_launcher_foreground" />
