@@ -93,6 +93,25 @@ service cloud.firestore {
       allow read, update, delete: if isAdmin();
     }
 
+    match /suggestions/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['type', 'message', 'screen', 'consent', 'name', 'email', 'source', 'page', 'createdAt'])
+        && request.resource.data.type in ['idea', 'bug', 'feedback']
+        && request.resource.data.message is string
+        && request.resource.data.message.size() >= 5 && request.resource.data.message.size() <= 2000
+        && request.resource.data.consent is bool
+        && optStr(request.resource.data, 'screen', 60)
+        && optStr(request.resource.data, 'name', 100)
+        && (!('email' in request.resource.data) || validEmail(request.resource.data.email))
+        && siteMeta(request.resource.data);
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Public release notes (admin-written, readable by anyone)
+    match /app_updates/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Default deny
     match /{document=**} {
       allow read, write: if false;

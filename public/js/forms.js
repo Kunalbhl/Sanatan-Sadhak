@@ -104,3 +104,17 @@ wire('contact-form', 'contact_messages', (fd) => {
   if (message.length < 5) throw new Error('Please write a short message.');
   return { name: clean(fd.get('name'), 100), email, topic: clean(fd.get('topic'), 40), message };
 }, 'Thank you! We received your message and will reply by email.');
+
+wire('suggestion-form', 'suggestions', (fd) => {
+  const type = clean(fd.get('type'), 10);
+  if (!['idea', 'bug', 'feedback'].includes(type)) throw new Error('Please choose idea, bug or feedback.');
+  const message = clean(fd.get('message'), 2000);
+  if (message.length < 5) throw new Error('Please write a few words about your idea or issue.');
+  const email = clean(fd.get('email'), 200).toLowerCase();
+  if (email && !EMAIL_RE.test(email)) throw new Error('That email address does not look right (or leave it empty).');
+  const doc = { type, message, screen: clean(fd.get('screen'), 60), consent: !!fd.get('consent') };
+  const name = clean(fd.get('name'), 100);
+  if (name) doc.name = name;
+  if (email) doc.email = email;
+  return doc;
+}, 'Dhanyavaad! Your message reached the developer. 🙏');

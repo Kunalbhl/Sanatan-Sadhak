@@ -16,3 +16,4 @@
 local.properties
 .env
 debug.keystore
+website/__pycache__/
