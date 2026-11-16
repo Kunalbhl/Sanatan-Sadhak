@@ -4,6 +4,10 @@ import android.content.Context
 import android.content.Intent
 import android.speech.tts.TextToSpeech
 import android.widget.Toast
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import com.example.ui.audio.SadhakTextReader
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -42,6 +46,8 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.FormatQuote
 import androidx.compose.material.icons.filled.Headphones
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.LocalFlorist
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.MusicNote
@@ -73,6 +79,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -90,6 +97,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.data.BhaktiVideo
+import com.example.ui.components.DivineEnvironmentBanner
+import com.example.ui.components.DivineJapaMalaIcon
+import com.example.ui.components.DivineDhyanIcon
+import com.example.ui.components.DivineMyMantraIcon
+import com.example.ui.components.DivineAartiCounterIcon
+import com.example.ui.components.DivineChantsIcon
 import com.example.ui.components.DiyaDecoration
 import com.example.ui.components.GoldenLotusMedallion
 import com.example.ui.components.SacredGranthArtwork
@@ -142,11 +155,15 @@ fun HomeScreen(
     val currentNakshatra by panchangViewModel.currentNakshatra.collectAsState()
     val currentSunrise by panchangViewModel.currentSunrise.collectAsState()
     val currentSunset by panchangViewModel.currentSunset.collectAsState()
+    val currentRahukaal by panchangViewModel.currentRahukaal.collectAsState()
+    val currentAbhijeet by panchangViewModel.currentAbhijeet.collectAsState()
     val currentFestival by panchangViewModel.currentFestival.collectAsState()
     val panchangError by panchangViewModel.panchangError.collectAsState()
     val currentLocation by panchangViewModel.currentLocation.collectAsState()
 
     // Daily Spiritual Content
+    val dailyShlokaItem by homeViewModel.dailyShlokaItem.collectAsState()
+    val dailyMantraItem by homeViewModel.dailyMantraItem.collectAsState()
     val dailyMantra by homeViewModel.dailyMantra.collectAsState()
     val shlokaOfTheDay by homeViewModel.shlokaOfTheDay.collectAsState()
     val currentThought by panchangViewModel.currentThought.collectAsState()
@@ -204,17 +221,32 @@ fun HomeScreen(
         formatter.format(Date())
     }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .testTag("home_screen_lazy_column"),
-        contentPadding = PaddingValues(bottom = SadhakThemeDimensions.screenPaddingLarge)
+    var isRefreshing by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+
+    androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = {
+            coroutineScope.launch {
+                isRefreshing = true
+                panchangViewModel.loadDailyPanchang()
+                kotlinx.coroutines.delay(600)
+                isRefreshing = false
+            }
+        },
+        modifier = Modifier.fillMaxSize()
     ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .testTag("home_screen_lazy_column"),
+            contentPadding = PaddingValues(bottom = SadhakThemeDimensions.screenPaddingLarge)
+        ) {
         // 1. HEADER & DIVINE GREETING
         item(key = "header") {
-            HomeTopHeaderSection(
+            DivineEnvironmentBanner(
                 isEng = isEng,
-                userName = if (userName.isNotBlank() && userName != "Guest Sadhak") userName else null,
+                userName = if (userName.isNotBlank() && userName != "Guest Sadhak" && userName != "Guest Devotee") userName else null,
                 currentDate = currentDateStr,
                 hasNotifications = hasNewNotifications,
                 onNotificationClick = {
@@ -234,6 +266,10 @@ fun HomeScreen(
                 nakshatra = currentNakshatra,
                 sunrise = currentSunrise,
                 sunset = currentSunset,
+                rahukaal = currentRahukaal,
+                abhijeet = currentAbhijeet,
+                gulika = todayPanchang?.gulikaKaal,
+                yamaganda = todayPanchang?.yamaganda,
                 festival = if (currentFestival.isNotBlank() && currentFestival != "Devotional Puja Muhurat" && currentFestival != "भक्ति पूजा मुहूर्त") currentFestival else todayPanchang?.festival,
                 paksha = todayPanchang?.paksha,
                 sourceType = todayPanchang?.sourceType,
@@ -244,27 +280,24 @@ fun HomeScreen(
             )
         }
 
-        // 3. QUICK ACTIONS
+        // 3. QUICK ACTIONS (Placed above Daily Shloka per Canonical UX Spec)
         item(key = "quick_actions") {
             HomeQuickActionsSection(
                 isEng = isEng,
-                onNavigate = { screen -> viewModel.setScreen(screen) }
+                onNavigateTab = { tab -> viewModel.navigateToBhakti(tab) },
+                onNavigateScreen = { screen -> viewModel.setScreen(screen) }
             )
         }
 
-        // 4. DAILY SPIRITUAL THOUGHT & SHLOKA
+        // 4. DAILY SPIRITUAL THOUGHT, SHLOKA & DEFINED MANTRA (Collapsed by Default)
         item(key = "today_content") {
             HomeTodayContentSection(
                 isEng = isEng,
-                dailyMantra = dailyMantra,
-                shloka = shlokaOfTheDay,
+                dailyShlokaItem = dailyShlokaItem,
+                dailyMantraItem = dailyMantraItem,
                 thought = currentThought,
                 onSpeak = { text ->
-                    if (isTtsReady && tts != null) {
-                        tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "tts_home")
-                    } else {
-                        Toast.makeText(context, if (isEng) "Voice engine initializing..." else "ध्वनि इंजन आरंभ हो रहा है...", Toast.LENGTH_SHORT).show()
-                    }
+                    SadhakTextReader.toggle("home_spoken_content", text, isEng)
                 },
                 onCopy = { text ->
                     clipboardManager.setText(AnnotatedString(text))
@@ -335,6 +368,7 @@ fun HomeScreen(
             )
         }
     }
+    }
 }
 
 // ---------------------------------------------------------------------
@@ -370,27 +404,42 @@ private fun HomeTopHeaderSection(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                Text(
+                    text = "SANATAN SADHAK",
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        color = SadhakThemeColors.sacredSecondary,
+                        fontSize = 20.sp,
+                        letterSpacing = 0.8.sp
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(2.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    val dynamicGreeting = remember(isEng) {
+                        com.example.data.DeityGreetingEngine.getGreeting(java.util.Calendar.getInstance(), isEng)
+                    }
                     Text(
-                        text = if (isEng) "Jai Shree Ram 🕉" else "जय श्री राम 🕉",
-                        style = MaterialTheme.typography.titleMedium.copy(
+                        text = dynamicGreeting,
+                        style = MaterialTheme.typography.labelSmall.copy(
                             fontWeight = FontWeight.Bold,
                             color = SadhakThemeColors.sacredPrimary,
-                            fontSize = 16.sp
+                            fontSize = 11.sp
                         )
                     )
                 }
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = if (userName != null) {
-                        if (isEng) "Welcome, $userName" else "स्वागतम्, $userName"
+                        if (isEng) "Welcome $userName" else "स्वागतम् $userName"
                     } else {
-                        if (isEng) "Welcome, Devotee" else "सुस्वागतम्, साधक"
+                        if (isEng) "Welcome Devotee" else "स्वागतम् साधक"
                     },
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.SemiBold,
                         color = SadhakThemeColors.sacredSecondary,
-                        fontSize = 22.sp
+                        fontSize = 15.sp
                     ),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -464,6 +513,10 @@ private fun HomePanchangSection(
     nakshatra: String,
     sunrise: String,
     sunset: String,
+    rahukaal: String = "—",
+    abhijeet: String = "—",
+    gulika: String? = null,
+    yamaganda: String? = null,
     festival: String?,
     paksha: String?,
     sourceType: String?,
@@ -645,7 +698,43 @@ private fun HomePanchangSection(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    if (rahukaal.isNotBlank() && rahukaal != "—") {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(SadhakThemeColors.sacredIconBackground.copy(alpha = 0.7f))
+                                .padding(horizontal = 10.dp, vertical = 5.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = if (isEng) "Rahu Kaal: $rahukaal" else "राहुकाल: $rahukaal",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = SadhakThemeColors.sacredTextSecondary,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Medium
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            if (abhijeet.isNotBlank() && abhijeet != "—") {
+                                Text(
+                                    text = if (isEng) "Abhijit: $abhijeet" else "अभिजित: $abhijeet",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = SadhakThemeColors.sacredPrimary,
+                                        fontSize = 11.sp,
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -697,10 +786,22 @@ private fun HomePanchangSection(
     }
 }
 
+private enum class QuickActionType {
+    JAPA_MALA, DHYAN, MY_MANTRA, AARTI, CHANTS
+}
+
+private data class QuickActionItem(
+    val title: String,
+    val type: QuickActionType,
+    val target: String,
+    val isTab: Boolean
+)
+
 @Composable
 private fun HomeQuickActionsSection(
     isEng: Boolean,
-    onNavigate: (String) -> Unit
+    onNavigateTab: (String) -> Unit,
+    onNavigateScreen: (String) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -714,63 +815,81 @@ private fun HomeQuickActionsSection(
 
         val quickActions = remember(isEng) {
             listOf(
-                QuickActionItem(if (isEng) "Mantra" else "मंत्र", Icons.Default.SelfImprovement, "Bhakti"),
-                QuickActionItem(if (isEng) "Pooja" else "पूजा", Icons.Default.LocalFlorist, "BhaktiTools"),
-                QuickActionItem(if (isEng) "Meditation" else "ध्यान", Icons.Default.Star, "Bhakti"),
-                QuickActionItem(if (isEng) "Panchang" else "पंचांग", Icons.Default.CalendarMonth, "Calendar"),
-                QuickActionItem(if (isEng) "Sadhana" else "साधना", Icons.Default.Article, "Bhakti"),
-                QuickActionItem(if (isEng) "Calendar" else "कैलेंडर", Icons.Default.Event, "Calendar")
+                QuickActionItem(if (isEng) "Japa Mala" else "जप माला", QuickActionType.JAPA_MALA, "Counter", true),
+                QuickActionItem(if (isEng) "Dhyan" else "ध्यान", QuickActionType.DHYAN, "Timer", true),
+                QuickActionItem(if (isEng) "My Mantra" else "मेरे मंत्र", QuickActionType.MY_MANTRA, "My Mantras", true),
+                QuickActionItem(if (isEng) "Aarti" else "आरती", QuickActionType.AARTI, "Bell", true),
+                QuickActionItem(if (isEng) "Chants" else "स्तोत्र", QuickActionType.CHANTS, "Mantras", true)
             )
         }
 
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-            contentPadding = PaddingValues(vertical = 4.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            items(quickActions) { action ->
+            quickActions.forEach { action ->
                 QuickActionTile(
                     label = action.title,
-                    icon = action.icon,
-                    onClick = { onNavigate(action.route) }
+                    type = action.type,
+                    onClick = {
+                        if (action.isTab) {
+                            onNavigateTab(action.target)
+                        } else {
+                            onNavigateScreen(action.target)
+                        }
+                    },
+                    modifier = Modifier.weight(1f)
                 )
             }
         }
     }
 }
 
-private data class QuickActionItem(val title: String, val icon: ImageVector, val route: String)
-
 @Composable
 private fun QuickActionTile(
     label: String,
-    icon: ImageVector,
-    onClick: () -> Unit
+    type: QuickActionType,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
-            .width(76.dp)
+        modifier = modifier
             .clip(RoundedCornerShape(14.dp))
             .background(SadhakThemeColors.sacredSurface)
             .border(1.dp, SadhakThemeColors.sacredDivider, RoundedCornerShape(14.dp))
-            .clickable(onClick = onClick)
-            .padding(vertical = 12.dp, horizontal = 4.dp)
+            .clickable(onClick = {
+                val feedbackType = when (type) {
+                    QuickActionType.JAPA_MALA -> com.example.utils.HapticFeedbackManager.FeedbackType.JAPA_BEAD
+                    QuickActionType.AARTI -> com.example.utils.HapticFeedbackManager.FeedbackType.BELL_RING
+                    else -> com.example.utils.HapticFeedbackManager.FeedbackType.DEVOTIONAL_TAP
+                }
+                com.example.utils.HapticFeedbackManager.performHaptic(haptic, feedbackType)
+                onClick()
+            })
+            .padding(vertical = 10.dp, horizontal = 2.dp)
+            .testTag("quick_action_$label")
     ) {
         Box(
             modifier = Modifier
-                .size(44.dp)
+                .size(40.dp)
                 .clip(CircleShape)
                 .background(SadhakThemeColors.sacredIconBackground),
             contentAlignment = Alignment.Center
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = SadhakThemeColors.sacredPrimary,
-                modifier = Modifier.size(22.dp)
-            )
+            when (type) {
+                QuickActionType.JAPA_MALA -> DivineJapaMalaIcon(size = 24.dp)
+                QuickActionType.DHYAN -> DivineDhyanIcon(size = 24.dp)
+                QuickActionType.MY_MANTRA -> DivineMyMantraIcon(size = 24.dp)
+                QuickActionType.AARTI -> DivineAartiCounterIcon(size = 24.dp)
+                QuickActionType.CHANTS -> DivineChantsIcon(size = 24.dp)
+            }
         }
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall.copy(
@@ -1375,13 +1494,16 @@ private fun HomeContinueSadhanaSection(
 @Composable
 private fun HomeTodayContentSection(
     isEng: Boolean,
-    dailyMantra: com.example.data.DailyMantra,
-    shloka: com.example.data.Shloka,
+    dailyShlokaItem: com.example.data.DailyShlokaItem,
+    dailyMantraItem: com.example.data.DailyMantraItem,
     thought: String,
     onSpeak: (String) -> Unit,
     onCopy: (String) -> Unit,
     onShare: (String) -> Unit
 ) {
+    var isShlokaExpanded by rememberSaveable { mutableStateOf(false) }
+    var isMantraExpanded by rememberSaveable { mutableStateOf(false) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -1389,10 +1511,10 @@ private fun HomeTodayContentSection(
     ) {
         SadhakSectionHeader(
             title = if (isEng) "Daily Shloka & Wisdom" else "आज का दिव्य श्लोक व विचार",
-            subtitle = if (isEng) "Timeless teachings from Srimad Bhagavad Gita" else "श्रीमद्भगवद्गीता एवं उपनिषदों की अमर शिक्षा"
+            subtitle = if (isEng) "Timeless teachings from Vedic scriptures" else "श्रीमद्भगवद्गीता, वेद एवं उपनिषदों की अमर शिक्षा"
         )
 
-        // Master Sacred Maroon Gita Shloka Card
+        // Master Sacred Maroon Gita / Scripture Shloka Card (Collapsed by Default)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -1404,75 +1526,47 @@ private fun HomeTodayContentSection(
                 )
                 .border(1.5.dp, Color(0xFFD4A23A).copy(alpha = 0.5f), RoundedCornerShape(16.dp))
                 .padding(16.dp)
+                .testTag("home_daily_shloka_card")
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
+                val fullShlokaText = "${dailyShlokaItem.verseSanskrit}\n${if (isEng) dailyShlokaItem.meaningEn else dailyShlokaItem.meaningHi}\n— ${if (isEng) dailyShlokaItem.sourceScriptureEn else dailyShlokaItem.sourceScriptureHi} ${dailyShlokaItem.chapterVerse}"
+
                 // Card Header Row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f)
+                    ) {
                         GoldenLotusMedallion(modifier = Modifier.size(24.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = if (isEng) "DAILY SHLOKA • BHAGAVAD GITA" else "दैनिक श्लोक • श्रीमद्भगवद्गीता",
+                            text = (if (isEng) "DAILY SHLOKA • " else "दैनिक श्लोक • ") + dailyShlokaItem.category.uppercase(),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFFFD54F),
                                 fontSize = 11.sp,
                                 letterSpacing = 0.6.sp
-                            )
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
-                    }
-
-                    Row {
-                        IconButton(
-                            onClick = { onSpeak(shloka.verse + "\n" + shloka.meaning) },
-                            modifier = Modifier.size(28.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.VolumeUp,
-                                contentDescription = "Listen",
-                                tint = Color(0xFFFFD54F),
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        IconButton(
-                            onClick = { onCopy(shloka.verse + "\n" + shloka.meaning + "\n- " + shloka.source) },
-                            modifier = Modifier.size(28.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.ContentCopy,
-                                contentDescription = "Copy",
-                                tint = Color(0xFFFFF8E9).copy(alpha = 0.7f),
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
-                        IconButton(
-                            onClick = { onShare(shloka.verse + "\n" + shloka.meaning + "\n- " + shloka.source) },
-                            modifier = Modifier.size(28.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.Share,
-                                contentDescription = "Share",
-                                tint = Color(0xFFFFF8E9).copy(alpha = 0.7f),
-                                modifier = Modifier.size(18.dp)
-                            )
-                        }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Middle Row: Sanskrit Verse + Granth artwork
+                // Sanskrit Verse + Source Text (Takes full horizontal space with priority)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                         Text(
-                            text = shloka.verse,
+                            text = dailyShlokaItem.verseSanskrit,
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFFFFFDF8),
@@ -1481,17 +1575,15 @@ private fun HomeTodayContentSection(
                             )
                         )
 
-                        if (shloka.source.isNotBlank()) {
-                            Spacer(modifier = Modifier.height(3.dp))
-                            Text(
-                                text = "— ${shloka.source}",
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = Color(0xFFFFD54F),
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 11.sp
-                                )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "— ${if (isEng) dailyShlokaItem.sourceScriptureEn else dailyShlokaItem.sourceScriptureHi} ${dailyShlokaItem.chapterVerse}",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = Color(0xFFFFD54F),
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 11.sp
                             )
-                        }
+                        )
                     }
 
                     // Granth Artwork
@@ -1506,91 +1598,341 @@ private fun HomeTodayContentSection(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Box(
+                // Action Row BELOW main text (Listen | Copy | Share | Expand)
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(1.dp)
-                        .background(Color(0xFFD4A23A).copy(alpha = 0.25f))
-                )
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color.Black.copy(alpha = 0.15f))
+                        .padding(horizontal = 8.dp, vertical = 2.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(
+                            onClick = { onSpeak("${dailyShlokaItem.verseSanskrit}.\n${if (isEng) dailyShlokaItem.meaningEn else dailyShlokaItem.meaningHi}") },
+                            modifier = Modifier.size(32.dp).testTag("shloka_listen_button")
+                        ) {
+                            Icon(
+                                Icons.Default.VolumeUp,
+                                contentDescription = "Listen",
+                                tint = Color(0xFFFFD54F),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        IconButton(
+                            onClick = { onCopy(fullShlokaText) },
+                            modifier = Modifier.size(32.dp).testTag("shloka_copy_button")
+                        ) {
+                            Icon(
+                                Icons.Default.ContentCopy,
+                                contentDescription = "Copy",
+                                tint = Color(0xFFFFF8E9).copy(alpha = 0.85f),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        IconButton(
+                            onClick = { onShare(fullShlokaText) },
+                            modifier = Modifier.size(32.dp).testTag("shloka_share_button")
+                        ) {
+                            Icon(
+                                Icons.Default.Share,
+                                contentDescription = "Share",
+                                tint = Color(0xFFFFF8E9).copy(alpha = 0.85f),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
 
-                Spacer(modifier = Modifier.height(6.dp))
+                    IconButton(
+                        onClick = { isShlokaExpanded = !isShlokaExpanded },
+                        modifier = Modifier.size(32.dp).testTag("shloka_expand_button")
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = if (isShlokaExpanded) (if (isEng) "Less" else "कम") else (if (isEng) "More" else "अधिक"),
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    color = Color(0xFFFFD54F),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 11.sp
+                                )
+                            )
+                            Icon(
+                                imageVector = if (isShlokaExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                contentDescription = if (isShlokaExpanded) "Collapse" else "Expand",
+                                tint = Color(0xFFFFD54F),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
 
-                Text(
-                    text = shloka.meaning,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = Color(0xFFFFF8E9).copy(alpha = 0.88f),
-                        fontSize = 12.sp,
-                        lineHeight = 18.sp
-                    )
-                )
+                // Expandable Section: Meaning & Practical Wisdom
+                AnimatedVisibility(visible = isShlokaExpanded) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(Color(0xFFD4A23A).copy(alpha = 0.25f))
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Text(
+                            text = if (isEng) dailyShlokaItem.meaningEn else dailyShlokaItem.meaningHi,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = Color(0xFFFFF8E9).copy(alpha = 0.92f),
+                                fontSize = 12.sp,
+                                lineHeight = 18.sp
+                            )
+                        )
+
+                        if (dailyShlokaItem.practicalWisdomEn.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color(0xFFFFD54F).copy(alpha = 0.12f))
+                                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.Top) {
+                                    Text(text = "💡", fontSize = 12.sp)
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = if (isEng) dailyShlokaItem.practicalWisdomEn else dailyShlokaItem.practicalWisdomHi,
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            color = Color(0xFFFFD54F),
+                                            fontSize = 11.sp,
+                                            lineHeight = 15.sp
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Subtle Expand indicator when collapsed
+                if (!isShlokaExpanded) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { isShlokaExpanded = true }
+                            .padding(vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = if (isEng) "Tap to view meaning & wisdom ▼" else "अर्थ एवं व्याख्या देखें ▼",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = Color(0xFFFFD54F).copy(alpha = 0.85f),
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        )
+                    }
+                }
             }
         }
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Daily Mantra Card
+        // Daily Mantra Card with Explicit Defined Title and Metadata (Collapsed by Default)
         SadhakCard(
             backgroundColor = SadhakThemeColors.sacredSurface,
-            borderColor = SadhakThemeColors.sacredGold.copy(alpha = 0.4f)
+            borderColor = SadhakThemeColors.sacredGold.copy(alpha = 0.4f),
+            testTag = "home_daily_mantra_card"
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
+                val fullMantraText = "${if (isEng) dailyMantraItem.nameEn else dailyMantraItem.nameHi}\n${dailyMantraItem.sanskrit}\n${if (isEng) dailyMantraItem.meaningEn else dailyMantraItem.meaningHi}"
+
+                // Card Header Row
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.weight(1f, fill = false)
+                    ) {
                         Text(text = "🕉", fontSize = 16.sp)
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = if (isEng) "DAILY MANTRA" else "दैनिक मंत्र",
+                            text = (if (isEng) "DAILY MANTRA • " else "दैनिक मंत्र • ") + (if (isEng) dailyMantraItem.deityEn else dailyMantraItem.deityHi).uppercase(),
                             style = MaterialTheme.typography.labelSmall.copy(
                                 fontWeight = FontWeight.Bold,
                                 color = SadhakThemeColors.sacredSecondary,
-                                fontSize = 11.sp
-                            )
+                                fontSize = 11.sp,
+                                letterSpacing = 0.5.sp
+                            ),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
 
-                    IconButton(
-                        onClick = { onSpeak(dailyMantra.title + ".\n" + dailyMantra.content + ".\n" + dailyMantra.meaning) },
-                        modifier = Modifier.size(28.dp)
-                    ) {
-                        Icon(Icons.Default.VolumeUp, contentDescription = "Listen", tint = SadhakThemeColors.sacredPrimary, modifier = Modifier.size(18.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(
+                            onClick = { onSpeak("${if (isEng) dailyMantraItem.nameEn else dailyMantraItem.nameHi}.\n${dailyMantraItem.sanskrit}.\n${if (isEng) dailyMantraItem.meaningEn else dailyMantraItem.meaningHi}") },
+                            modifier = Modifier.size(28.dp).testTag("mantra_listen_button")
+                        ) {
+                            Icon(
+                                Icons.Default.VolumeUp,
+                                contentDescription = "Listen",
+                                tint = SadhakThemeColors.sacredPrimary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        IconButton(
+                            onClick = { onCopy(fullMantraText) },
+                            modifier = Modifier.size(28.dp).testTag("mantra_copy_button")
+                        ) {
+                            Icon(
+                                Icons.Default.ContentCopy,
+                                contentDescription = "Copy",
+                                tint = SadhakThemeColors.sacredTextSecondary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        IconButton(
+                            onClick = { onShare(fullMantraText) },
+                            modifier = Modifier.size(28.dp).testTag("mantra_share_button")
+                        ) {
+                            Icon(
+                                Icons.Default.Share,
+                                contentDescription = "Share",
+                                tint = SadhakThemeColors.sacredTextSecondary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                        IconButton(
+                            onClick = { isMantraExpanded = !isMantraExpanded },
+                            modifier = Modifier.size(28.dp).testTag("mantra_expand_button")
+                        ) {
+                            Icon(
+                                imageVector = if (isMantraExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                contentDescription = if (isMantraExpanded) "Collapse" else "Expand",
+                                tint = SadhakThemeColors.sacredPrimary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(6.dp))
 
+                // Defined Mantra Name / Title
                 Text(
-                    text = dailyMantra.title,
+                    text = if (isEng) dailyMantraItem.nameEn else dailyMantraItem.nameHi,
                     style = MaterialTheme.typography.titleMedium.copy(
                         fontWeight = FontWeight.Bold,
-                        color = SadhakThemeColors.sacredTextPrimary,
+                        color = SadhakThemeColors.sacredSecondary,
                         fontSize = 16.sp
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(2.dp))
-
-                Text(
-                    text = dailyMantra.content,
-                    style = MaterialTheme.typography.bodyMedium.copy(
-                        fontWeight = FontWeight.SemiBold,
-                        color = SadhakThemeColors.sacredPrimary,
-                        fontSize = 14.sp
                     )
                 )
 
                 Spacer(modifier = Modifier.height(4.dp))
 
+                // Sanskrit Mantra
                 Text(
-                    text = dailyMantra.meaning,
-                    style = MaterialTheme.typography.bodySmall.copy(
-                        color = SadhakThemeColors.sacredTextSecondary,
-                        fontSize = 12.sp
+                    text = dailyMantraItem.sanskrit,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = SadhakThemeColors.sacredPrimary,
+                        fontSize = 15.sp,
+                        lineHeight = 22.sp
                     )
                 )
+
+                if (dailyMantraItem.transliteration.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = dailyMantraItem.transliteration,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            color = SadhakThemeColors.sacredTextSecondary,
+                            fontSize = 11.sp,
+                            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                        )
+                    )
+                }
+
+                // Expandable Section: Meaning & Spiritual Focus
+                AnimatedVisibility(visible = isMantraExpanded) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(SadhakThemeColors.sacredDivider)
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // Meaning
+                        Text(
+                            text = if (isEng) dailyMantraItem.meaningEn else dailyMantraItem.meaningHi,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = SadhakThemeColors.sacredTextPrimary,
+                                fontSize = 12.sp,
+                                lineHeight = 17.sp
+                            )
+                        )
+
+                        // Spiritual Focus / Purpose
+                        if (dailyMantraItem.purposeEn.isNotBlank()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(SadhakThemeColors.sacredPrimary.copy(alpha = 0.08f))
+                                    .padding(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = if (isEng) "Focus: " else "साधना लक्ष्य: ",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = SadhakThemeColors.sacredPrimary,
+                                        fontSize = 11.sp
+                                    )
+                                )
+                                Text(
+                                    text = if (isEng) dailyMantraItem.purposeEn else dailyMantraItem.purposeHi,
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = SadhakThemeColors.sacredTextSecondary,
+                                        fontSize = 11.sp
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Subtle Expand indicator when collapsed
+                if (!isMantraExpanded) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { isMantraExpanded = true }
+                            .padding(vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = if (isEng) "Tap to view meaning & guidance ▼" else "अर्थ एवं साधना लक्ष्य देखें ▼",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                color = SadhakThemeColors.sacredPrimary,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        )
+                    }
+                }
             }
         }
     }

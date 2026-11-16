@@ -178,6 +178,9 @@ import com.example.ui.theme.Terracotta
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import com.example.utils.HapticFeedbackManager
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.material.icons.filled.Visibility
@@ -281,10 +284,11 @@ fun MantraCard(mantras: List<com.example.data.DailyMantra>, isEng: Boolean) {
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
-fun AartiBellWidget(isEng: Boolean) {
+fun AartiBellWidget(isEng: Boolean, viewModel: SadhakViewModel? = null) {
     var isSwinging by remember { mutableStateOf(false) }
     var pulseTrigger by remember { mutableStateOf(0) }
     var bellCount by remember { mutableStateOf(0) }
+    var lastRingTime by remember { mutableStateOf(0L) }
     val bellLogs = remember { mutableStateListOf<String>() }
     val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -350,23 +354,30 @@ fun AartiBellWidget(isEng: Boolean) {
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .size(140.dp)
+                    .testTag("aarti_bell_interactive_widget")
                     .clickable(
                         interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
                         indication = null
                     ) {
-                        isSwinging = true
-                        pulseTrigger += 1
-                        bellCount += 1
-                        haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                        
-                        // Play original temple bell sound
-                        playTempleBellSound()
+                        val now = System.currentTimeMillis()
+                        if (now - lastRingTime >= 200L) {
+                            lastRingTime = now
+                            isSwinging = true
+                            pulseTrigger += 1
+                            bellCount += 1
+                            viewModel?.incrementAartiBell()
+                            com.example.utils.HapticFeedbackManager.performHaptic(haptic, com.example.utils.HapticFeedbackManager.FeedbackType.BELL_RING)
+                            com.example.utils.HapticFeedbackManager.vibrate(context, com.example.utils.HapticFeedbackManager.FeedbackType.BELL_RING)
+                            
+                            // Play original temple bell sound
+                            playTempleBellSound()
 
-                        // Log the event
-                        val sdf = java.text.SimpleDateFormat("hh:mm:ss a", java.util.Locale.getDefault())
-                        val timeStr = sdf.format(java.util.Date())
-                        val logMsg = if (isEng) "Bell Rung at $timeStr (Ring #$bellCount)" else "आरती घंटी नाद समय $timeStr (संख्या #$bellCount)"
-                        bellLogs.add(0, logMsg)
+                            // Log the event
+                            val sdf = java.text.SimpleDateFormat("hh:mm:ss a", java.util.Locale.getDefault())
+                            val timeStr = sdf.format(java.util.Date())
+                            val logMsg = if (isEng) "Bell Rung at $timeStr (Ring #$bellCount)" else "आरती घंटी नाद समय $timeStr (संख्या #$bellCount)"
+                            bellLogs.add(0, logMsg)
+                        }
                     }
             ) {
                 // Radiating visual pulse waves representing sound propagation
@@ -711,7 +722,7 @@ fun BhaktiToolsScreen(viewModel: SadhakViewModel) {
 
             // Sub Section Content
             when (activeTab) {
-                "Bell" -> Column(modifier = Modifier.weight(1f)) { AartiBellWidget(isEng = isEng) }
+                "Bell" -> Column(modifier = Modifier.weight(1f)) { AartiBellWidget(isEng = isEng, viewModel = viewModel) }
                 "Counter" -> Column(modifier = Modifier.weight(1f)) { CounterView(isEng, viewModel) }
                 "KarmaLog" -> Column(modifier = Modifier.weight(1f)) { KarmaTrackerView(viewModel, isEng) }
                 "Gratitude" -> Column(modifier = Modifier.weight(1f)) { GratitudeJournalView(viewModel, isEng) }
@@ -1012,7 +1023,12 @@ fun MeditationTimerView(viewModel: SadhakViewModel, isEnglish: Boolean) {
             if (secondsLeft <= 0) {
                 timerRunning = false
                 secondsLeft = selectedDuration
-                viewModel.logKarmaDeed("Dhyana Sadhana Completed for ${selectedDuration / 60} mins")
+                com.example.ui.audio.SadhakAudioManager.stop()
+                HapticFeedbackManager.vibrate(context, HapticFeedbackManager.FeedbackType.BELL_RING)
+                HapticFeedbackManager.performHaptic(haptic, HapticFeedbackManager.FeedbackType.BELL_RING)
+                val completedMins = (selectedDuration / 60).coerceAtLeast(1)
+                viewModel.logKarmaDeed("Dhyana Sadhana Completed for $completedMins mins")
+                viewModel.recordMeditationMinutes(completedMins)
             }
         }
     }
@@ -1060,7 +1076,7 @@ fun MeditationTimerView(viewModel: SadhakViewModel, isEnglish: Boolean) {
                     modifier = Modifier.size(190.dp)
                 ) {
                     androidx.compose.material3.CircularProgressIndicator(
-                        progress = secondsLeft.toFloat() / selectedDuration,
+                        progress = if (selectedDuration > 0) (secondsLeft.toFloat() / selectedDuration.toFloat()).coerceIn(0f, 1f) else 0f,
                         modifier = Modifier
                             .fillMaxSize()
                             .testTag("timer_circular_progress"),
@@ -1084,6 +1100,14 @@ fun MeditationTimerView(viewModel: SadhakViewModel, isEnglish: Boolean) {
                                 )
                             )
                             .border(2.dp, MaterialTheme.colorScheme.tertiary, CircleShape)
+                            .semantics {
+                                contentDescription = if (isEnglish) {
+                                    "Meditation timer: $breathingPhase, ${secondsLeft / 60} minutes ${secondsLeft % 60} seconds remaining. Tap to toggle or hold to reset."
+                                } else {
+                                    "ध्यान टाइमर: $breathingPhase, ${secondsLeft / 60} मिनट ${secondsLeft % 60} सेकंड शेष।"
+                                }
+                            }
+                            .testTag("timer_bead_tap_target")
                             .pointerInput(selectedDuration) {
                                 awaitPointerEventScope {
                                     while (true) {
@@ -1094,7 +1118,9 @@ fun MeditationTimerView(viewModel: SadhakViewModel, isEnglish: Boolean) {
                                             triggered = true
                                             timerRunning = false
                                             secondsLeft = selectedDuration
-                                            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                            com.example.ui.audio.SadhakAudioManager.stop()
+                                            HapticFeedbackManager.vibrate(context, HapticFeedbackManager.FeedbackType.LIGHT_TOUCH)
+                                            HapticFeedbackManager.performHaptic(haptic, HapticFeedbackManager.FeedbackType.LIGHT_TOUCH)
                                         }
                                         
                                         var isDown = true
@@ -1105,7 +1131,11 @@ fun MeditationTimerView(viewModel: SadhakViewModel, isEnglish: Boolean) {
                                                 isDown = false
                                                 job.cancel()
                                                 if (!triggered) {
-                                                    timerRunning = !timerRunning
+                                                    val newRunning = !timerRunning
+                                                    timerRunning = newRunning
+                                                    val fbType = if (newRunning) HapticFeedbackManager.FeedbackType.SUCCESS else HapticFeedbackManager.FeedbackType.LIGHT_TOUCH
+                                                    HapticFeedbackManager.vibrate(context, fbType)
+                                                    HapticFeedbackManager.performHaptic(haptic, fbType)
                                                 }
                                             }
                                         }
@@ -1146,6 +1176,68 @@ fun MeditationTimerView(viewModel: SadhakViewModel, isEnglish: Boolean) {
                                 letterSpacing = 0.5.sp
                             )
                         }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Explicit Start/Pause and Reset Controls
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            val newRunning = !timerRunning
+                            timerRunning = newRunning
+                            val fb = if (newRunning) HapticFeedbackManager.FeedbackType.SUCCESS else HapticFeedbackManager.FeedbackType.LIGHT_TOUCH
+                            HapticFeedbackManager.vibrate(context, fb)
+                            HapticFeedbackManager.performHaptic(haptic, fb)
+                        },
+                        modifier = Modifier.testTag("meditation_play_pause_button"),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (timerRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
+                            contentDescription = if (timerRunning) "Pause" else "Play",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (timerRunning) {
+                                if (isEnglish) "Pause" else "विराम दें"
+                            } else {
+                                if (isEnglish) "Start Dhyana" else "ध्यान आरंभ करें"
+                            },
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 12.sp
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    OutlinedButton(
+                        onClick = {
+                            timerRunning = false
+                            secondsLeft = selectedDuration
+                            com.example.ui.audio.SadhakAudioManager.stop()
+                            HapticFeedbackManager.vibrate(context, HapticFeedbackManager.FeedbackType.LIGHT_TOUCH)
+                            HapticFeedbackManager.performHaptic(haptic, HapticFeedbackManager.FeedbackType.LIGHT_TOUCH)
+                        },
+                        modifier = Modifier.testTag("meditation_reset_button"),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Refresh,
+                            contentDescription = "Reset",
+                            tint = MaterialTheme.colorScheme.outline
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (isEnglish) "Reset" else "रीसेट",
+                            fontSize = 12.sp
+                        )
                     }
                 }
 
@@ -1582,18 +1674,36 @@ fun GratitudeJournalView(viewModel: SadhakViewModel, isEnglish: Boolean) {
 @Composable
 fun SadhanaDashboardView(viewModel: SadhakViewModel, isEnglish: Boolean) {
     val context = LocalContext.current
-    val prefs = remember { context.getSharedPreferences("mantra_counter_prefs", android.content.Context.MODE_PRIVATE) }
+    val userEmail by viewModel.userEmail.collectAsState()
+    val effectiveUserId = remember(userEmail) {
+        if (userEmail.isBlank()) "guest_devotee" else userEmail.trim().lowercase()
+    }
+    val prefsKey = remember(effectiveUserId) {
+        val sanitized = effectiveUserId.replace("[^a-zA-Z0-9_]".toRegex(), "_")
+        "mantra_counter_prefs_$sanitized"
+    }
+    val prefs = remember(prefsKey) { context.getSharedPreferences(prefsKey, android.content.Context.MODE_PRIVATE) }
     
-    val totalJapaCount = remember { prefs.getInt("current_count", 108) }
-    val currentStreak = remember { prefs.getInt("streak", 7) }
-    val beadsPerMala = remember { prefs.getInt("beads_per_mala", 108) }
-    val targetMalas = remember { prefs.getInt("target_malas", 1) }
-    val dailyTargetChants = beadsPerMala * targetMalas
+    val totalJapaCount = prefs.getInt("current_count", 0)
+    val beadsPerMala = prefs.getInt("beads_per_mala", 108)
+    val targetMalas = prefs.getInt("target_malas", 1)
+    val dailyTargetChants = (beadsPerMala * targetMalas).coerceAtLeast(108)
 
     val karmaLogs by viewModel.karmaLogs.collectAsState()
+    val sadhanaProfile by viewModel.sadhanaProfile.collectAsState()
+    val sadhanaBadges by viewModel.sadhanaBadges.collectAsState()
+    val leaderboardEntries by viewModel.leaderboardEntries.collectAsState()
+    val leaderboardPeriod by viewModel.leaderboardPeriod.collectAsState()
+    val activeMilestoneCelebration by viewModel.activeMilestoneCelebration.collectAsState()
+
+    val currentStreak = sadhanaProfile?.currentStreak ?: prefs.getInt("streak", 0)
+    val meditationMinutes = sadhanaProfile?.totalMeditationMinutes ?: 0
+    val targetMeditationMinutes = 20
+    val sankalpaDay = (sadhanaProfile?.currentStreak ?: 1).coerceIn(1, 40)
 
     var showLogProgressDialog by remember { mutableStateOf(false) }
     var logNotes by remember { mutableStateOf("") }
+    var selectedBadgeForDetail by remember { mutableStateOf<com.example.data.SadhanaBadge?>(null) }
 
     Column(
         modifier = Modifier
@@ -1601,150 +1711,21 @@ fun SadhanaDashboardView(viewModel: SadhakViewModel, isEnglish: Boolean) {
             .testTag("sadhana_dashboard_view"),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // 1. Sadhana Overview Header Card
-        SacredCard(
-            backgroundColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
-            borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            text = if (isEnglish) "Daily Sadhana Overview" else "दैनिक साधना अवलोकन",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        )
-                        Text(
-                            text = if (isEnglish) "Sanatan Discipline & Spiritual Growth" else "सनातन अनुशासन एवं आध्यात्मिक उन्नति",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        )
-                    }
-                    DiyaDecoration(size = 32.dp)
-                }
+        // 1. Sadhana Sacred Profile & Spiritual Rank Card
+        com.example.ui.screens.sadhana.SadhanaRankProfileCard(
+            profile = sadhanaProfile,
+            isEnglish = isEnglish,
+            onViewAllBadges = {}
+        )
 
-                Spacer(modifier = Modifier.height(16.dp))
+        // 2. Devotional Badges Showcase
+        com.example.ui.screens.sadhana.SadhanaBadgesSection(
+            badges = sadhanaBadges,
+            isEnglish = isEnglish,
+            onBadgeClick = { badge -> selectedBadgeForDetail = badge }
+        )
 
-                // Stats Grid (2x2)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Total Japa Stat
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.surface)
-                            .padding(12.dp)
-                    ) {
-                        Column {
-                            Text(
-                                text = if (isEnglish) "Total Japa" else "कुल जाप",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.secondary,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Text(
-                                text = "$totalJapaCount Chants",
-                                fontSize = 16.sp,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-
-                    // Streak Stat
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.surface)
-                            .padding(12.dp)
-                    ) {
-                        Column {
-                            Text(
-                                text = if (isEnglish) "Karma Streak" else "निरंतरता",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.secondary,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Text(
-                                text = "🔥 $currentStreak ${if (isEnglish) "Days" else "दिन"}",
-                                fontSize = 16.sp,
-                                color = Terracotta,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Active Sankalpa
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.surface)
-                            .padding(12.dp)
-                    ) {
-                        Column {
-                            Text(
-                                text = if (isEnglish) "Active Sankalpa" else "सक्रिय संकल्प",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.secondary,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Text(
-                                text = if (isEnglish) "40-Day Gayatri Anushthan" else "४०-दिवसीय गायत्री अनुष्ठान",
-                                fontSize = 13.sp,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.Bold,
-                                maxLines = 1
-                            )
-                        }
-                    }
-
-                    // Total Sadhana Time
-                    Box(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clip(RoundedCornerShape(12.dp))
-                            .background(MaterialTheme.colorScheme.surface)
-                            .padding(12.dp)
-                    ) {
-                        Column {
-                            Text(
-                                text = if (isEnglish) "Sadhana Time" else "साधना समय",
-                                fontSize = 11.sp,
-                                color = MaterialTheme.colorScheme.secondary,
-                                fontWeight = FontWeight.Medium
-                            )
-                            Text(
-                                text = if (isEnglish) "45 Mins Today" else "आज ४५ मिनट",
-                                fontSize = 13.sp,
-                                color = MaterialTheme.colorScheme.primary,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-            }
-        }
-
-        // 2. Quick Action Tiles
+        // 3. Quick Action Tiles
         SadhakSectionHeader(
             title = if (isEnglish) "Sadhana Practices" else "साधना अभ्यास"
         )
@@ -1803,7 +1784,7 @@ fun SadhanaDashboardView(viewModel: SadhakViewModel, isEnglish: Boolean) {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // Japa Goal
-                Column {
+                Column(modifier = Modifier.testTag("daily_japa_progress_card")) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -1835,7 +1816,7 @@ fun SadhanaDashboardView(viewModel: SadhakViewModel, isEnglish: Boolean) {
                 }
 
                 // Dhyan Goal
-                Column {
+                Column(modifier = Modifier.testTag("daily_dhyan_progress_card")) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -1847,15 +1828,16 @@ fun SadhanaDashboardView(viewModel: SadhakViewModel, isEnglish: Boolean) {
                             color = MaterialTheme.colorScheme.secondary
                         )
                         Text(
-                            text = "15 / 20 Mins",
+                            text = if (isEnglish) "$meditationMinutes / $targetMeditationMinutes Mins" else "$meditationMinutes / $targetMeditationMinutes मिनट",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
+                    val dhyanProgress = if (targetMeditationMinutes > 0) (meditationMinutes.toFloat() / targetMeditationMinutes.toFloat()).coerceIn(0f, 1f) else 0f
                     LinearProgressIndicator(
-                        progress = 0.75f,
+                        progress = dhyanProgress,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(8.dp)
@@ -1884,7 +1866,8 @@ fun SadhanaDashboardView(viewModel: SadhakViewModel, isEnglish: Boolean) {
 
         SacredCard(
             backgroundColor = MaterialTheme.colorScheme.surface,
-            borderColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f)
+            borderColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.3f),
+            modifier = Modifier.testTag("active_sankalpa_card")
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Row(
@@ -1913,7 +1896,7 @@ fun SadhanaDashboardView(viewModel: SadhakViewModel, isEnglish: Boolean) {
                             .padding(horizontal = 8.dp, vertical = 4.dp)
                     ) {
                         Text(
-                            text = if (isEnglish) "Day 12 of 40" else "दिन १२ / ४०",
+                            text = if (isEnglish) "Day $sankalpaDay of 40" else "दिन $sankalpaDay / ४०",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             color = Terracotta
@@ -1923,7 +1906,7 @@ fun SadhanaDashboardView(viewModel: SadhakViewModel, isEnglish: Boolean) {
 
                 Spacer(modifier = Modifier.height(12.dp))
                 LinearProgressIndicator(
-                    progress = 12f / 40f,
+                    progress = (sankalpaDay.toFloat() / 40f).coerceIn(0f, 1f),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(6.dp)
@@ -1980,6 +1963,38 @@ fun SadhanaDashboardView(viewModel: SadhakViewModel, isEnglish: Boolean) {
                 }
             }
         }
+
+        // 6. Devotional Community Mandala & Spiritual Leaderboard
+        com.example.ui.screens.sadhana.SadhanaMandalaLeaderboardView(
+            entries = leaderboardEntries,
+            currentProfile = sadhanaProfile,
+            selectedPeriod = leaderboardPeriod,
+            onPeriodSelected = { viewModel.setLeaderboardPeriod(it) },
+            isEnglish = isEnglish,
+            onToggleLeaderboardParticipation = { viewModel.setLeaderboardOptIn(it) }
+        )
+    }
+
+    // Badge Details Dialog
+    selectedBadgeForDetail?.let { badge ->
+        com.example.ui.screens.sadhana.BadgeDetailDialog(
+            badge = badge,
+            isEnglish = isEnglish,
+            onSetShowcase = {
+                viewModel.setShowcaseBadge(badge.badgeId)
+                selectedBadgeForDetail = null
+            },
+            onDismiss = { selectedBadgeForDetail = null }
+        )
+    }
+
+    // Active Milestone Celebration Dialog
+    activeMilestoneCelebration?.let { celebration ->
+        com.example.ui.screens.sadhana.SadhanaMilestoneCelebrationDialog(
+            celebration = celebration,
+            isEnglish = isEnglish,
+            onDismiss = { viewModel.dismissMilestoneCelebration() }
+        )
     }
 
     // Quick Log Progress Dialog

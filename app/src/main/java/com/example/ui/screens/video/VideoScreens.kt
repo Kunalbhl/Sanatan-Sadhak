@@ -61,6 +61,7 @@ import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Comment
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.MenuBook
@@ -203,12 +204,14 @@ fun VideoHubScreen(viewModel: SadhakViewModel, videoViewModel: com.example.ui.vi
 
     val videos by videoViewModel.videos.collectAsState()
     val selectedCat by videoViewModel.selectedVideoCategory.collectAsState()
+    val searchQuery by videoViewModel.searchQuery.collectAsState()
+    val favoriteVideoIds by viewModel.favoriteVideoIds.collectAsState()
     val userRole by viewModel.userRole.collectAsState()
 
     var activeVideoUrl by remember { mutableStateOf<String?>(null) }
     var activeVideoTitle by remember { mutableStateOf("") }
 
-    val categories = listOf("All", "YouTube", "Darshan", "Puja", "Stories")
+    val categories = listOf("All", "Favorites", "YouTube", "Darshan", "Puja", "Stories")
 
     Column(
         modifier = Modifier
@@ -222,6 +225,27 @@ fun VideoHubScreen(viewModel: SadhakViewModel, videoViewModel: com.example.ui.vi
             showDiyas = true
         )
 
+        // Search Bar for videos
+        OutlinedTextField(
+            value = searchQuery,
+            onValueChange = { videoViewModel.setSearchQuery(it) },
+            placeholder = { Text(if (isEng) "Search videos by title, category, or ID..." else "शीर्षक, श्रेणी या आईडी से खोजें...") },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search", tint = MaterialTheme.colorScheme.primary) },
+            trailingIcon = {
+                if (searchQuery.isNotEmpty()) {
+                    IconButton(onClick = { videoViewModel.setSearchQuery("") }) {
+                        Icon(Icons.Default.Close, contentDescription = "Clear", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            },
+            singleLine = true,
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp)
+                .testTag("video_search_field")
+        )
+
         // Video Filtering and Sorting Options State
         var selectedVideoSort by remember { mutableStateOf("Newest") }
         val videoSorts = listOf("Newest", "A-Z")
@@ -229,13 +253,18 @@ fun VideoHubScreen(viewModel: SadhakViewModel, videoViewModel: com.example.ui.vi
             "Newest" -> if (isEng) "Newest" else "नवीनतम"
             else -> if (isEng) "A-Z" else "अ-ज्ञ"
         }
-        val isAnyVideoFilterActive = selectedCat != "All" || selectedVideoSort != "Newest"
+        val isAnyVideoFilterActive = selectedCat != "All" || selectedVideoSort != "Newest" || searchQuery.isNotBlank()
 
-        val filteredSortedVideos = remember(videos, selectedVideoSort) {
-            if (selectedVideoSort == "A-Z") {
-                videos.sortedBy { it.title }
+        val filteredSortedVideos = remember(videos, selectedVideoSort, selectedCat, favoriteVideoIds) {
+            val baseList = if (selectedCat == "Favorites") {
+                videos.filter { favoriteVideoIds.contains(it.videoId) }
             } else {
                 videos
+            }
+            if (selectedVideoSort == "A-Z") {
+                baseList.sortedBy { it.title }
+            } else {
+                baseList
             }
         }
 
@@ -249,6 +278,7 @@ fun VideoHubScreen(viewModel: SadhakViewModel, videoViewModel: com.example.ui.vi
                 val isSelected = selectedCat == category
                 val label = when (category) {
                     "All" -> if (isEng) "All Videos" else "सभी वीडियो"
+                    "Favorites" -> if (isEng) "Favorites" else "पसंदीदा (Favorites)"
                     "YouTube" -> if (isEng) "YouTube Content" else "यूट्यूब वीडियो"
                     "Darshan" -> if (isEng) "Darshan" else "देव दर्शन (Darshan)"
                     "Puja" -> if (isEng) "Puja & Aarti" else "पूजा व आरती (Puja)"
@@ -306,6 +336,7 @@ fun VideoHubScreen(viewModel: SadhakViewModel, videoViewModel: com.example.ui.vi
                     modifier = Modifier
                         .clickable {
                             videoViewModel.setVideoCategory("All")
+                            videoViewModel.setSearchQuery("")
                             selectedVideoSort = "Newest"
                         }
                         .touchFeedback()
@@ -455,22 +486,8 @@ fun VideoHubScreen(viewModel: SadhakViewModel, videoViewModel: com.example.ui.vi
                                         .fillMaxWidth()
                                         .height(180.dp)
                                 ) {
-                                    androidx.compose.ui.viewinterop.AndroidView(
-                                        factory = { context ->
-                                            android.webkit.WebView(context).apply {
-                                                settings.javaScriptEnabled = true
-                                                settings.mediaPlaybackRequiresUserGesture = false
-                                                webChromeClient = android.webkit.WebChromeClient()
-                                                val html = """
-                                                    <html>
-                                                    <body style="margin:0;padding:0;background-color:black;">
-                                                        <iframe width="100%" height="100%" src="https://www.youtube.com/embed/${video.videoId}?autoplay=1&rel=0" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
-                                                    </body>
-                                                    </html>
-                                                """.trimIndent()
-                                                loadDataWithBaseURL("https://www.youtube.com", html, "text/html", "utf-8", null)
-                                            }
-                                        },
+                                    YouTubeWebView(
+                                        videoId = video.videoId,
                                         modifier = Modifier.fillMaxSize()
                                     )
                                     IconButton(
@@ -577,6 +594,25 @@ fun VideoHubScreen(viewModel: SadhakViewModel, videoViewModel: com.example.ui.vi
                                     horizontalArrangement = Arrangement.End,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
+                                    val isFav = favoriteVideoIds.contains(video.videoId)
+                                    IconButton(
+                                        onClick = {
+                                            if (userRole == "Guest") {
+                                                viewModel.triggerGuestPromo()
+                                            } else {
+                                                viewModel.toggleFavoriteVideo(video.videoId)
+                                            }
+                                        },
+                                        modifier = Modifier.size(32.dp).testTag("fav_video_${video.videoId}")
+                                    ) {
+                                        Icon(
+                                            imageVector = if (isFav) Icons.Default.Favorite else androidx.compose.material.icons.Icons.Outlined.FavoriteBorder,
+                                            contentDescription = if (isFav) "Favorited" else "Add to Favorites",
+                                            tint = if (isFav) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                    Spacer(modifier = Modifier.width(8.dp))
                                     val context = androidx.compose.ui.platform.LocalContext.current
                                     androidx.compose.material3.IconButton(
                                         onClick = {
@@ -626,3 +662,62 @@ fun VideoHubScreen(viewModel: SadhakViewModel, videoViewModel: com.example.ui.vi
 
 
 // --- PROFILE / ACCOUNT / LOGIN SCREEN ---
+
+@android.annotation.SuppressLint("SetJavaScriptEnabled")
+@Composable
+fun YouTubeWebView(
+    videoId: String,
+    modifier: Modifier = Modifier
+) {
+    var webViewInstance by remember { mutableStateOf<android.webkit.WebView?>(null) }
+
+    DisposableEffect(videoId) {
+        onDispose {
+            webViewInstance?.let { webView ->
+                try {
+                    webView.stopLoading()
+                    webView.loadUrl("about:blank")
+                    webView.onPause()
+                    webView.clearHistory()
+                    webView.removeAllViews()
+                    webView.destroy()
+                } catch (e: Exception) {
+                    android.util.Log.w("VideoScreens", "Error destroying YouTube WebView", e)
+                }
+                webViewInstance = null
+            }
+        }
+    }
+
+    androidx.compose.ui.viewinterop.AndroidView(
+        factory = { context ->
+            android.webkit.WebView(context).apply {
+                webViewInstance = this
+                settings.apply {
+                    javaScriptEnabled = true
+                    mediaPlaybackRequiresUserGesture = false
+                    domStorageEnabled = true
+                    useWideViewPort = true
+                    loadWithOverviewMode = true
+                }
+                webChromeClient = android.webkit.WebChromeClient()
+                webViewClient = android.webkit.WebViewClient()
+                val html = """
+                    <html>
+                    <head>
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    </head>
+                    <body style="margin:0;padding:0;background-color:black;">
+                        <iframe width="100%" height="100%" src="https://www.youtube.com/embed/$videoId?autoplay=1&rel=0&playsinline=1" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+                    </body>
+                    </html>
+                """.trimIndent()
+                loadDataWithBaseURL("https://www.youtube.com", html, "text/html", "utf-8", null)
+            }
+        },
+        update = { webView ->
+            webViewInstance = webView
+        },
+        modifier = modifier
+    )
+}

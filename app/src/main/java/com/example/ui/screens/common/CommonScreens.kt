@@ -47,11 +47,9 @@ import androidx.compose.ui.draw.clip
 
 import androidx.compose.material.icons.filled.Festival
 
-import androidx.compose.material.icons.filled.MenuBook
-
+import androidx.compose.material.icons.automirrored.filled.MenuBook
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Warning
-
-import androidx.compose.material.icons.filled.ArrowForward
 
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -91,7 +89,15 @@ fun AccessDeniedScreen(viewModel: SadhakViewModel) {
         Icon(imageVector = Icons.Default.Warning, contentDescription = "Denied", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(64.dp))
         Spacer(modifier = Modifier.height(16.dp))
         Text(text = if (isEng) "Access Denied" else "पहुंच अस्वीकृत", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary, fontSize = 20.sp)
+        Spacer(modifier = Modifier.height(8.dp))
         Text(text = if (isEng) "You do not have permission to view this page." else "आपको इस पृष्ठ को देखने की अनुमति नहीं है।", color = MaterialTheme.colorScheme.onSurface)
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(
+            onClick = { viewModel.setScreen("Home") },
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+        ) {
+            Text(if (isEng) "Return Home" else "मुख्य पृष्ठ पर लौटें", color = MaterialTheme.colorScheme.onPrimary)
+        }
     }
 }
 
@@ -191,7 +197,7 @@ fun ChatScreen(viewModel: SadhakViewModel, aiViewModel: com.example.ui.viewmodel
                     // Category Cards 2-column Grid
                     val categories = listOf(
                         Pair("Mantras & Aarti", Icons.Default.PlayArrow to "Explore Mantras"),
-                        Pair("Scriptures", Icons.Default.MenuBook to "Tell me about Gita"),
+                        Pair("Scriptures", Icons.AutoMirrored.Filled.MenuBook to "Tell me about Gita"),
                         Pair("Deities & Temples", Icons.Default.TempleHindu to "Tell me about Mahadev"),
                         Pair("Festivals & Rituals", Icons.Default.Festival to "How do I start a daily puja?"),
                         Pair("Karma & Dharma", Icons.Default.SelfImprovement to "Explain Karma simply"),
@@ -291,7 +297,7 @@ fun ChatScreen(viewModel: SadhakViewModel, aiViewModel: com.example.ui.viewmodel
                             modifier = Modifier.size(48.dp),
                             shape = CircleShape
                         ) {
-                            Icon(Icons.Default.ArrowForward, contentDescription = if (isEng) "Send" else "भेजें")
+                            Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = if (isEng) "Send" else "भेजें")
                         }
                     }
                 }
@@ -395,7 +401,7 @@ fun ChatBubble(msg: ChatMessage, onChipClick: (String) -> Unit, onFollowUpClick:
                             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)) {
                                 Text(label, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = SadhakThemeColors.secondary)
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Icon(Icons.Default.ArrowForward, contentDescription = null, modifier = Modifier.size(12.dp), tint = SadhakThemeColors.secondary)
+                                Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, modifier = Modifier.size(12.dp), tint = SadhakThemeColors.secondary)
                             }
                         }
                     }

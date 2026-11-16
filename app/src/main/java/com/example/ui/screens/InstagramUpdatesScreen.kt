@@ -380,9 +380,29 @@ fun InstagramWebView(
         """.trimIndent()
     }
 
+    var webViewInstance by remember { mutableStateOf<WebView?>(null) }
+
+    DisposableEffect(url) {
+        onDispose {
+            webViewInstance?.let { webView ->
+                try {
+                    webView.stopLoading()
+                    webView.loadUrl("about:blank")
+                    webView.clearHistory()
+                    webView.removeAllViews()
+                    webView.destroy()
+                } catch (e: Exception) {
+                    android.util.Log.w("InstagramUpdatesScreen", "Error destroying Instagram WebView", e)
+                }
+                webViewInstance = null
+            }
+        }
+    }
+
     AndroidView(
         factory = { context ->
             WebView(context).apply {
+                webViewInstance = this
                 settings.apply {
                     javaScriptEnabled = true
                     domStorageEnabled = true
@@ -418,7 +438,7 @@ fun InstagramWebView(
             }
         },
         update = { webView ->
-            // Do nothing on recomposition unless url changes, which is handled by remember(url)
+            webViewInstance = webView
         },
         modifier = Modifier.fillMaxSize()
     )
