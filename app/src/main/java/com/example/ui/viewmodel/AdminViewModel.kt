@@ -32,6 +32,11 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
     val comments: StateFlow<List<PostComment>> = communityRepository.getAllComments().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
     val videos: StateFlow<List<BhaktiVideo>> = videoRepository.getAllVideos().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    // Diagnostics & Observability State
+    val diagnosticErrors: StateFlow<List<DiagnosticErrorRecord>> = AppDiagnosticsManager.errorRecords
+    val systemHealth: StateFlow<List<SystemComponentHealth>> = AppDiagnosticsManager.systemHealth
+    val complianceAuditList: StateFlow<List<ComplianceAuditItem>> = AppDiagnosticsManager.complianceAudit
+
     // Filter & Search states
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
@@ -224,12 +229,132 @@ class AdminViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun addCuratedVideo(
+        urlOrId: String,
+        title: String,
+        description: String,
+        category: String,
+        currentAdminEmail: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val videoId = YoutubeUrlParser.extractVideoId(urlOrId)
+        if (videoId == null) {
+            onError("Invalid YouTube URL or Video ID. Please provide a valid YouTube watch, short, or share link.")
+            return
+        }
+        if (title.isBlank()) {
+            onError("Video Title cannot be empty.")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                val newVideo = BhaktiVideo(
+                    title = title.trim(),
+                    description = description.trim(),
+                    category = category,
+                    videoId = videoId,
+                    isCustom = true,
+                    thumbnail = YoutubeUrlParser.getThumbnailUrl(videoId),
+                    publishDate = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
+                )
+                videoRepository.insertVideo(newVideo)
+                adminRepository.logAction(currentAdminEmail, "YOUTUBE_VIDEO_CURATED", "BHAKTI_VIDEO", videoId, "", title)
+                onSuccess()
+            } catch (e: Exception) {
+                AppDiagnosticsManager.recordException(e, ErrorCategory.YOUTUBE, ErrorSeverity.MEDIUM)
+                onError("Failed to save video: ${e.message}")
+            }
+        }
+    }
+
+    fun updateCuratedVideo(
+        id: Int,
+        videoId: String,
+        title: String,
+        description: String,
+        category: String,
+        isCustom: Boolean,
+        currentAdminEmail: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        if (title.isBlank()) {
+            onError("Video Title cannot be empty.")
+            return
+        }
+
+        viewModelScope.launch {
+            try {
+                val updated = BhaktiVideo(
+                    id = id,
+                    title = title.trim(),
+                    description = description.trim(),
+                    category = category,
+                    videoId = videoId,
+                    isCustom = isCustom,
+                    thumbnail = YoutubeUrlParser.getThumbnailUrl(videoId)
+                )
+                videoRepository.updateVideo(updated)
+                adminRepository.logAction(currentAdminEmail, "YOUTUBE_VIDEO_UPDATED", "BHAKTI_VIDEO", id.toString(), videoId, title)
+                onSuccess()
+            } catch (e: Exception) {
+                AppDiagnosticsManager.recordException(e, ErrorCategory.YOUTUBE, ErrorSeverity.MEDIUM)
+                onError("Failed to update video: ${e.message}")
+            }
+        }
+    }
+
+    fun deleteCuratedVideo(video: BhaktiVideo, currentAdminEmail: String) {
+        requestConfirmation(
+            title = "Delete Curated Video",
+            message = "Are you sure you want to remove '${video.title}' from the Sanatan Sadhak video hub?",
+            warningMessage = "This video will be removed from all users' video playlists.",
+            onConfirm = {
+                viewModelScope.launch {
+                    videoRepository.deleteVideoById(video.id)
+                    adminRepository.logAction(currentAdminEmail, "YOUTUBE_VIDEO_DELETED", "BHAKTI_VIDEO", video.id.toString(), video.videoId, video.title)
+                }
+            }
+        )
+    }
+
     fun toggleVideoStatus(video: BhaktiVideo, currentAdminEmail: String) {
         viewModelScope.launch {
             val updated = video.copy(isCustom = !video.isCustom)
             videoRepository.updateVideo(updated)
             adminRepository.logAction(currentAdminEmail, "VIDEO_UPDATED", "BHAKTI_VIDEO", video.id.toString(), video.title, if (updated.isCustom) "CUSTOM" else "STANDARD")
         }
+    }
+
+    // --- OBSERVABILITY & SYSTEM DIAGNOSTICS ---
+    fun runSystemDiagnostics(context: android.content.Context) {
+        viewModelScope.launch {
+            AppDiagnosticsManager.runSystemSelfDiagnostics(context)
+            adminRepository.logAction("System Diagnostics", "DIAGNOSTICS_EXECUTED", "SYSTEM_HEALTH", "ALL_COMPONENTS", "", "Self-diagnostics completed")
+        }
+    }
+
+    fun updateErrorDiagnosticStatus(fingerprint: String, newStatus: ErrorStatus, adminEmail: String) {
+        viewModelScope.launch {
+            AppDiagnosticsManager.updateErrorStatus(fingerprint, newStatus)
+            adminRepository.logAction(adminEmail, "ERROR_STATUS_UPDATED", "DIAGNOSTIC_ERROR", fingerprint, "", newStatus.name)
+        }
+    }
+
+    fun clearDiagnosticErrors(adminEmail: String) {
+        requestConfirmation(
+            title = "Clear Error Logs",
+            message = "Clear all resolved and open diagnostic error logs?",
+            warningMessage = "Active logs help developers identify crash trends.",
+            onConfirm = {
+                viewModelScope.launch {
+                    AppDiagnosticsManager.clearAllErrors()
+                    adminRepository.logAction(adminEmail, "DIAGNOSTICS_CLEARED", "DIAGNOSTIC_ERRORS", "ALL", "", "Cleared error history")
+                }
+            }
+        )
     }
 
     // --- NOTIFICATIONS ---

@@ -38,8 +38,13 @@ fun SadhakCard(
 
     val cardShape = shape
 
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+
     val clickModifier = if (onClick != null && enabled) {
-        Modifier.clickable(onClick = onClick)
+        Modifier.clickable(onClick = {
+            com.example.utils.HapticFeedbackManager.performHaptic(haptic, com.example.utils.HapticFeedbackManager.FeedbackType.LIGHT_TOUCH)
+            onClick()
+        })
     } else {
         Modifier
     }

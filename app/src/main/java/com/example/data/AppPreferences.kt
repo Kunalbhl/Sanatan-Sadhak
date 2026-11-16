@@ -26,6 +26,9 @@ object AppPreferences {
     private val _soundEnabled = MutableStateFlow(true)
     val soundEnabled: StateFlow<Boolean> = _soundEnabled
 
+    private val _hasCompletedOnboarding = MutableStateFlow(false)
+    val hasCompletedOnboarding: StateFlow<Boolean> = _hasCompletedOnboarding
+
     fun init(context: Context) {
         prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         _isEnglish.value = prefs.getBoolean("is_english", true)
@@ -34,7 +37,46 @@ object AppPreferences {
         _bgChantEnabled.value = prefs.getBoolean("bg_chant_enabled", false)
         _bgChantVolume.value = prefs.getFloat("bg_chant_vol", 0.3f)
         _soundEnabled.value = prefs.getBoolean("sound_enabled", true)
+        _hasCompletedOnboarding.value = prefs.getBoolean("onboarding_completed", false)
         com.example.ui.audio.SadhakAudioManager.setSoundEnabled(_soundEnabled.value)
+    }
+
+    fun setOnboardingCompleted(completed: Boolean) {
+        setUserCompletedOnboarding("", completed)
+    }
+
+    fun getOnboardingState(email: String): String {
+        if (!::prefs.isInitialized) return "NOT_STARTED"
+        val cleanEmail = email.lowercase().trim()
+        val key = if (cleanEmail.isBlank() || cleanEmail == "guest@sanatan.org" || cleanEmail == "guest") "guest" else cleanEmail
+        val userState = prefs.getString("onboarding_state_$key", null)
+        if (userState != null) return userState
+        val userCompleted = prefs.getBoolean("onboarding_completed_$key", false)
+        if (userCompleted) return "COMPLETED"
+        return "NOT_STARTED"
+    }
+
+    fun hasUserCompletedOnboarding(email: String): Boolean {
+        val state = getOnboardingState(email)
+        return state == "COMPLETED" || state == "SKIPPED"
+    }
+
+    fun setOnboardingState(email: String, state: String) {
+        val isDone = (state == "COMPLETED" || state == "SKIPPED")
+        _hasCompletedOnboarding.value = isDone
+        if (::prefs.isInitialized) {
+            val editor = prefs.edit()
+            val cleanEmail = email.lowercase().trim()
+            val key = if (cleanEmail.isBlank() || cleanEmail == "guest@sanatan.org" || cleanEmail == "guest") "guest" else cleanEmail
+            editor.putString("onboarding_state_$key", state)
+            editor.putBoolean("onboarding_completed_$key", isDone)
+            editor.commit()
+        }
+    }
+
+    fun setUserCompletedOnboarding(email: String, completed: Boolean) {
+        val state = if (completed) "COMPLETED" else "NOT_STARTED"
+        setOnboardingState(email, state)
     }
 
     fun toggleLanguage() {

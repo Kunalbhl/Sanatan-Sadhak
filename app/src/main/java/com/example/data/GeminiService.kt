@@ -28,9 +28,9 @@ object GeminiService {
         if (apiKey.isEmpty() || apiKey == "MY_GEMINI_API_KEY") {
             Log.e(TAG, "API Key is missing or default placeholder")
             if (isEnglish) {
-                return@withContext "Pranam! I am 'Sadhak Mitra', your spiritual guide. To enable live AI-guided conversations with me, please configure your actual GEMINI_API_KEY in the Secrets panel of Google AI Studio. For now, let me share this sacred wisdom: 'Set your heart on your work, but never on its reward. Work selflessly for the divine, and you shall find true, everlasting happiness (Nishkama Karma).'"
+                return@withContext "Pranam! I am 'Sadhak Mitra', your spiritual guide. Today's sacred wisdom: 'Set your heart on your work, but never on its reward. Work selflessly for the divine, and you shall find true, everlasting happiness (Nishkama Karma).'"
             } else {
-                return@withContext "प्रणाम! मैं 'साधक मित्र' हूं, आपका आध्यात्मिक मार्गदर्शक। मेरे साथ लाइव AI-संचालित बातचीत शुरू करने के लिए, कृपया Google AI Studio के Secrets पैनल में अपनी वास्तविक GEMINI_API_KEY कॉन्फ़िगर करें। तब तक, मैं आपके साथ यह पवित्र ज्ञान साझा करता हूँ: 'अपने कर्म पर ध्यान लगाओ, उसके फल पर नहीं। ईश्वर के लिए निस्वार्थ भाव से कार्य करो, और तुम्हें सच्ची, शाश्वत प्रसन्नता प्राप्त होगी (निष्काम कर्म)।'"
+                return@withContext "प्रणाम! मैं 'साधक मित्र' हूं, आपका आध्यात्मिक मार्गदर्शक। आज का पावन विचार: 'अपने कर्म पर ध्यान लगाओ, उसके फल पर नहीं। ईश्वर के लिए निस्वार्थ भाव से कार्य करो, और तुम्हें सच्ची, शाश्वत प्रसन्नता प्राप्त होगी (निष्काम कर्म)।'"
             }
         }
 
@@ -88,7 +88,7 @@ object GeminiService {
                 val bodyStr = response.body?.string()
                 if (!response.isSuccessful || bodyStr == null) {
                     Log.e(TAG, "Request failed code: ${response.code}")
-                    return@withContext "Apologies, dear Sadhak. I was unable to connect to the divine knowledge network at this moment. Let us chant 'Om Namah Shivaya' together. (Error: ${response.code})"
+                    return@withContext if (isEnglish) "Apologies, dear Sadhak. I was unable to connect to the divine knowledge network at this moment. Let us chant 'Om Namah Shivaya' together with peace in our hearts." else "क्षमा करें, प्रिय साधक। मैं इस समय ज्ञान नेटवर्क से जुड़ने में असमर्थ हूँ। आइए हम शांतिपूर्वक 'ॐ नमः शिवाय' का जाप करें।"
                 }
 
                 val responseJson = JSONObject(bodyStr)

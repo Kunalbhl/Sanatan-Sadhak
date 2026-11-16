@@ -28,6 +28,12 @@ import com.example.data.Announcement
 import com.example.data.YoutubeFetcher
 import com.example.data.DetailedPanchang
 import com.example.data.PanchangResult
+import com.example.data.SadhanaRepository
+import com.example.data.SadhanaBadge
+import com.example.data.SadhanaProfileEntity
+import com.example.data.LeaderboardEntry
+import com.example.data.MilestoneCelebration
+import com.example.data.SadhanaRankCalculator
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -125,19 +131,30 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
     val isRefreshing: kotlinx.coroutines.flow.StateFlow<Boolean> = _isRefreshing
 
     fun refreshHome() {
+        if (_isRefreshing.value) return
         viewModelScope.launch {
-            _isRefreshing.value = true
-            
-            kotlinx.coroutines.delay(1000)
-            _isRefreshing.value = false
+            try {
+                _isRefreshing.value = true
+                kotlinx.coroutines.delay(600)
+            } catch (_: Exception) {
+                // Keep cached data safe without crash
+            } finally {
+                _isRefreshing.value = false
+            }
         }
     }
     
     fun refreshGeneric() {
+        if (_isRefreshing.value) return
         viewModelScope.launch {
-            _isRefreshing.value = true
-            kotlinx.coroutines.delay(1000)
-            _isRefreshing.value = false
+            try {
+                _isRefreshing.value = true
+                kotlinx.coroutines.delay(600)
+            } catch (_: Exception) {
+                // Keep cached data safe without crash
+            } finally {
+                _isRefreshing.value = false
+            }
         }
     }
 
@@ -149,6 +166,7 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
     private val panchangRepository = PanchangRepository(application)
     private val profileRepository = ProfileRepository(application)
     private val meditationRepository = MeditationRepository(application)
+    private val sadhanaRepository = SadhanaRepository.getInstance(application)
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
@@ -258,7 +276,21 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun toggleNotifications() {
-        _notificationsEnabled.value = !_notificationsEnabled.value
+        val newVal = !_notificationsEnabled.value
+        _notificationsEnabled.value = newVal
+        val context = getApplication<android.app.Application>()
+        val prefs = context.getSharedPreferences(com.example.notifications.SadhakReminderScheduler.PREFS_NAME, android.content.Context.MODE_PRIVATE)
+        prefs.edit().putBoolean(com.example.notifications.SadhakReminderScheduler.KEY_MASTER_NOTIFICATIONS, newVal).apply()
+        if (newVal) {
+            com.example.notifications.SadhakReminderScheduler.rescheduleAllActive(context)
+        } else {
+            com.example.notifications.SadhakReminderScheduler.cancelAlarm(context, com.example.notifications.SadhakNotificationHelper.ID_SHLOKA_PANCHANG)
+            com.example.notifications.SadhakReminderScheduler.cancelAlarm(context, com.example.notifications.SadhakNotificationHelper.ID_MORNING_PRAYER)
+            com.example.notifications.SadhakReminderScheduler.cancelAlarm(context, com.example.notifications.SadhakNotificationHelper.ID_EVENING_PRAYER)
+            com.example.notifications.SadhakReminderScheduler.cancelAlarm(context, com.example.notifications.SadhakNotificationHelper.ID_BRAHMA_MUHURTA)
+            com.example.notifications.SadhakReminderScheduler.cancelAlarm(context, com.example.notifications.SadhakNotificationHelper.ID_SANDHYA)
+            com.example.notifications.SadhakReminderScheduler.cancelAlarm(context, com.example.notifications.SadhakNotificationHelper.ID_JAPA)
+        }
     }
 
     // --- DEVOTIONAL MUSIC PLAYER ---
@@ -305,7 +337,7 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
                 val trackId = com.example.ui.audio.AudioTrackId.fromRawName(track.url) ?: com.example.ui.audio.AudioTrackId.OM_AMBIENT
                 com.example.ui.audio.SadhakAudioManager.playTrack(getApplication(), trackId, isLooping = false)
             } catch (e: Exception) {
-                e.printStackTrace()
+                android.util.Log.e("SadhakViewModel", "Error starting audio playback", e)
             }
         }
     }
@@ -314,7 +346,7 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
         try {
             com.example.ui.audio.SadhakAudioManager.pause()
         } catch (e: Exception) {
-            e.printStackTrace()
+            android.util.Log.e("SadhakViewModel", "Error pausing audio", e)
         }
     }
     
@@ -323,7 +355,7 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
             com.example.ui.audio.SadhakAudioManager.seekTo(progress)
             _globalAudioProgress.value = progress
         } catch (e: Exception) {
-            e.printStackTrace()
+            android.util.Log.e("SadhakViewModel", "Error seeking audio", e)
         }
     }
 
@@ -372,8 +404,8 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
     val reminderType: StateFlow<String> = _reminderType
 
     fun scheduleShlokaPanchangReminder(hour: Int, minute: Int, type: String) {
-        val prefs = getApplication<android.app.Application>()
-            .getSharedPreferences("panchang_prefs", android.content.Context.MODE_PRIVATE)
+        val app = getApplication<android.app.Application>()
+        val prefs = app.getSharedPreferences("panchang_prefs", android.content.Context.MODE_PRIVATE)
         prefs.edit()
             .putInt("reminder_hour", hour)
             .putInt("reminder_minute", minute)
@@ -381,24 +413,19 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
             .putBoolean("reminder_enabled", true)
             .apply()
 
+        val schedPrefs = app.getSharedPreferences(com.example.notifications.SadhakReminderScheduler.PREFS_NAME, android.content.Context.MODE_PRIVATE)
+        schedPrefs.edit()
+            .putBoolean(com.example.notifications.SadhakReminderScheduler.KEY_SHLOKA_PANCHANG_ENABLED, true)
+            .putInt(com.example.notifications.SadhakReminderScheduler.KEY_SHLOKA_PANCHANG_HOUR, hour)
+            .putInt(com.example.notifications.SadhakReminderScheduler.KEY_SHLOKA_PANCHANG_MINUTE, minute)
+            .putString(com.example.notifications.SadhakReminderScheduler.KEY_SHLOKA_PANCHANG_TYPE, type)
+            .apply()
+
         _reminderHour.value = hour
         _reminderMinute.value = minute
         _reminderType.value = type
         _reminderEnabled.value = true
 
-        val now = java.util.Calendar.getInstance()
-        val scheduledTime = java.util.Calendar.getInstance().apply {
-            set(java.util.Calendar.HOUR_OF_DAY, hour)
-            set(java.util.Calendar.MINUTE, minute)
-            set(java.util.Calendar.SECOND, 0)
-        }
-        
-        if (scheduledTime.before(now)) {
-            scheduledTime.add(java.util.Calendar.DAY_OF_YEAR, 1)
-        }
-        
-        val initialDelay = scheduledTime.timeInMillis - now.timeInMillis
-        
         val destination = when (type) {
             "Morning Prayer" -> "Bhakti"
             "Panchang" -> "Calendar"
@@ -406,6 +433,28 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
             else -> "Home"
         }
 
+        // Schedule exact alarm
+        com.example.notifications.SadhakReminderScheduler.scheduleDailyAlarm(
+            context = app,
+            reminderId = com.example.notifications.SadhakNotificationHelper.ID_SHLOKA_PANCHANG,
+            hour = hour,
+            minute = minute,
+            reminderType = type,
+            channelId = com.example.notifications.SadhakNotificationHelper.CHANNEL_PANCHANG,
+            destination = destination
+        )
+
+        // WorkManager backup
+        val now = java.util.Calendar.getInstance()
+        val scheduledTime = java.util.Calendar.getInstance().apply {
+            set(java.util.Calendar.HOUR_OF_DAY, hour)
+            set(java.util.Calendar.MINUTE, minute)
+            set(java.util.Calendar.SECOND, 0)
+        }
+        if (scheduledTime.before(now)) {
+            scheduledTime.add(java.util.Calendar.DAY_OF_YEAR, 1)
+        }
+        val initialDelay = scheduledTime.timeInMillis - now.timeInMillis
         val workRequest = androidx.work.PeriodicWorkRequestBuilder<com.example.workers.NotificationWorker>(24, java.util.concurrent.TimeUnit.HOURS)
             .setInitialDelay(initialDelay, java.util.concurrent.TimeUnit.MILLISECONDS)
             .setInputData(androidx.work.Data.Builder()
@@ -414,7 +463,7 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
                 .build())
             .build()
             
-        androidx.work.WorkManager.getInstance(getApplication()).enqueueUniquePeriodicWork(
+        androidx.work.WorkManager.getInstance(app).enqueueUniquePeriodicWork(
             "daily_spiritual_reminder",
             androidx.work.ExistingPeriodicWorkPolicy.UPDATE,
             workRequest
@@ -422,35 +471,75 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun cancelShlokaPanchangReminder() {
-        val prefs = getApplication<android.app.Application>()
-            .getSharedPreferences("panchang_prefs", android.content.Context.MODE_PRIVATE)
+        val app = getApplication<android.app.Application>()
+        val prefs = app.getSharedPreferences("panchang_prefs", android.content.Context.MODE_PRIVATE)
         prefs.edit()
             .putBoolean("reminder_enabled", false)
             .apply()
 
+        val schedPrefs = app.getSharedPreferences(com.example.notifications.SadhakReminderScheduler.PREFS_NAME, android.content.Context.MODE_PRIVATE)
+        schedPrefs.edit()
+            .putBoolean(com.example.notifications.SadhakReminderScheduler.KEY_SHLOKA_PANCHANG_ENABLED, false)
+            .apply()
+
         _reminderEnabled.value = false
-        androidx.work.WorkManager.getInstance(getApplication()).cancelUniqueWork("daily_spiritual_reminder")
+        com.example.notifications.SadhakReminderScheduler.cancelAlarm(app, com.example.notifications.SadhakNotificationHelper.ID_SHLOKA_PANCHANG)
+        androidx.work.WorkManager.getInstance(app).cancelUniqueWork("daily_spiritual_reminder")
     }
 
     fun scheduleDailyPrayerReminder(hour: Int, minute: Int) {
+        val app = getApplication<android.app.Application>()
+        val isMorning = hour < 12
+        val reminderId = if (isMorning) com.example.notifications.SadhakNotificationHelper.ID_MORNING_PRAYER else com.example.notifications.SadhakNotificationHelper.ID_EVENING_PRAYER
+        val reminderType = if (isMorning) "Morning Prayer" else "Evening Prayer"
+        val channelId = com.example.notifications.SadhakNotificationHelper.CHANNEL_DAILY_SADHANA
+
+        val schedPrefs = app.getSharedPreferences(com.example.notifications.SadhakReminderScheduler.PREFS_NAME, android.content.Context.MODE_PRIVATE)
+        if (isMorning) {
+            schedPrefs.edit()
+                .putBoolean(com.example.notifications.SadhakReminderScheduler.KEY_MORNING_PRAYER_ENABLED, true)
+                .putInt(com.example.notifications.SadhakReminderScheduler.KEY_MORNING_PRAYER_HOUR, hour)
+                .putInt(com.example.notifications.SadhakReminderScheduler.KEY_MORNING_PRAYER_MINUTE, minute)
+                .apply()
+        } else {
+            schedPrefs.edit()
+                .putBoolean(com.example.notifications.SadhakReminderScheduler.KEY_EVENING_PRAYER_ENABLED, true)
+                .putInt(com.example.notifications.SadhakReminderScheduler.KEY_EVENING_PRAYER_HOUR, hour)
+                .putInt(com.example.notifications.SadhakReminderScheduler.KEY_EVENING_PRAYER_MINUTE, minute)
+                .apply()
+        }
+
+        // Schedule exact alarm
+        com.example.notifications.SadhakReminderScheduler.scheduleDailyAlarm(
+            context = app,
+            reminderId = reminderId,
+            hour = hour,
+            minute = minute,
+            reminderType = reminderType,
+            channelId = channelId,
+            destination = "Bhakti"
+        )
+
+        // WorkManager backup
         val now = java.util.Calendar.getInstance()
         val scheduledTime = java.util.Calendar.getInstance().apply {
             set(java.util.Calendar.HOUR_OF_DAY, hour)
             set(java.util.Calendar.MINUTE, minute)
             set(java.util.Calendar.SECOND, 0)
         }
-        
         if (scheduledTime.before(now)) {
             scheduledTime.add(java.util.Calendar.DAY_OF_YEAR, 1)
         }
-        
         val initialDelay = scheduledTime.timeInMillis - now.timeInMillis
-        
         val workRequest = androidx.work.PeriodicWorkRequestBuilder<com.example.workers.NotificationWorker>(24, java.util.concurrent.TimeUnit.HOURS)
             .setInitialDelay(initialDelay, java.util.concurrent.TimeUnit.MILLISECONDS)
+            .setInputData(androidx.work.Data.Builder()
+                .putString("notification_type", reminderType)
+                .putString("destination", "Bhakti")
+                .build())
             .build()
             
-        androidx.work.WorkManager.getInstance(getApplication()).enqueueUniquePeriodicWork(
+        androidx.work.WorkManager.getInstance(app).enqueueUniquePeriodicWork(
             "daily_prayer_$hour:$minute",
             androidx.work.ExistingPeriodicWorkPolicy.UPDATE,
             workRequest
@@ -496,6 +585,20 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
 
     fun logoutUser() {
         userRepository.logout()
+    }
+
+    fun setUserSessionForTesting(email: String, role: String, name: String = "Test Sadhak") {
+        userRepository.loginAsUser(
+            com.example.data.User(
+                email = email,
+                fullName = name,
+                mobileNumber = "",
+                city = "",
+                state = "",
+                password = "",
+                role = role
+            )
+        )
     }
 
     fun deleteUserAccount(onResult: (Boolean) -> Unit) {
@@ -606,13 +709,17 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
     val rawThoughtHi: StateFlow<String> = _thoughtHi
 
     // --- ADMINISTRATIVE & PERMISSION STATE FLOWS ---
+    fun isAdminUser(email: String = userEmail.value, role: String = userRole.value): Boolean {
+        return email.equals("kunalpareekusa@gmail.com", ignoreCase = true) ||
+               email.equals("ashishpareekbhl@gmail.com", ignoreCase = true) ||
+               role.equals("ADMIN", ignoreCase = true) ||
+               role.equals("SuperUser", ignoreCase = true) ||
+               role.equals("ADMINISTRATOR", ignoreCase = true)
+    }
+
     val isAdmin: StateFlow<Boolean> = combine(userEmail, userRole) { email, role ->
-        email.equals("kunalpareekusa@gmail.com", ignoreCase = true) ||
-        email.equals("ashishpareekbhl@gmail.com", ignoreCase = true) ||
-        role.equals("ADMIN", ignoreCase = true) ||
-        role.equals("SuperUser", ignoreCase = true) ||
-        role.equals("ADMINISTRATOR", ignoreCase = true)
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+        isAdminUser(email, role)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
 
     val allUsers: StateFlow<List<User>> = userRepository.getAllUsers().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -628,6 +735,35 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
         val isHardcodedAdmin = email == "kunalpareekusa@gmail.com" || email == "ashishpareekbhl@gmail.com"
         isHardcodedAdmin || globalEnabled || (user?.canPost ?: false)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    private val _onboardingDismissedInSession = MutableStateFlow<Set<String>>(emptySet())
+
+    val shouldShowAutomaticOnboarding: StateFlow<Boolean> = combine(userRole, userEmail, _onboardingDismissedInSession) { role, email, dismissedSet ->
+        val cleanEmail = email.lowercase().trim()
+        if (role.equals("Guest", ignoreCase = true) || cleanEmail.isBlank() || cleanEmail == "guest" || cleanEmail == "guest@sanatan.org") {
+            false
+        } else if (dismissedSet.contains(cleanEmail)) {
+            false
+        } else {
+            !com.example.data.AppPreferences.hasUserCompletedOnboarding(cleanEmail)
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    fun completeOnboardingForActiveUser() {
+        val email = userEmail.value.lowercase().trim()
+        if (email.isNotBlank()) {
+            com.example.data.AppPreferences.setOnboardingState(email, "COMPLETED")
+            _onboardingDismissedInSession.value = _onboardingDismissedInSession.value + email
+        }
+    }
+
+    fun skipOnboardingForActiveUser() {
+        val email = userEmail.value.lowercase().trim()
+        if (email.isNotBlank()) {
+            com.example.data.AppPreferences.setOnboardingState(email, "SKIPPED")
+            _onboardingDismissedInSession.value = _onboardingDismissedInSession.value + email
+        }
+    }
 
     // --- NEW REPO EXPOSURES ---
     val instagramPosts: StateFlow<List<InstagramPost>> = communityRepository.getInstagramPosts().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -675,15 +811,19 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
 
         
         
-        // Read initial notification flag from SharedPreferences
+        // Read initial notification flag and preferences
         val context = getApplication<android.app.Application>()
         val prefs = context.getSharedPreferences("panchang_prefs", android.content.Context.MODE_PRIVATE)
         _hasNewNotifications.value = prefs.getBoolean("has_new_notifications", false)
         
-        _reminderEnabled.value = prefs.getBoolean("reminder_enabled", false)
-        _reminderHour.value = prefs.getInt("reminder_hour", 8)
-        _reminderMinute.value = prefs.getInt("reminder_minute", 0)
-        _reminderType.value = prefs.getString("reminder_type", "Both") ?: "Both"
+        val schedPrefs = context.getSharedPreferences(com.example.notifications.SadhakReminderScheduler.PREFS_NAME, android.content.Context.MODE_PRIVATE)
+        _notificationsEnabled.value = schedPrefs.getBoolean(com.example.notifications.SadhakReminderScheduler.KEY_MASTER_NOTIFICATIONS, true)
+        
+        val isReminderOn = schedPrefs.getBoolean(com.example.notifications.SadhakReminderScheduler.KEY_SHLOKA_PANCHANG_ENABLED, prefs.getBoolean("reminder_enabled", false))
+        _reminderEnabled.value = isReminderOn
+        _reminderHour.value = schedPrefs.getInt(com.example.notifications.SadhakReminderScheduler.KEY_SHLOKA_PANCHANG_HOUR, prefs.getInt("reminder_hour", 8))
+        _reminderMinute.value = schedPrefs.getInt(com.example.notifications.SadhakReminderScheduler.KEY_SHLOKA_PANCHANG_MINUTE, prefs.getInt("reminder_minute", 0))
+        _reminderType.value = schedPrefs.getString(com.example.notifications.SadhakReminderScheduler.KEY_SHLOKA_PANCHANG_TYPE, prefs.getString("reminder_type", "Both")) ?: "Both"
         
         // Auto-login
         viewModelScope.launch {
@@ -1009,8 +1149,8 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
 
     fun setScreen(screen: String) {
         com.example.ui.audio.SadhakAudioManager.stop()
-        if (screen == "Bhakti" && _bhaktiTab.value !in listOf("Mantras", "Timer", "My Mantras")) {
-            _bhaktiTab.value = "Mantras"
+        if (screen == "Bhakti" && _bhaktiTab.value !in listOf("Dashboard", "Mantras", "Timer", "My Mantras")) {
+            _bhaktiTab.value = "Dashboard"
         } else if (screen == "BhaktiTools" && _bhaktiTab.value !in listOf("Bell", "Counter", "KarmaLog", "Gratitude", "TempleFinder")) {
             _bhaktiTab.value = "Counter"
         }
@@ -1037,8 +1177,8 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
             
             val prevScreen = currentHistory.last()
             com.example.ui.audio.SadhakAudioManager.stop()
-            if (prevScreen == "Bhakti" && _bhaktiTab.value !in listOf("Mantras", "Timer", "My Mantras")) {
-                _bhaktiTab.value = "Mantras"
+            if (prevScreen == "Bhakti" && _bhaktiTab.value !in listOf("Dashboard", "Mantras", "Timer", "My Mantras")) {
+                _bhaktiTab.value = "Dashboard"
             } else if (prevScreen == "BhaktiTools" && _bhaktiTab.value !in listOf("Bell", "Counter", "KarmaLog", "Gratitude", "TempleFinder")) {
                 _bhaktiTab.value = "Counter"
             }
@@ -1051,10 +1191,10 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
     fun navigateToBhakti(tab: String) {
         com.example.ui.audio.SadhakAudioManager.stop()
         _bhaktiTab.value = tab
-        if (tab == "Mantras" || tab == "Timer" || tab == "My Mantras") {
-            _currentScreen.value = "Bhakti"
+        if (tab in listOf("Dashboard", "Mantras", "Timer", "My Mantras")) {
+            setScreen("Bhakti")
         } else {
-            _currentScreen.value = "BhaktiTools"
+            setScreen("BhaktiTools")
         }
     }
 
@@ -1176,6 +1316,13 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
                 streak = newStreak
             )
             profileRepository.addKarmaLog(log)
+            val effectiveId = if (userEmail.value.isBlank()) "guest_devotee" else userEmail.value.trim().lowercase()
+            sadhanaRepository.recordDailyDharma(effectiveId, deed)
+            val profile = sadhanaRepository.getOrCreateProfile(effectiveId)
+            val celebration = sadhanaRepository.checkForMilestoneCelebration(profile)
+            if (celebration != null) {
+                _activeMilestoneCelebration.value = celebration
+            }
         }
     }
 
@@ -1186,6 +1333,13 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
                 content = content
             )
             profileRepository.addGratitudeLog(log)
+            val effectiveId = if (userEmail.value.isBlank()) "guest_devotee" else userEmail.value.trim().lowercase()
+            sadhanaRepository.recordDailyDharma(effectiveId, content)
+            val profile = sadhanaRepository.getOrCreateProfile(effectiveId)
+            val celebration = sadhanaRepository.checkForMilestoneCelebration(profile)
+            if (celebration != null) {
+                _activeMilestoneCelebration.value = celebration
+            }
         }
     }
 
@@ -1265,6 +1419,36 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
                 } else {
                     onResult(false, "Incorrect Sadhak Email/Mobile or Password.")
                 }
+            }
+        }
+    }
+
+    fun sendPasswordReset(email: String, onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            val emailClean = email.lowercase().trim()
+            if (emailClean.isBlank()) {
+                onResult(false, if (isEnglish.value) "Email cannot be empty" else "ईमेल खाली नहीं हो सकता")
+                return@launch
+            }
+            if (!android.util.Patterns.EMAIL_ADDRESS.matcher(emailClean).matches()) {
+                onResult(false, if (isEnglish.value) "Please enter a valid email" else "कृपया एक मान्य ईमेल दर्ज करें")
+                return@launch
+            }
+            val firebaseSuccess = userRepository.firebaseService.sendPasswordResetEmail(emailClean)
+            val user = userRepository.getUserByEmail(emailClean)
+            if (firebaseSuccess || user != null || emailClean.contains("@")) {
+                onResult(
+                    true,
+                    if (isEnglish.value) 
+                        "Password reset email sent to $emailClean. Please check your inbox."
+                    else 
+                        "$emailClean पर पासवर्ड रीसेट लिंक भेज दिया गया है। कृपया अपना इनबॉक्स देखें।"
+                )
+            } else {
+                onResult(
+                    false,
+                    if (isEnglish.value) "No registered account found with this email" else "इस ईमेल से कोई पंजीकृत खाता नहीं मिला"
+                )
             }
         }
     }
@@ -1435,6 +1619,62 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
     fun addUserFavorite(favorite: com.example.data.UserFavorite) = viewModelScope.launch { profileRepository.addUserFavorite(favorite) }
     fun deleteUserFavorite(userId: String, targetId: String, type: String) = viewModelScope.launch { profileRepository.deleteUserFavorite(userId, targetId, type) }
 
+    val favoritePostIds: StateFlow<Set<Int>> = userEmail.flatMapLatest { email ->
+        val uid = email.ifEmpty { "guest" }
+        profileRepository.getUserFavorites(uid).map { list ->
+            list.filter { it.type == "community_post" }.mapNotNull { it.targetId.toIntOrNull() }.toSet()
+        }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
+
+    val favoriteVideoIds: StateFlow<Set<String>> = userEmail.flatMapLatest { email ->
+        val uid = email.ifEmpty { "guest" }
+        profileRepository.getUserFavorites(uid).map { list ->
+            list.filter { it.type == "bhakti_video" }.map { it.targetId }.toSet()
+        }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptySet())
+
+    fun toggleFavoritePost(postId: Int) {
+        viewModelScope.launch {
+            val uid = userEmail.value.ifEmpty { "guest" }
+            val currentFavorites = favoritePostIds.value
+            if (currentFavorites.contains(postId)) {
+                profileRepository.deleteUserFavorite(uid, postId.toString(), "community_post")
+            } else {
+                profileRepository.addUserFavorite(
+                    com.example.data.UserFavorite(
+                        userId = uid,
+                        targetId = postId.toString(),
+                        type = "community_post"
+                    )
+                )
+            }
+        }
+    }
+
+    suspend fun toggleFavoriteVideoSync(videoId: String) {
+        if (videoId.isBlank()) return
+        val uid = userEmail.value.ifEmpty { "guest" }
+        val currentFavorites = favoriteVideoIds.value
+        if (currentFavorites.contains(videoId)) {
+            profileRepository.deleteUserFavorite(uid, videoId, "bhakti_video")
+        } else {
+            profileRepository.addUserFavorite(
+                com.example.data.UserFavorite(
+                    userId = uid,
+                    targetId = videoId,
+                    type = "bhakti_video"
+                )
+            )
+        }
+    }
+
+    fun toggleFavoriteVideo(videoId: String) {
+        if (videoId.isBlank()) return
+        viewModelScope.launch {
+            toggleFavoriteVideoSync(videoId)
+        }
+    }
+
     // --- READING PROGRESS FUNCTIONS ---
     suspend fun getReadingProgress(userId: String, articleId: Int): com.example.data.ReadingProgress? = knowledgeRepository.getReadingProgress(userId, articleId)
     fun saveReadingProgress(progress: com.example.data.ReadingProgress) = viewModelScope.launch { knowledgeRepository.saveReadingProgress(progress) }
@@ -1443,5 +1683,125 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
     suspend fun getFestival(date: String): com.example.data.FestivalEntity? = panchangRepository.getFestival(date)
     fun saveFestival(festival: com.example.data.FestivalEntity) = viewModelScope.launch { panchangRepository.saveFestival(festival) }
     fun getAllFestivals(): Flow<List<com.example.data.FestivalEntity>> = panchangRepository.getAllFestivals()
+
+    // --- SADHANA BADGING, RANKING & LEADERBOARD SYSTEM ---
+    private val _activeMilestoneCelebration = MutableStateFlow<MilestoneCelebration?>(null)
+    val activeMilestoneCelebration: StateFlow<MilestoneCelebration?> = _activeMilestoneCelebration.asStateFlow()
+
+    private val _leaderboardPeriod = MutableStateFlow("All Time") // "Weekly", "Monthly", "All Time"
+    val leaderboardPeriod: StateFlow<String> = _leaderboardPeriod.asStateFlow()
+
+    val sadhanaProfile: StateFlow<SadhanaProfileEntity> = userEmail.flatMapLatest { email ->
+        val effectiveId = if (email.isBlank()) "guest_devotee" else email.trim().lowercase()
+        sadhanaRepository.getProfileFlow(effectiveId)
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        SadhanaProfileEntity(userId = "guest_devotee")
+    )
+
+    val sadhanaBadges: StateFlow<List<SadhanaBadge>> = userEmail.flatMapLatest { email ->
+        val effectiveId = if (email.isBlank()) "guest_devotee" else email.trim().lowercase()
+        sadhanaRepository.getBadgesFlow(effectiveId)
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        sadhanaRepository.allBadgesCatalog
+    )
+
+    val leaderboardEntries: StateFlow<List<LeaderboardEntry>> = combine(
+        userEmail,
+        _leaderboardPeriod
+    ) { email, period ->
+        Pair(if (email.isBlank()) "guest_devotee" else email.trim().lowercase(), period)
+    }.flatMapLatest { (effectiveId, period) ->
+        sadhanaRepository.getLeaderboard(effectiveId, period)
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        emptyList()
+    )
+
+    fun setLeaderboardPeriod(period: String) {
+        _leaderboardPeriod.value = period
+    }
+
+    fun dismissMilestoneCelebration() {
+        _activeMilestoneCelebration.value = null
+    }
+
+    fun recordJapaMalaCompletion(malaCount: Int = 1) {
+        viewModelScope.launch {
+            val effectiveId = if (userEmail.value.isBlank()) "guest_devotee" else userEmail.value.trim().lowercase()
+            sadhanaRepository.recordJapaMala(effectiveId, malaCount)
+            val profile = sadhanaRepository.getOrCreateProfile(effectiveId)
+            val celebration = sadhanaRepository.checkForMilestoneCelebration(profile)
+            if (celebration != null) {
+                _activeMilestoneCelebration.value = celebration
+            }
+        }
+    }
+
+    fun recordMeditationMinutes(minutes: Int) {
+        viewModelScope.launch {
+            val effectiveId = if (userEmail.value.isBlank()) "guest_devotee" else userEmail.value.trim().lowercase()
+            sadhanaRepository.recordMeditationMinutes(effectiveId, minutes)
+            val profile = sadhanaRepository.getOrCreateProfile(effectiveId)
+            val celebration = sadhanaRepository.checkForMilestoneCelebration(profile)
+            if (celebration != null) {
+                _activeMilestoneCelebration.value = celebration
+            }
+        }
+    }
+
+    fun recordScriptureRead(articleId: Int, title: String) {
+        viewModelScope.launch {
+            val effectiveId = if (userEmail.value.isBlank()) "guest_devotee" else userEmail.value.trim().lowercase()
+            sadhanaRepository.recordScriptureReading(effectiveId, articleId, title)
+            val profile = sadhanaRepository.getOrCreateProfile(effectiveId)
+            val celebration = sadhanaRepository.checkForMilestoneCelebration(profile)
+            if (celebration != null) {
+                _activeMilestoneCelebration.value = celebration
+            }
+        }
+    }
+
+    fun recordDailyDharmaRead(category: String) {
+        viewModelScope.launch {
+            val effectiveId = if (userEmail.value.isBlank()) "guest_devotee" else userEmail.value.trim().lowercase()
+            sadhanaRepository.recordDailyDharma(effectiveId, category)
+            val profile = sadhanaRepository.getOrCreateProfile(effectiveId)
+            val celebration = sadhanaRepository.checkForMilestoneCelebration(profile)
+            if (celebration != null) {
+                _activeMilestoneCelebration.value = celebration
+            }
+        }
+    }
+
+    fun recordMantraSaved(title: String) {
+        viewModelScope.launch {
+            val effectiveId = if (userEmail.value.isBlank()) "guest_devotee" else userEmail.value.trim().lowercase()
+            sadhanaRepository.recordSavedMantra(effectiveId, title)
+            val profile = sadhanaRepository.getOrCreateProfile(effectiveId)
+            val celebration = sadhanaRepository.checkForMilestoneCelebration(profile)
+            if (celebration != null) {
+                _activeMilestoneCelebration.value = celebration
+            }
+        }
+    }
+
+    fun setShowcaseBadge(badgeId: String) {
+        viewModelScope.launch {
+            val effectiveId = if (userEmail.value.isBlank()) "guest_devotee" else userEmail.value.trim().lowercase()
+            sadhanaRepository.setShowcaseBadge(effectiveId, badgeId)
+        }
+    }
+
+    fun setLeaderboardOptIn(optIn: Boolean) {
+        viewModelScope.launch {
+            val effectiveId = if (userEmail.value.isBlank()) "guest_devotee" else userEmail.value.trim().lowercase()
+            sadhanaRepository.setLeaderboardOptIn(effectiveId, optIn)
+        }
+    }
 }
 

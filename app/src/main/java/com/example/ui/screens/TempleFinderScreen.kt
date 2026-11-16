@@ -560,14 +560,13 @@ fun TempleFinderView(viewModel: SadhakViewModel) {
         }
     }
 
-    // Request permissions on first load
+    // Check real permission status on first load without prompting automatically
     LaunchedEffect(Unit) {
-        permissionLauncher.launch(
-            arrayOf(
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-            )
-        )
+        val status = com.example.utils.PermissionManager.getLocationPermissionStatus(context)
+        if (status == com.example.utils.AppPermissionStatus.GRANTED) {
+            hasPermission = true
+            requestLocationUpdate()
+        }
     }
 
     // Trigger update if permission is granted
