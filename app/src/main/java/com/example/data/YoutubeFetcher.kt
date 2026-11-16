@@ -19,6 +19,7 @@ object YoutubeFetcher {
         val hasRealApiKey = apiKey.isNotEmpty() && 
                             apiKey != "MY_GEMINI_API_KEY" && 
                             apiKey != "YOUR_YOUTUBE_API_KEY" && 
+                            apiKey != "MY_YOUTUBE_API_KEY" && 
                             !apiKey.contains("PLACEHOLDER")
 
         if (hasRealApiKey) {

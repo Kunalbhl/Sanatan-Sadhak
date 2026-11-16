@@ -1165,7 +1165,7 @@ private fun HomeContinueSadhanaSection(
                     .clip(RoundedCornerShape(12.dp))
                     .background(SadhakThemeColors.sacredSurface)
                     .border(1.dp, SadhakThemeColors.sacredPrimary.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
-                    .clickable(onClick = { onNavigate("Bhakti") })
+                    .clickable(onClick = { onNavigate("Counter") })
                     .padding(vertical = 10.dp, horizontal = 8.dp),
                 contentAlignment = Alignment.Center
             ) {
@@ -1197,7 +1197,7 @@ private fun HomeContinueSadhanaSection(
                     .clip(RoundedCornerShape(12.dp))
                     .background(SadhakThemeColors.sacredSurface)
                     .border(1.dp, SadhakThemeColors.sacredSecondary.copy(alpha = 0.25f), RoundedCornerShape(12.dp))
-                    .clickable(onClick = { onNavigate("Bhakti") })
+                    .clickable(onClick = { onNavigate("Counter") })
                     .padding(vertical = 10.dp, horizontal = 8.dp),
                 contentAlignment = Alignment.Center
             ) {

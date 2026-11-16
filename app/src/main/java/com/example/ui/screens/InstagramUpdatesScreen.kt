@@ -144,6 +144,7 @@ fun InstagramUpdatesScreen(
 @Composable
 fun InstagramEmbedCard(post: InstagramPost, isEng: Boolean) {
     val uriHandler = LocalUriHandler.current
+    val linkContext = androidx.compose.ui.platform.LocalContext.current
     var isWebViewLoading by remember { mutableStateOf(true) }
     var isWebViewError by remember { mutableStateOf(false) }
     var useFallback by remember { mutableStateOf(false) }
@@ -189,7 +190,7 @@ fun InstagramEmbedCard(post: InstagramPost, isEng: Boolean) {
                             try {
                                 uriHandler.openUri(post.url)
                             } catch (e: Exception) {
-                                e.printStackTrace()
+                                android.widget.Toast.makeText(linkContext, if (isEng) "Couldn't open this post" else "यह पोस्ट नहीं खुल सकी", android.widget.Toast.LENGTH_SHORT).show()
                             }
                         },
                         modifier = Modifier.size(32.dp)
@@ -270,7 +271,7 @@ fun InstagramEmbedCard(post: InstagramPost, isEng: Boolean) {
                                 try {
                                     uriHandler.openUri(post.url)
                                 } catch (e: Exception) {
-                                    e.printStackTrace()
+                                    android.widget.Toast.makeText(linkContext, if (isEng) "Couldn't open this post" else "यह पोस्ट नहीं खुल सकी", android.widget.Toast.LENGTH_SHORT).show()
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(

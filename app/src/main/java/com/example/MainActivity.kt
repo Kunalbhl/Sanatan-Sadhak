@@ -217,23 +217,31 @@ class MainActivity : ComponentActivity() {
                             .padding(innerPadding)
                             .background(MaterialTheme.colorScheme.background)
                     ) {
-                        when (currentScreen) {
-                            "Home" -> HomeScreen(viewModel = viewModel)
-                            "Knowledge" -> KnowledgeScreen(viewModel = viewModel)
-                            "Community" -> CommunityScreen(viewModel = viewModel)
-                            "Bhakti" -> BhaktiSadhanaScreen(viewModel = viewModel)
-                            "BhaktiTools" -> BhaktiToolsScreen(viewModel = viewModel)
-                            "Videos" -> VideoHubScreen(viewModel = viewModel)
-                            "InstagramUpdates" -> InstagramUpdatesScreen(viewModel = viewModel, onBack = { if (!viewModel.navigateBack()) viewModel.setScreen("Home") })
-                            "Chat" -> ChatScreen(viewModel = viewModel)
-                            "Calendar" -> CalendarScreen(viewModel = viewModel, onBack = { if (!viewModel.navigateBack()) viewModel.setScreen("Home") }, isEng = isEng)
-                            "Profile" -> ProfileScreen(viewModel = viewModel, onNavigateAdmin = { viewModel.setScreen("Admin") })
-                            "Admin" -> {
-                                val isAdmin by viewModel.isAdmin.collectAsState()
-                                if (isAdmin) {
-                                    AdminScreen(viewModel = viewModel)
-                                } else {
-                                    AccessDeniedScreen(viewModel = viewModel)
+                        // Soft fade-in for each new screen. The previous screen is removed
+                        // immediately, so its cleanup (bottom bar, audio) runs before the new one starts.
+                        val screenAlpha = remember(currentScreen) { androidx.compose.animation.core.Animatable(0f) }
+                        androidx.compose.runtime.LaunchedEffect(currentScreen) {
+                            screenAlpha.animateTo(1f, androidx.compose.animation.core.tween(durationMillis = 220))
+                        }
+                        Box(modifier = Modifier.fillMaxSize().graphicsLayer { alpha = screenAlpha.value }) {
+                            when (currentScreen) {
+                                "Home" -> HomeScreen(viewModel = viewModel)
+                                "Knowledge" -> KnowledgeScreen(viewModel = viewModel)
+                                "Community" -> CommunityScreen(viewModel = viewModel)
+                                "Bhakti" -> BhaktiSadhanaScreen(viewModel = viewModel)
+                                "BhaktiTools" -> BhaktiToolsScreen(viewModel = viewModel)
+                                "Videos" -> VideoHubScreen(viewModel = viewModel)
+                                "InstagramUpdates" -> InstagramUpdatesScreen(viewModel = viewModel, onBack = { if (!viewModel.navigateBack()) viewModel.setScreen("Home") })
+                                "Chat" -> ChatScreen(viewModel = viewModel)
+                                "Calendar" -> CalendarScreen(viewModel = viewModel, onBack = { if (!viewModel.navigateBack()) viewModel.setScreen("Home") }, isEng = isEng)
+                                "Profile" -> ProfileScreen(viewModel = viewModel, onNavigateAdmin = { viewModel.setScreen("Admin") })
+                                "Admin" -> {
+                                    val isAdmin by viewModel.isAdmin.collectAsState()
+                                    if (isAdmin) {
+                                        AdminScreen(viewModel = viewModel)
+                                    } else {
+                                        AccessDeniedScreen(viewModel = viewModel)
+                                    }
                                 }
                             }
                         }

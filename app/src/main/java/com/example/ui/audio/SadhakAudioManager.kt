@@ -268,6 +268,14 @@ object SadhakAudioManager {
         }
     }
 
+    /**
+     * Stops whatever the user was listening to on the screen they are leaving,
+     * but keeps the global background chant (Om ambient) running.
+     */
+    fun stopForNavigation() {
+        if (_currentTrack.value != AudioTrackId.OM_AMBIENT) stop()
+    }
+
     fun releaseAll() {
         stop()
         isInitialized = false
