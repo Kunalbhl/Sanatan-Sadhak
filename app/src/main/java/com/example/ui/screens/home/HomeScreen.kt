@@ -350,26 +350,29 @@ private fun HomeTopHeaderSection(
     onNotificationClick: () -> Unit,
     onProfileClick: () -> Unit
 ) {
-    Box(
+    // Animated temple scene: the sky follows local time (sunrise, day, sunset, moonlit night),
+    // with birds, a monkey on the shikhar and a waving flag.
+    com.example.ui.components.TempleSceneBanner(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = SadhakThemeDimensions.screenPaddingMedium)
             .padding(top = 10.dp, bottom = 6.dp)
+            .height(176.dp)
     ) {
-        // Subtle Background Sacred Temple Art in top right corner
-        SacredTempleArtwork(
-            modifier = Modifier
-                .width(180.dp)
-                .height(110.dp)
-                .align(Alignment.TopEnd)
-        )
-
         Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            verticalAlignment = Alignment.Top,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp)
+                    .background(Color.White.copy(alpha = 0.84f), RoundedCornerShape(16.dp))
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = if (isEng) "Jai Shree Ram 🕉" else "जय श्री राम 🕉",
@@ -406,7 +409,10 @@ private fun HomeTopHeaderSection(
                 )
             }
 
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.background(Color.White.copy(alpha = 0.84f), RoundedCornerShape(24.dp))
+            ) {
                 IconButton(
                     onClick = onNotificationClick,
                     modifier = Modifier.testTag("home_notifications_button")
