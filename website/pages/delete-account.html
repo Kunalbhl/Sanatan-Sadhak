@@ -1,0 +1,55 @@
+<article class="doc">
+  <div class="wrap">
+    <h1>Delete your account & data</h1>
+    <p class="meta">Sanatan Sadhak by K. Tech Services · Last updated: {{UPDATED}}</p>
+
+    <p>You can delete your Sanatan Sadhak account and its data at any time. Use whichever option suits you.</p>
+
+    <h2>Option 1: In the app (fastest)</h2>
+    <ol>
+      <li>Open <b>Sanatan Sadhak</b> and sign in.</li>
+      <li>Go to the <b>Profile</b> tab.</li>
+      <li>Tap <b>Delete account</b> and confirm.</li>
+    </ol>
+    <p>Your account is deleted straight away and the data on your phone is cleared.</p>
+
+    <h2>Option 2: Request it here</h2>
+    <p>If you no longer have the app, send this form. We'll confirm by email from support@chaloone.com, check that the request comes from the account owner, and finish within 30 days.</p>
+
+    <div class="panel" style="margin:18px 0 10px">
+      <form id="deletion-form" class="form" novalidate>
+        <div class="row">
+          <label>Name<input name="name" autocomplete="name" maxlength="100"></label>
+          <label>Account email *<input name="email" type="email" autocomplete="email" required maxlength="200" placeholder="Email used to sign in"></label>
+        </div>
+        <label>What should we delete? *
+          <select name="scope" required>
+            <option value="account">My whole account and all its data</option>
+            <option value="data_only">Only some data (tell us below), keep my account</option>
+          </select>
+        </label>
+        <label>Details or reason (optional)<textarea name="reason" maxlength="1000" placeholder="For example: only delete my community posts"></textarea></label>
+        <label class="hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>
+        <label class="check"><input type="checkbox" name="confirm" required> <span>I am the owner of this account and understand that deletion cannot be undone.</span></label>
+        <button class="btn btn-primary" type="submit">Send deletion request</button>
+        <p class="status" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+    <p>Or email <a href="mailto:support@chaloone.com?subject=Sanatan%20Sadhak%20-%20Delete%20my%20account">support@chaloone.com</a> with the subject "Sanatan Sadhak – Delete my account".</p>
+
+    <h2>What gets deleted</h2>
+    <ul>
+      <li>Your login (Firebase Authentication) and profile: name, email, photo and role.</li>
+      <li>Synced sadhana data: japa and mala counts, streaks, karma points and favourites.</li>
+      <li>Your community posts, comments and likes.</li>
+      <li>Data on your device: the local database, journals, custom mantras and settings.</li>
+    </ul>
+
+    <h2>What we may keep, and for how long</h2>
+    <ul>
+      <li>Security and server logs, which expire automatically within 30 days.</li>
+      <li>A record that a deletion request was completed (your email and the date), kept for up to 1 year to show we met the request. Nothing else is kept.</li>
+      <li>Anything we must keep by law, for example an active legal complaint, only for as long as the law requires.</li>
+    </ul>
+  </div>
+</article>
