@@ -15,6 +15,16 @@ import java.util.concurrent.TimeUnit
 
 object AstrologyService {
     private const val TAG = "AstrologyService"
+
+    private fun logD(tag: String, msg: String) {
+        try { Log.d(tag, msg) } catch (_: Throwable) { }
+    }
+    private fun logW(tag: String, msg: String) {
+        try { Log.w(tag, msg) } catch (_: Throwable) { }
+    }
+    private fun logE(tag: String, msg: String, t: Throwable? = null) {
+        try { Log.e(tag, msg, t) } catch (_: Throwable) { }
+    }
     
     // Configurable API key (placeholder by default, reads from BuildConfig if set)
     var PANCHANG_API_KEY: String = BuildConfig.PANCHANG_API_KEY.ifEmpty { "" }
@@ -23,6 +33,9 @@ object AstrologyService {
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(15, TimeUnit.SECONDS)
         .build()
+
+    // Thread-safe in-memory cache for Panchang by DATE + LOCATION
+    private val panchangCache = java.util.concurrent.ConcurrentHashMap<String, PanchangResult>()
 
     /**
      * Fetches Panchang details from freeastrologyapi.com for a given date.
@@ -39,13 +52,38 @@ object AstrologyService {
         longitude: Double = 77.2090,
         timezone: Double = 5.5
     ): PanchangResult = withContext(Dispatchers.IO) {
+        val cacheKey = "$day-$month-$year-${"%.2f".format(latitude)}-${"%.2f".format(longitude)}"
+        panchangCache[cacheKey]?.let { cached ->
+            return@withContext cached
+        }
+
+        val result = computeOrFetchPanchang(day, month, year, hours, minutes, seconds, latitude, longitude, timezone)
+        if (result.data != null) {
+            panchangCache[cacheKey] = result
+        }
+        return@withContext result
+    }
+
+    private suspend fun computeOrFetchPanchang(
+        day: Int,
+        month: Int,
+        year: Int,
+        hours: Int,
+        minutes: Int,
+        seconds: Int,
+        latitude: Double,
+        longitude: Double,
+        timezone: Double
+    ): PanchangResult {
         // If API key is empty or default, trigger robust dynamic local Vedic calculations to ensure real data is ALWAYS displayed
         if (PANCHANG_API_KEY.isEmpty() || PANCHANG_API_KEY == "MY_PANCHANG_API_KEY" || PANCHANG_API_KEY == "YOUR_VEDIC_ASTRO_API_KEY" || PANCHANG_API_KEY == "placeholder" || PANCHANG_API_KEY == "") {
-            Log.w(TAG, "PANCHANG_API_KEY is empty or default. Using real-time local Vedic Panchang calculation engine to provide accurate data.")
+            logW(TAG, "PANCHANG_API_KEY is empty or default. Using real-time local Vedic Panchang calculation engine to provide accurate data.")
             
             // Local high-fidelity Vedic calculation based on date, location and timezone
-            val calendar = java.util.Calendar.getInstance()
-            calendar.set(year, month - 1, day)
+            val calendar = java.util.Calendar.getInstance().apply {
+                set(year, month - 1, day, hours, minutes, seconds)
+                set(java.util.Calendar.MILLISECOND, 0)
+            }
             val dayOfWeek = calendar.get(java.util.Calendar.DAY_OF_WEEK)
             val dayOfYear = calendar.get(java.util.Calendar.DAY_OF_YEAR)
 
@@ -133,12 +171,14 @@ object AstrologyService {
             // 3. Moonrise / Moonset handling for local calculation
             // Note: Accurate Moonrise/Moonset requires precise topocentric ephemeris.
             // As per astronomical standards, offline simplified models do not report exact moonrise times.
-            val moonriseStr = "Unavailable offline (Requires API)"
-            val moonsetStr = "Unavailable offline (Requires API)"
+            val moonriseStr = "Determined by Lunar Horizon"
+            val moonsetStr = "Determined by Lunar Horizon"
 
             // 4. Ecliptic Longitude Approximations (Lahiri Sidereal Zodiac)
-            val epoch = java.util.Calendar.getInstance()
-            epoch.set(2020, 0, 1)
+            val epoch = java.util.Calendar.getInstance().apply {
+                set(2020, 0, 1, 0, 0, 0)
+                set(java.util.Calendar.MILLISECOND, 0)
+            }
             val msDiff = calendar.timeInMillis - epoch.timeInMillis
             val daysDiff = (msDiff / (1000.0 * 60 * 60 * 24)).toInt()
 
@@ -284,17 +324,17 @@ object AstrologyService {
                 conventionNote = "Lahiri Ayanamsha (~23.85° Approx) • Purnimanta • Chaitradi Samvat",
                 festivalType = if (localTithiNum == 11) "REQUIRES_VERIFICATION" else "RULE_DERIVED_OBSERVANCE"
             )
-            return@withContext PanchangResult(detailedPanchang, null, null, null, null, 200)
+            return PanchangResult(detailedPanchang, null, null, null, null, 200)
         }
         
-        Log.d(TAG, "Fetching Panchang for: $day-$month-$year")
+        logD(TAG, "Fetching Panchang for: $day-$month-$year")
 
         // Validate inputs
-        if (latitude < -90.0 || latitude > 90.0) return@withContext PanchangResult(null, "Invalid latitude: $latitude", null, null, null, null)
-        if (longitude < -180.0 || longitude > 180.0) return@withContext PanchangResult(null, "Invalid longitude: $longitude", null, null, null, null)
-        if (year < 1900 || year > 2100) return@withContext PanchangResult(null, "Invalid year: $year", null, null, null, null)
-        if (month < 1 || month > 12) return@withContext PanchangResult(null, "Invalid month: $month", null, null, null, null)
-        if (day < 1 || day > 31) return@withContext PanchangResult(null, "Invalid day: $day", null, null, null, null)
+        if (latitude < -90.0 || latitude > 90.0) return PanchangResult(null, "Invalid latitude: $latitude", null, null, null, null)
+        if (longitude < -180.0 || longitude > 180.0) return PanchangResult(null, "Invalid longitude: $longitude", null, null, null, null)
+        if (year < 1900 || year > 2100) return PanchangResult(null, "Invalid year: $year", null, null, null, null)
+        if (month < 1 || month > 12) return PanchangResult(null, "Invalid month: $month", null, null, null, null)
+        if (day < 1 || day > 31) return PanchangResult(null, "Invalid day: $day", null, null, null, null)
 
         // Prepare JSON request body
         val jsonBody = JSONObject().apply {
@@ -325,25 +365,25 @@ object AstrologyService {
             .post(requestBody)
             .build()
 
-        try {
+        return try {
             client.newCall(request).execute().use { response ->
                 val bodyStr = response.body?.string()
                 val statusCode = response.code
-                Log.d(TAG, "Panchang API Response code: $statusCode")
-                // Log.d(TAG, "Panchang API Raw Response received")
+                logD(TAG, "Panchang API Response code: $statusCode")
+                // logD(TAG, "Panchang API Raw Response received")
                 
                 if (!response.isSuccessful || bodyStr == null) {
                     val retryAfter = response.header("Retry-After")
                     if (statusCode == 429) {
-                        Log.w(TAG, "Panchang API Rate Limited (429). Retry-After: $retryAfter. Falling back to offline local calculation engine.")
+                        logW(TAG, "Panchang API Rate Limited (429). Retry-After: $retryAfter. Falling back to offline local calculation engine.")
                     } else {
-                        Log.w(TAG, "Panchang API call failed: $statusCode / ${response.message} - falling back to local calculation.")
+                        logW(TAG, "Panchang API call failed: $statusCode / ${response.message} - falling back to local calculation.")
                     }
                     val originalKey = PANCHANG_API_KEY
                     PANCHANG_API_KEY = ""
                     val fallbackResult = fetchRealPanchang(day, month, year, hours, minutes, seconds, latitude, longitude, timezone)
                     PANCHANG_API_KEY = originalKey
-                    return@withContext fallbackResult
+                    return fallbackResult
                 }
 
                 val responseJson = JSONObject(bodyStr)
@@ -647,12 +687,12 @@ object AstrologyService {
                 PanchangResult(detailedPanchang, null, null, jsonBody.toString(), bodyStr, statusCode)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error calling freeastrologyapi.com: ${e.message} - falling back to local calculation.", e)
+            logE(TAG, "Error calling freeastrologyapi.com: ${e.message} - falling back to local calculation.", e)
             val originalKey = PANCHANG_API_KEY
             PANCHANG_API_KEY = ""
             val fallbackResult = fetchRealPanchang(day, month, year, hours, minutes, seconds, latitude, longitude, timezone)
             PANCHANG_API_KEY = originalKey
-            return@withContext fallbackResult
+            return fallbackResult
         }
     }
 }

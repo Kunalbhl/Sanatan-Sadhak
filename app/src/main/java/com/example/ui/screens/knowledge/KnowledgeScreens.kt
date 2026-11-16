@@ -156,6 +156,9 @@ import com.example.data.BhaktiVideo
 import com.example.data.ChatMessage
 import com.example.data.CommunityPost
 import com.example.data.KnowledgeArticle
+import com.example.ui.audio.DevotionalTextReaderBar
+import com.example.ui.audio.DevotionalListenButton
+import com.example.ui.audio.SadhakTextReader
 import com.example.ui.components.CategoryTab
 import com.example.ui.components.DiyaDecoration
 import com.example.ui.components.SacredCard
@@ -952,6 +955,16 @@ fun ArticleDetailScreen(
                             modifier = Modifier.padding(top = 4.dp)
                         )
                     }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Divine Text-to-Speech Reader Bar
+                    DevotionalTextReaderBar(
+                        id = "article_reader_${article.id}",
+                        title = article.title,
+                        textToRead = "${article.title}.\n${article.summary}.\n${if (article.originalText.isNotEmpty()) article.originalText + ".\n" else ""}${if (article.translation.isNotEmpty()) article.translation + ".\n" else ""}${article.content}",
+                        isEnglish = isEnglish
+                    )
 
                     Divider(modifier = Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.tertiary)
 

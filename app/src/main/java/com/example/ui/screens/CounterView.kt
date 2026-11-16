@@ -25,9 +25,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.Canvas
 import com.example.ui.viewmodel.SadhakViewModel
+import com.example.ui.theme.SadhakThemeColors
 import com.example.ui.components.SacredCard
+import com.example.utils.HapticFeedbackManager
 
 // NEW POLISHED COUNTER VIEW
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,19 +39,46 @@ import com.example.ui.components.SacredCard
 fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
-    val prefs = remember { context.getSharedPreferences("mantra_counter_prefs", android.content.Context.MODE_PRIVATE) }
+
+    // Account Isolation for Japa Preferences
+    val userEmail by viewModel.userEmail.collectAsState()
+    val effectiveUserId = remember(userEmail) {
+        if (userEmail.isBlank()) "guest_devotee" else userEmail.trim().lowercase()
+    }
+    val prefsKey = remember(effectiveUserId) {
+        val sanitized = effectiveUserId.replace("[^a-zA-Z0-9_]".toRegex(), "_")
+        "mantra_counter_prefs_$sanitized"
+    }
+    val prefs = remember(prefsKey) { context.getSharedPreferences(prefsKey, android.content.Context.MODE_PRIVATE) }
 
     // State Persistence
-    var selectedMantraId by remember { mutableStateOf(prefs.getString("selected_mantra_id", "gayatri") ?: "gayatri") }
-    var customMantraText by remember { mutableStateOf(prefs.getString("custom_mantra_text", "") ?: "") }
-    var beadsPerMala by remember { mutableStateOf(prefs.getInt("beads_per_mala", 108)) }
-    var targetMalas by remember { mutableStateOf(prefs.getInt("target_malas", 1)) }
-    var count by remember { mutableStateOf(prefs.getInt("current_count", 0)) }
-    var streak by remember { mutableStateOf(prefs.getInt("streak", 0)) }
-    var lastCompletedDate by remember { mutableStateOf(prefs.getString("last_completed_date", "") ?: "") }
-    var vibrateOnTap by remember { mutableStateOf(prefs.getBoolean("vibrate_on_tap", true)) }
-    var vibrateOnMala by remember { mutableStateOf(prefs.getBoolean("vibrate_on_mala", true)) }
+    var selectedMantraId by remember(prefsKey) { mutableStateOf(prefs.getString("selected_mantra_id", "gayatri") ?: "gayatri") }
+    var customMantraText by remember(prefsKey) { mutableStateOf(prefs.getString("custom_mantra_text", "") ?: "") }
+    var beadsPerMala by remember(prefsKey) { mutableStateOf(prefs.getInt("beads_per_mala", 108)) }
+    var targetMalas by remember(prefsKey) { mutableStateOf(prefs.getInt("target_malas", 1)) }
+    var count by remember(prefsKey) { mutableStateOf(prefs.getInt("current_count", 0)) }
+    var streak by remember(prefsKey) { mutableStateOf(prefs.getInt("streak", 0)) }
+    var lastCompletedDate by remember(prefsKey) { mutableStateOf(prefs.getString("last_completed_date", "") ?: "") }
+    var vibrateOnTap by remember(prefsKey) { mutableStateOf(prefs.getBoolean("vibrate_on_tap", true)) }
+    var vibrateOnMala by remember(prefsKey) { mutableStateOf(prefs.getBoolean("vibrate_on_mala", true)) }
     var showCelebrationDialog by remember { mutableStateOf(false) }
+    var showResetConfirmDialog by remember { mutableStateOf(false) }
+
+    // Tap Debounce & Protection
+    var lastTapTimestamp by remember { mutableStateOf(0L) }
+
+    // Sync state when account/user switches
+    LaunchedEffect(prefsKey) {
+        selectedMantraId = prefs.getString("selected_mantra_id", "gayatri") ?: "gayatri"
+        customMantraText = prefs.getString("custom_mantra_text", "") ?: ""
+        beadsPerMala = prefs.getInt("beads_per_mala", 108)
+        targetMalas = prefs.getInt("target_malas", 1)
+        count = prefs.getInt("current_count", 0)
+        streak = prefs.getInt("streak", 0)
+        lastCompletedDate = prefs.getString("last_completed_date", "") ?: ""
+        vibrateOnTap = prefs.getBoolean("vibrate_on_tap", true)
+        vibrateOnMala = prefs.getBoolean("vibrate_on_mala", true)
+    }
 
     // Timer state variables
     var modeSelected by remember { mutableStateOf("Counter") } // "Counter" or "Timer"
@@ -77,6 +108,7 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
                     timerRunning = false
                     com.example.ui.audio.SadhakAudioManager.playOneShot(com.example.ui.audio.AudioTrackId.SADHANA_SUCCESS)
                     viewModel.logKarmaDeed("Completed Japa Timer of ${durationSecondsTotal / 60} mins: $currentChantCount chants")
+                    viewModel.recordMeditationMinutes(durationSecondsTotal / 60)
                     showCelebrationDialog = true
                 }
             } else { // "Count" mode
@@ -89,6 +121,7 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
                     timerRunning = false
                     com.example.ui.audio.SadhakAudioManager.playOneShot(com.example.ui.audio.AudioTrackId.SADHANA_SUCCESS)
                     viewModel.logKarmaDeed("Completed Japa Timer of $targetChantCount chants")
+                    viewModel.recordJapaMalaCompletion((targetChantCount / beadsPerMala).coerceAtLeast(1))
                     showCelebrationDialog = true
                 }
             }
@@ -126,21 +159,33 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
     fun saveString(key: String, value: String) { prefs.edit().putString(key, value).apply() }
     fun saveBoolean(key: String, value: Boolean) { prefs.edit().putBoolean(key, value).apply() }
 
-    // Handle Bead Tapping
+    // Handle Bead Tapping with Debounce & Haptic Hardening
     fun incrementCount() {
-        val nextCount = count + 1
+        val now = android.os.SystemClock.elapsedRealtime()
+        if (now - lastTapTimestamp < 60L) {
+            return // Debounce rapid multi-tap
+        }
+        lastTapTimestamp = now
+
+        val nextCount = (count + 1).coerceAtLeast(0)
         count = nextCount
         saveInt("current_count", nextCount)
 
-        // Haptic feedback on tap
+        // Haptic feedback & Mala Completion
+        val isMalaComplete = (nextCount > 0 && nextCount % beadsPerMala == 0)
+
         if (vibrateOnTap) {
-            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+            if (isMalaComplete && vibrateOnMala) {
+                HapticFeedbackManager.vibrate(context, HapticFeedbackManager.FeedbackType.MALA_COMPLETE)
+                HapticFeedbackManager.performHaptic(haptic, HapticFeedbackManager.FeedbackType.MALA_COMPLETE)
+            } else {
+                HapticFeedbackManager.vibrate(context, HapticFeedbackManager.FeedbackType.JAPA_BEAD)
+                HapticFeedbackManager.performHaptic(haptic, HapticFeedbackManager.FeedbackType.JAPA_BEAD)
+            }
         }
 
-        // Mala Completion Haptic (every beadsPerMala chants)
-        if (vibrateOnMala && nextCount % beadsPerMala == 0) {
-            // Trigger multi-pulse feel
-            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+        if (isMalaComplete) {
+            viewModel.recordJapaMalaCompletion(1)
         }
 
         // Daily Target Achievement check
@@ -153,15 +198,17 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
                 saveString("last_completed_date", todayStr)
             }
             showCelebrationDialog = true
-            // Special success vibration pattern
-            haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+            HapticFeedbackManager.vibrate(context, HapticFeedbackManager.FeedbackType.SUCCESS)
+            HapticFeedbackManager.performHaptic(haptic, HapticFeedbackManager.FeedbackType.SUCCESS)
         }
     }
 
-    // Reset current round
+    // Reset current round with haptic
     fun resetCurrentCount() {
         count = 0
         saveInt("current_count", 0)
+        HapticFeedbackManager.vibrate(context, HapticFeedbackManager.FeedbackType.LIGHT_TOUCH)
+        HapticFeedbackManager.performHaptic(haptic, HapticFeedbackManager.FeedbackType.LIGHT_TOUCH)
     }
 
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
@@ -234,7 +281,8 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant)
+                        .background(SadhakThemeColors.sacredSurface)
+                        .border(1.dp, SadhakThemeColors.sacredDivider, RoundedCornerShape(12.dp))
                         .padding(4.dp),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
@@ -365,6 +413,7 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
                         modifier = Modifier
                             .padding(vertical = 12.dp)
                             .size(240.dp)
+                            .testTag("counter_progress_indicator")
                     ) {
                         // Outer Glow ring via Canvas
                         val primaryColor = MaterialTheme.colorScheme.primary
@@ -379,7 +428,7 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
                             )
                             // active progress circle
                             val sweep = if (dailyTargetChants > 0) {
-                                (count.toFloat() / dailyTargetChants.toFloat() * 360f).coerceAtMost(360f)
+                                (count.toFloat() / dailyTargetChants.toFloat() * 360f).coerceIn(0f, 360f)
                             } else 0f
                             drawArc(
                                 color = primaryColor,
@@ -404,6 +453,13 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
                                     )
                                 )
                                 .clickable { incrementCount() }
+                                .semantics {
+                                    contentDescription = if (isEng) {
+                                        "Japa Counter: $count chants completed towards goal of $dailyTargetChants. Double tap to count next bead."
+                                    } else {
+                                        "जाप काउंटर: लक्ष्य $dailyTargetChants में से $count जाप पूर्ण। अगला मनका गिनने हेतु दो बार टैप करें।"
+                                    }
+                                }
                                 .testTag("bead_tap_target"),
                             contentAlignment = Alignment.Center
                         ) {
@@ -448,11 +504,12 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        // Reset Button
+                        // Reset Button with Confirmation Dialog
                         OutlinedButton(
-                            onClick = { resetCurrentCount() },
+                            onClick = { showResetConfirmDialog = true },
                             border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
-                            shape = RoundedCornerShape(12.dp)
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.testTag("reset_counter_button")
                         ) {
                             Icon(imageVector = Icons.Default.Refresh, contentDescription = "Reset")
                             Spacer(modifier = Modifier.width(6.dp))
@@ -489,13 +546,14 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
                                         Box(
                                             modifier = Modifier
                                                 .clip(RoundedCornerShape(8.dp))
-                                                .background(if (activeOpt) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
-                                                .border(1.dp, if (activeOpt) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(8.dp))
+                                                .background(if (activeOpt) SadhakThemeColors.sacredPrimary else SadhakThemeColors.sacredSurface)
+                                                .border(1.dp, if (activeOpt) SadhakThemeColors.sacredPrimary else SadhakThemeColors.sacredDivider, RoundedCornerShape(8.dp))
                                                 .clickable {
                                                     beadsPerMala = countOpt
                                                     saveInt("beads_per_mala", countOpt)
                                                 }
-                                                .padding(horizontal = 10.dp, vertical = 6.dp),
+                                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                                                .testTag("beads_per_mala_$countOpt"),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Text(
@@ -542,16 +600,18 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
                                         },
                                         modifier = Modifier
                                             .size(32.dp)
-                                            .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                                            .background(SadhakThemeColors.sacredSurface, CircleShape)
+                                            .border(1.dp, SadhakThemeColors.sacredDivider, CircleShape)
+                                            .testTag("target_malas_minus")
                                     ) {
-                                        Text(text = "-", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                        Text(text = "-", fontWeight = FontWeight.Bold, color = SadhakThemeColors.sacredPrimary)
                                     }
 
                                     Text(
                                         text = targetMalas.toString(),
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 16.sp,
-                                        color = MaterialTheme.colorScheme.secondary
+                                        color = SadhakThemeColors.sacredSecondary
                                     )
 
                                     IconButton(
@@ -561,9 +621,11 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
                                         },
                                         modifier = Modifier
                                             .size(32.dp)
-                                            .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                                            .background(SadhakThemeColors.sacredSurface, CircleShape)
+                                            .border(1.dp, SadhakThemeColors.sacredDivider, CircleShape)
+                                            .testTag("target_malas_plus")
                                     ) {
-                                        Text(text = "+", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                        Text(text = "+", fontWeight = FontWeight.Bold, color = SadhakThemeColors.sacredPrimary)
                                     }
                                 }
                             }
@@ -966,6 +1028,53 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
             },
             containerColor = MaterialTheme.colorScheme.surface,
             modifier = Modifier.testTag("celebration_dialog")
+        )
+    }
+
+    // Reset Confirmation Dialog (Protects against accidental reset)
+    if (showResetConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetConfirmDialog = false },
+            title = {
+                Text(
+                    text = if (isEng) "Reset Japa Counter?" else "जाप काउंटर रीसेट करें?",
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            },
+            text = {
+                Text(
+                    text = if (isEng) {
+                        "Are you sure you want to reset the current Japa count to 0? This cannot be undone."
+                    } else {
+                        "क्या आप वर्तमान जाप संख्या को शून्य (०) पर रीसेट करना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।"
+                    },
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        resetCurrentCount()
+                        showResetConfirmDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                    modifier = Modifier.testTag("reset_confirm_button")
+                ) {
+                    Text(text = if (isEng) "Reset" else "रीसेट करें", color = Color.White)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showResetConfirmDialog = false },
+                    modifier = Modifier.testTag("reset_cancel_button")
+                ) {
+                    Text(text = if (isEng) "Cancel" else "रद्द करें")
+                }
+            },
+            containerColor = MaterialTheme.colorScheme.surface,
+            modifier = Modifier.testTag("reset_confirm_dialog")
         )
     }
 }

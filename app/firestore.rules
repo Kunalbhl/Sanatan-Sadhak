@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for authorization
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (request.auth.token.email == "admin@sanatansadhak.org" ||
+         request.auth.token.email == "kunalpareekusa@gmail.com" ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+          (getUserData().role == "ADMIN" || getUserData().role == "SUPER_ADMIN")));
+    }
+
+    // Devotee User Profiles
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isOwner(userId) || isAdmin();
+    }
+
+    // Bhakti Videos & Live YouTube Content
+    match /bhakti_videos/{videoId} {
+      // Normal devotees can only read published videos
+      allow read: if resource.data.published == true || isAdmin();
+      // Only authenticated Admins can curate, publish, edit, or delete videos
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Community Posts & Discussions
+    match /community_posts/{postId} {
+      allow read: if true;
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() && (resource.data.authorId == request.auth.uid || isAdmin());
+    }
+
+    // Diagnostic & Observability Telemetry
+    match /diagnostic_errors/{fingerprint} {
+      // Allow sanitized client error reporting with reasonable size limit
+      allow create, update: if request.resource.data.message.size() < 2000;
+      allow read, delete: if isAdmin();
+    }
+
+    // Immutable Admin Audit Logs
+    match /admin_audit_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if false; // Append-only audit trail
+    }
+
+    // Broadcast Notifications
+    match /admin_notifications/{notifId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+  }
+}

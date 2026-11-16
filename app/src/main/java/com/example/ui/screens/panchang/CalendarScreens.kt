@@ -132,8 +132,9 @@ fun CalendarScreen(
         // --- Location Selector Strip ---
         Card(
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)),
-            shape = RoundedCornerShape(12.dp)
+            colors = CardDefaults.cardColors(containerColor = SadhakThemeColors.sacredSurface),
+            shape = RoundedCornerShape(12.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, SadhakThemeColors.sacredDivider)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
@@ -309,8 +310,9 @@ fun FullPanchangView(
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
-                        shape = RoundedCornerShape(10.dp)
+                        colors = CardDefaults.cardColors(containerColor = SadhakThemeColors.sacredSurface),
+                        shape = RoundedCornerShape(10.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, SadhakThemeColors.sacredDivider)
                     ) {
                         Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
                             Row(
@@ -322,7 +324,7 @@ fun FullPanchangView(
                                     text = if (d.sourceType == "REMOTE_SOURCE")
                                         (if (isEng) "Source: Verified Ephemeris Source" else "स्रोत: प्रमाणित पंचांग स्रोत")
                                     else
-                                        (if (isEng) "Source: Local Astronomical Engine" else "स्रोत: स्थानीय खगोलीय गणना"),
+                                        (if (isEng) "Source: Local Ephemeris Engine" else "स्रोत: स्थानीय खगोलीय गणना"),
                                     style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                                 )
                                 Box(
@@ -336,9 +338,9 @@ fun FullPanchangView(
                                 ) {
                                     Text(
                                         text = if (d.sourceType == "REMOTE_SOURCE")
-                                            (if (isEng) "✓ VERIFIED" else "✓ प्रमाणित")
+                                            (if (isEng) "✓ VERIFIED / Verified Ephemeris Source" else "✓ प्रमाणित पंचांग स्रोत")
                                         else
-                                            (if (isEng) "⚙ CALCULATED" else "⚙ स्थानीय गणना"),
+                                            (if (isEng) "⚙ CALCULATED / Local Ephemeris" else "⚙ स्थानीय गणना"),
                                         style = MaterialTheme.typography.labelSmall.copy(
                                             fontWeight = FontWeight.Bold,
                                             color = if (d.sourceType == "REMOTE_SOURCE") SadhakThemeColors.success else MaterialTheme.colorScheme.onSecondaryContainer

@@ -38,6 +38,9 @@ interface CommunityPostDao {
     @Query("SELECT * FROM community_posts ORDER BY isPinned DESC, createdAt DESC")
     fun getAllPosts(): Flow<List<CommunityPost>>
 
+    @Query("SELECT * FROM community_posts WHERE id = :id LIMIT 1")
+    suspend fun getPostById(id: Int): CommunityPost?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPost(post: CommunityPost)
 
@@ -61,6 +64,9 @@ interface PostCommentDao {
 
     @Update
     suspend fun updateComment(comment: PostComment)
+
+    @Query("SELECT * FROM post_comments WHERE id = :id LIMIT 1")
+    suspend fun getCommentById(id: Int): PostComment?
 
     @Query("DELETE FROM post_comments WHERE id = :id")
     suspend fun deleteCommentById(id: Int)
@@ -260,9 +266,12 @@ interface FestivalDao {
         PanchangEntity::class,
         UserFavorite::class,
         ReadingProgress::class,
-        FestivalEntity::class
+        FestivalEntity::class,
+        SadhanaProfileEntity::class,
+        SadhanaActivityLog::class,
+        SadhanaBadgeEntity::class
     ],
-    version = 18,
+    version = 19,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -284,6 +293,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun userFavoriteDao(): UserFavoriteDao
     abstract fun readingProgressDao(): ReadingProgressDao
     abstract fun festivalDao(): FestivalDao
+    abstract fun sadhanaDao(): SadhanaDao
 
     companion object {
         @Volatile
@@ -296,6 +306,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "sanatan_sadhak_db"
                 )
+                .fallbackToDestructiveMigration()
                 .build()
                 INSTANCE = instance
                 instance

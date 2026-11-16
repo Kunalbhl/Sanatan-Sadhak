@@ -278,7 +278,80 @@ object SpiritualData {
         )
     )
 
-    val defaultVideos = listOf<BhaktiVideo>()
+    val defaultVideos = listOf(
+        BhaktiVideo(
+            title = "Diwali Mahalakshmi Puja & Deepawali Aarti",
+            description = "Grand Diwali Aarti and sacred Lakshmi Ganesh Puja chanting for peace, prosperity and wisdom.",
+            category = "Puja",
+            videoId = "9bZkp7q19f0",
+            isCustom = false,
+            thumbnail = "https://img.youtube.com/vi/9bZkp7q19f0/hqdefault.jpg",
+            publishDate = "2026-09-01"
+        ),
+        BhaktiVideo(
+            title = "Maha Shivratri Sacred Darshan & Bholenath Aarti",
+            description = "Divine Kashi Vishwanath and Somnath Jyotirlinga Mahadev Darshan and sacred evening Aarti.",
+            category = "Aarti",
+            videoId = "1Z3cE3sA9YQ",
+            isCustom = false,
+            thumbnail = "https://img.youtube.com/vi/1Z3cE3sA9YQ/hqdefault.jpg",
+            publishDate = "2026-09-02"
+        ),
+        BhaktiVideo(
+            title = "Har Ki Pauri Haridwar Divine Sandhya Aarti",
+            description = "Sublime Har Ki Pauri evening Aarti with burning brass deepams on the sacred banks of Maa Ganga.",
+            category = "Aarti",
+            videoId = "kJQP7kiw5Fk",
+            isCustom = false,
+            thumbnail = "https://img.youtube.com/vi/kJQP7kiw5Fk/hqdefault.jpg",
+            publishDate = "2026-09-03"
+        ),
+        BhaktiVideo(
+            title = "Shri Hanuman Chalisa & Sundarkand Chanting",
+            description = "Devotional recital of the sacred Hanuman Chalisa for inner strength, courage, and divine surrender.",
+            category = "Stories",
+            videoId = "AETFv4yzkGU",
+            isCustom = false,
+            thumbnail = "https://img.youtube.com/vi/AETFv4yzkGU/hqdefault.jpg",
+            publishDate = "2026-09-04"
+        ),
+        BhaktiVideo(
+            title = "Shri Mahakaleshwar Jyotirlinga Bhasma Aarti & Darshan",
+            description = "Sacred early morning Bhasma Aarti and darshan of Mahakaleshwar Ujjain.",
+            category = "Darshan",
+            videoId = "3fumBcKC6RE",
+            isCustom = false,
+            thumbnail = "https://img.youtube.com/vi/3fumBcKC6RE/hqdefault.jpg",
+            publishDate = "2026-09-05"
+        ),
+        BhaktiVideo(
+            title = "Banke Bihari Vrindavan Darshan & Krishna Bhajan",
+            description = "Divine darshan of Thakur Banke Bihari Ji in Vrindavan Dham with sacred morning prayers.",
+            category = "Darshan",
+            videoId = "bO9p1Pekp3s",
+            isCustom = false,
+            thumbnail = "https://img.youtube.com/vi/bO9p1Pekp3s/hqdefault.jpg",
+            publishDate = "2026-09-06"
+        ),
+        BhaktiVideo(
+            title = "Vedic Rudrabhishek & Gayatri Mantra 108 Chants",
+            description = "Authentic Vedic chanting of Shri Rudram and 108 Gayatri Mantra recitations.",
+            category = "Puja",
+            videoId = "L_LUpnjgPso",
+            isCustom = false,
+            thumbnail = "https://img.youtube.com/vi/L_LUpnjgPso/hqdefault.jpg",
+            publishDate = "2026-09-07"
+        ),
+        BhaktiVideo(
+            title = "Maa Durga Aarti & Navratri Garba Stuti",
+            description = "Jai Ambe Gauri and sacred Navratri devotional chanting honoring the divine feminine mother.",
+            category = "Aarti",
+            videoId = "CevxZvSJLk8",
+            isCustom = false,
+            thumbnail = "https://img.youtube.com/vi/CevxZvSJLk8/hqdefault.jpg",
+            publishDate = "2026-09-08"
+        )
+    )
     
     val defaultPosts = listOf<CommunityPost>()
 

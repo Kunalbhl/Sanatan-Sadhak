@@ -208,6 +208,10 @@ fun CommunityScreen(
     val isAdmin by viewModel.isAdmin.collectAsState()
     
     var showCreatePostDialog by remember { mutableStateOf(false) }
+    var draftPostTitle by remember { mutableStateOf("") }
+    var draftPostCategory by remember { mutableStateOf("Bhakti Experiences") }
+    var draftPostContent by remember { mutableStateOf("") }
+    var draftPostStatusText by remember { mutableStateOf("") }
     var reportingPost by remember { mutableStateOf<CommunityPost?>(null) }
     val sortBy by communityViewModel.communitySortBy.collectAsState()
 
@@ -520,7 +524,7 @@ fun CommunityScreen(
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             IconButton(
                                                 onClick = { viewModel.upvotePost(post) },
-                                                modifier = Modifier.size(36.dp)
+                                                modifier = Modifier.size(36.dp).testTag("upvote_post_${post.id}")
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.Default.ThumbUp,
@@ -534,12 +538,12 @@ fun CommunityScreen(
                                                 fontWeight = FontWeight.Bold,
                                                 color = MaterialTheme.colorScheme.secondary,
                                                 fontSize = 13.sp,
-                                                modifier = Modifier.padding(horizontal = 4.dp)
+                                                modifier = Modifier.padding(horizontal = 4.dp).testTag("upvote_count_${post.id}")
                                             )
                                             Spacer(modifier = Modifier.width(8.dp))
                                             IconButton(
                                                 onClick = { viewModel.downvotePost(post) },
-                                                modifier = Modifier.size(36.dp)
+                                                modifier = Modifier.size(36.dp).testTag("downvote_post_${post.id}")
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.Default.ThumbDown,
@@ -553,7 +557,7 @@ fun CommunityScreen(
                                                 fontWeight = FontWeight.Bold,
                                                 color = Color.Gray,
                                                 fontSize = 13.sp,
-                                                modifier = Modifier.padding(horizontal = 4.dp)
+                                                modifier = Modifier.padding(horizontal = 4.dp).testTag("downvote_count_${post.id}")
                                             )
                                         }
 
@@ -561,7 +565,7 @@ fun CommunityScreen(
                                             if (isAdmin) {
                                                 IconButton(
                                                     onClick = { viewModel.togglePinPost(post) },
-                                                    modifier = Modifier.size(36.dp)
+                                                    modifier = Modifier.size(36.dp).testTag("pin_post_${post.id}")
                                                 ) {
                                                     Icon(
                                                         imageVector = androidx.compose.material.icons.Icons.Default.Star,
@@ -574,7 +578,7 @@ fun CommunityScreen(
                                             val userName by viewModel.userName.collectAsState()
                                             IconButton(
                                                 onClick = { reportingPost = post },
-                                                modifier = Modifier.size(36.dp)
+                                                modifier = Modifier.size(36.dp).testTag("report_post_${post.id}")
                                             ) {
                                                 Icon(
                                                     imageVector = Icons.Default.Announcement,
@@ -586,7 +590,7 @@ fun CommunityScreen(
                                             if (isAdmin || post.author == userName) {
                                                 IconButton(
                                                     onClick = { viewModel.deletePost(post) },
-                                                    modifier = Modifier.size(36.dp)
+                                                    modifier = Modifier.size(36.dp).testTag("delete_post_${post.id}")
                                                 ) {
                                                     Icon(
                                                         imageVector = androidx.compose.material.icons.Icons.Default.Delete,
@@ -596,11 +600,23 @@ fun CommunityScreen(
                                                     )
                                                 }
                                             }
+                                            val isSaved = viewModel.favoritePostIds.collectAsState().value.contains(post.id)
+                                            IconButton(
+                                                onClick = { viewModel.toggleFavoritePost(post.id) },
+                                                modifier = Modifier.size(36.dp).testTag("bookmark_post_${post.id}")
+                                            ) {
+                                                Icon(
+                                                    imageVector = if (isSaved) Icons.Default.Favorite else Icons.Default.Book,
+                                                    contentDescription = if (isSaved) "Remove Bookmark" else "Save Bookmark",
+                                                    tint = if (isSaved) MaterialTheme.colorScheme.primary else Color.Gray,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
                                         }
                                         
                                         Row(
                                             verticalAlignment = Alignment.CenterVertically,
-                                            modifier = Modifier.clickable { viewModel.selectPost(post.id) }
+                                            modifier = Modifier.clickable { viewModel.selectPost(post.id) }.testTag("post_comments_button_${post.id}")
                                         ) {
                                             Icon(
                                                 imageVector = Icons.Default.Comment,
@@ -637,11 +653,6 @@ fun CommunityScreen(
 
             // Write Post Dialog
             if (showCreatePostDialog) {
-                var title by remember { mutableStateOf("") }
-                var category by remember { mutableStateOf("Bhakti Experiences") }
-                var content by remember { mutableStateOf("") }
-                var statusText by remember { mutableStateOf("") }
-
                 val canPost by viewModel.canUserPost.collectAsState()
 
                 Dialog(onDismissRequest = { showCreatePostDialog = false }) {
@@ -710,10 +721,10 @@ fun CommunityScreen(
                             } else {
                                 // Form
                                 OutlinedTextField(
-                                    value = title,
-                                    onValueChange = { title = it },
+                                    value = draftPostTitle,
+                                    onValueChange = { draftPostTitle = it },
                                     label = { Text(text = if (isEng) "Title" else "शीर्षक") },
-                                    modifier = Modifier.fillMaxWidth(),
+                                    modifier = Modifier.fillMaxWidth().testTag("create_post_title_input"),
                                     colors = OutlinedTextFieldDefaults.colors(focusedTextColor = MaterialTheme.colorScheme.onSurface, unfocusedTextColor = MaterialTheme.colorScheme.onSurface, focusedBorderColor = MaterialTheme.colorScheme.primary, cursorColor = MaterialTheme.colorScheme.primary, focusedLabelColor = MaterialTheme.colorScheme.primary, unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
                                 )
 
@@ -732,11 +743,11 @@ fun CommunityScreen(
                                             verticalAlignment = Alignment.CenterVertically,
                                             modifier = Modifier
                                                 .fillMaxWidth()
-                                                .clickable { category = cat }
+                                                .clickable { draftPostCategory = cat }
                                         ) {
                                             RadioButton(
-                                                selected = category == cat,
-                                                onClick = { category = cat },
+                                                selected = draftPostCategory == cat,
+                                                onClick = { draftPostCategory = cat },
                                                 colors = RadioButtonDefaults.colors(selectedColor = MaterialTheme.colorScheme.primary)
                                             )
                                             Text(text = displayCat, fontSize = 13.sp)
@@ -745,18 +756,19 @@ fun CommunityScreen(
                                 }
 
                                 OutlinedTextField(
-                                    value = content,
-                                    onValueChange = { content = it },
+                                    value = draftPostContent,
+                                    onValueChange = { draftPostContent = it },
                                     label = { Text(text = if (isEng) "Reflection content..." else "विचार विवरण...") },
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .heightIn(min = 100.dp),
+                                        .heightIn(min = 100.dp)
+                                        .testTag("create_post_content_input"),
                                     maxLines = 6,
                                     colors = OutlinedTextFieldDefaults.colors(focusedTextColor = MaterialTheme.colorScheme.onSurface, unfocusedTextColor = MaterialTheme.colorScheme.onSurface, focusedBorderColor = MaterialTheme.colorScheme.primary, cursorColor = MaterialTheme.colorScheme.primary, focusedLabelColor = MaterialTheme.colorScheme.primary, unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f))
                                 )
 
-                                if (statusText.isNotEmpty()) {
-                                    Text(text = statusText, color = Color.Red, fontSize = 12.sp)
+                                if (draftPostStatusText.isNotEmpty()) {
+                                    Text(text = draftPostStatusText, color = Color.Red, fontSize = 12.sp)
                                 }
 
                                 Row(
@@ -765,21 +777,27 @@ fun CommunityScreen(
                                 ) {
                                     OutlinedButton(
                                         onClick = { showCreatePostDialog = false },
-                                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.secondary)
+                                        colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.secondary),
+                                        modifier = Modifier.testTag("cancel_post_button")
                                     ) {
                                         Text(text = if (isEng) "Cancel" else "रद्द करें")
                                     }
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Button(
                                         onClick = {
-                                            if (title.isBlank() || content.isBlank()) {
-                                                statusText = "Please fill in all fields."
+                                            if (draftPostTitle.isBlank() || draftPostContent.isBlank()) {
+                                                draftPostStatusText = "Please fill in all fields."
                                             } else {
-                                                viewModel.createPost(title, content, category)
+                                                viewModel.createPost(draftPostTitle, draftPostContent, draftPostCategory)
+                                                draftPostTitle = ""
+                                                draftPostContent = ""
+                                                draftPostCategory = "Bhakti Experiences"
+                                                draftPostStatusText = ""
                                                 showCreatePostDialog = false
                                             }
                                         },
-                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                                        modifier = Modifier.testTag("publish_post_button")
                                     ) {
                                         Text(text = if (isEng) "Publish" else "प्रकाशित करें", color = Color.White)
                                     }
@@ -1000,20 +1018,29 @@ fun CommentThreadScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    IconButton(onClick = { viewModel.toggleLikeComment(comment) }, modifier = Modifier.size(24.dp)) {
-                                        Icon(Icons.Default.ThumbUp, contentDescription = "Upvote", modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
+                                    IconButton(
+                                        onClick = { viewModel.toggleLikeComment(comment) },
+                                        modifier = Modifier.size(32.dp).testTag("comment_upvote_${comment.id}")
+                                    ) {
+                                        Icon(Icons.Default.ThumbUp, contentDescription = "Upvote", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.primary)
                                     }
                                     Text(text = comment.upvotes.toString(), fontSize = 12.sp, modifier = Modifier.padding(horizontal = 4.dp))
-                                    IconButton(onClick = { viewModel.toggleDislikeComment(comment) }, modifier = Modifier.size(24.dp)) {
-                                        Icon(Icons.Default.ThumbDown, contentDescription = "Downvote", modifier = Modifier.size(14.dp), tint = Color.Gray)
+                                    IconButton(
+                                        onClick = { viewModel.toggleDislikeComment(comment) },
+                                        modifier = Modifier.size(32.dp).testTag("comment_downvote_${comment.id}")
+                                    ) {
+                                        Icon(Icons.Default.ThumbDown, contentDescription = "Downvote", modifier = Modifier.size(16.dp), tint = Color.Gray)
                                     }
                                     Text(text = comment.downvotes.toString(), fontSize = 12.sp, modifier = Modifier.padding(horizontal = 4.dp))
                                 }
                                 val userName by viewModel.userName.collectAsState()
                                 val isAdmin by viewModel.isAdmin.collectAsState()
                                 if (isAdmin || comment.author == userName) {
-                                    IconButton(onClick = { viewModel.deleteComment(comment.id) }, modifier = Modifier.size(24.dp)) {
-                                        Icon(Icons.Default.Delete, contentDescription = "Delete", modifier = Modifier.size(14.dp), tint = Color.Red.copy(alpha=0.7f))
+                                    IconButton(
+                                        onClick = { viewModel.deleteComment(comment.id) },
+                                        modifier = Modifier.size(32.dp).testTag("comment_delete_${comment.id}")
+                                    ) {
+                                        Icon(Icons.Default.Delete, contentDescription = "Delete", modifier = Modifier.size(16.dp), tint = Color.Red.copy(alpha=0.7f))
                                     }
                                 }
                             }
@@ -1036,7 +1063,7 @@ fun CommentThreadScreen(
                 placeholder = {
                     Text(text = if (isEnglish) "Write a supportive comment..." else "सहायक टिप्पणी लिखें...")
                 },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.weight(1f).testTag("comment_input_field"),
                 colors = OutlinedTextFieldDefaults.colors(focusedTextColor = MaterialTheme.colorScheme.onSurface, unfocusedTextColor = MaterialTheme.colorScheme.onSurface, focusedBorderColor = MaterialTheme.colorScheme.primary, cursorColor = MaterialTheme.colorScheme.primary, focusedLabelColor = MaterialTheme.colorScheme.primary, unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)),
                 shape = RoundedCornerShape(20.dp)
             )
@@ -1048,7 +1075,8 @@ fun CommentThreadScreen(
                         newCommentText = ""
                     }
                 },
-                colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.primary)
+                colors = IconButtonDefaults.iconButtonColors(containerColor = MaterialTheme.colorScheme.primary),
+                modifier = Modifier.testTag("submit_comment_button")
             ) {
                 Icon(
                     imageVector = Icons.Default.Send,

@@ -6,20 +6,22 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 // Basic Sanatan Palette Tokens (Master Design Reference)
-val TempleCream = Color(0xFFFDF8EE)      // Warm Ivory / Temple Cream
+val TempleCream = Color(0xFFFDF8EE)      // Warm Ivory / Temple Cream (#FDF8EE)
 val SoftCreamSurface = Color(0xFFFFFDF8) // Soft Cream Surface
 val ElevatedCream = Color(0xFFFFF8E9)    // Elevated Cream
-val DeepSacredMaroon = Color(0xFF7A1720) // Deep Sacred Maroon
+val DeepSacredMaroon = Color(0xFF7A1720) // Deep Sacred Maroon (#7A1720)
 val DarkMaroon = Color(0xFF5C1018)       // Dark Maroon
-val DevotionalSaffron = Color(0xFFD97706)// Devotional Saffron
-val BrightSacredOrange = Color(0xFFE58A16) // Bright Sacred Orange
-val SacredGold = Color(0xFFD4A23A)       // Sacred Gold
+val DevotionalSaffron = Color(0xFFE58A16)// Devotional Saffron (#E58A16)
+val BrightSacredOrange = Color(0xFFE58A16) // Bright Sacred Orange (#E58A16)
+val SacredGold = Color(0xFFD4A23A)       // Sacred Gold (#D4A23A)
 val SoftGold = Color(0xFFEBC66A)         // Soft Gold
 val WarmBronze = Color(0xFF9A5A18)       // Warm Bronze
 val PrimaryTextMaroon = Color(0xFF5C1B1B)// Primary Text
 val SecondaryTextBrown = Color(0xFF76544A)// Secondary Text
 val MutedTextWarm = Color(0xFF9A8175)    // Muted Text
 val WarmDivider = Color(0xFFE8D4B0)      // Warm Divider / Border
+val MutedSand = Color(0xFFEFE6D5)        // Muted Sand Separator
+val TempleBrown = Color(0xFF4A2318)      // Supporting Text Brown
 val IconBgCream = Color(0xFFFFF1D6)      // Icon Background
 val NavigationBgCream = Color(0xFFFFFCF5)// Navigation Background
 
@@ -41,9 +43,9 @@ val WarmAmber = BrightSacredOrange
 val CrimsonRed = DeepSacredMaroon
 
 // Dark Mode Adaptations (Deep Temple Theme)
-val TempleDarkBackground = Color(0xFF241713) // Deep Temple Brown
-val TempleDarkSurface = Color(0xFF34221D)    // Warm Temple Surface
-val TempleDarkElevated = Color(0xFF432A22)   // Elevated Surface
+val TempleDarkBackground = Color(0xFF160D08) // Deep Temple Dark (#160D08)
+val TempleDarkSurface = Color(0xFF261710)    // Warm Temple Surface
+val TempleDarkElevated = Color(0xFF352017)   // Elevated Surface
 val SaffronDark = Color(0xFFE58A16)          // Saffron
 val SacredGoldDark = Color(0xFFD4A23A)       // Gold
 val DeepMaroonDark = Color(0xFF7A1720)       // Maroon
