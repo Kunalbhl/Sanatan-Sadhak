@@ -20,6 +20,9 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
     private val _selectedVideoCategory = MutableStateFlow("All")
     val selectedVideoCategory: StateFlow<String> = _selectedVideoCategory
 
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery
+
     private val _currentFestival = MutableStateFlow("")
     val currentFestival: StateFlow<String> = _currentFestival
 
@@ -27,28 +30,46 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
         _selectedVideoCategory.value = category
     }
 
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
+
     fun setCurrentFestival(festival: String) {
         _currentFestival.value = festival
     }
 
-    // Processed Video List based on Category
-    val videos: StateFlow<List<BhaktiVideo>> = repository.getVideos()
-        .combine(_selectedVideoCategory) { list, cat ->
-            when (cat) {
-                "All" -> list
-                "YouTube" -> list.filter { !it.isCustom }
-                "Darshan" -> list.filter { it.category.contains("Darshan", ignoreCase = true) }
-                "Puja" -> list.filter { it.category.contains("Puja", ignoreCase = true) || it.category.contains("Aarti", ignoreCase = true) || it.category.contains("Abhishek", ignoreCase = true) }
-                "Stories" -> list.filter { it.category.contains("Stories", ignoreCase = true) || it.category.contains("Experiences", ignoreCase = true) }
-                else -> list.filter { it.category.equals(cat, ignoreCase = true) }
+    fun filterVideos(list: List<BhaktiVideo>, cat: String, query: String): List<BhaktiVideo> {
+        val catFiltered = when (cat) {
+            "All" -> list
+            "YouTube" -> list.filter { !it.isCustom }
+            "Darshan" -> list.filter { it.category.contains("Darshan", ignoreCase = true) }
+            "Puja" -> list.filter { it.category.contains("Puja", ignoreCase = true) || it.category.contains("Aarti", ignoreCase = true) || it.category.contains("Abhishek", ignoreCase = true) }
+            "Stories" -> list.filter { it.category.contains("Stories", ignoreCase = true) || it.category.contains("Experiences", ignoreCase = true) }
+            else -> list.filter { it.category.equals(cat, ignoreCase = true) }
+        }
+        return if (query.isBlank()) {
+            catFiltered
+        } else {
+            val q = query.trim().lowercase()
+            catFiltered.filter { 
+                it.title.lowercase().contains(q) || 
+                it.description.lowercase().contains(q) || 
+                it.category.lowercase().contains(q) ||
+                it.videoId.lowercase().contains(q)
             }
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        }
+    }
 
-    // Curated dynamic playlist based on current day of the week or active festival
-    val curatedPlaylistVideos: StateFlow<List<BhaktiVideo>> = combine(
+    // Processed Video List based on Category and Search Query
+    val videos: StateFlow<List<BhaktiVideo>> = combine(
         repository.getVideos(),
-        _currentFestival
-    ) { allVideos, festival ->
+        _selectedVideoCategory,
+        _searchQuery
+    ) { list, cat, query ->
+        filterVideos(list, cat, query)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    fun computeCuratedPlaylist(allVideos: List<BhaktiVideo>, festival: String): List<BhaktiVideo> {
         val cal = java.util.Calendar.getInstance()
         val dow = cal.get(java.util.Calendar.DAY_OF_WEEK) // 1=Sunday, 2=Monday, ..., 7=Saturday
         
@@ -96,12 +117,20 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
 
         // Return matched videos sorted by relevance, or fallback to first 6 videos
         val matched = scoredVideos.filter { it.second > 0 }.sortedByDescending { it.second }.map { it.first }
-        if (matched.isNotEmpty()) {
+        return if (matched.isNotEmpty()) {
             matched
         } else {
             allVideos.take(6)
         }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    }
+
+    // Curated dynamic playlist based on current day of the week or active festival
+    val curatedPlaylistVideos: StateFlow<List<BhaktiVideo>> = combine(
+        repository.getVideos(),
+        _currentFestival
+    ) { allVideos, festival ->
+        computeCuratedPlaylist(allVideos, festival)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     fun getCuratedPlaylistTitle(isEng: Boolean): String {
         val cal = java.util.Calendar.getInstance()
@@ -166,24 +195,14 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
                 
                 if (lastSync == 0L || lastSyncDate != todayDate) {
                     val apiKey = com.example.BuildConfig.YOUTUBE_API_KEY
-                    val fetched = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                        com.example.data.YoutubeFetcher.fetchVideosFromChannel(apiKey)
-                    }
-                    if (fetched.isNotEmpty()) {
-                        val currentVideos = repository.getVideos().first()
-                        val existingIds = currentVideos.map { it.videoId }.toSet()
-                        val newVideos = fetched.filter { it.videoId !in existingIds }
-                        if (newVideos.isNotEmpty()) {
-                            newVideos.forEach { video ->
-                                repository.addVideo(video)
-                            }
-                            onNewVideo()
-                        }
+                    val result = repository.syncAllVideos(apiKey = apiKey)
+                    result.onSuccess { added ->
+                        if (added > 0) onNewVideo()
                     }
                     prefs.edit().putLong("last_youtube_sync_timestamp", now).apply()
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                android.util.Log.e("VideoViewModel", "Error in background YouTube fetch", e)
             }
         }
     }
@@ -194,22 +213,12 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
             var addedCount = 0
             try {
                 val apiKey = com.example.BuildConfig.YOUTUBE_API_KEY
-                val fetched = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                    com.example.data.YoutubeFetcher.fetchVideosFromChannel(apiKey)
-                }
-                if (fetched.isNotEmpty()) {
-                    val currentVideos = repository.getVideos().first()
-                    val existingIds = currentVideos.map { it.videoId }.toSet()
-                    val newVideos = fetched.filter { it.videoId !in existingIds }
-                    if (newVideos.isNotEmpty()) {
-                        newVideos.forEach { video ->
-                            repository.addVideo(video)
-                        }
-                        addedCount = newVideos.size
-                    }
+                val result = repository.syncAllVideos(apiKey = apiKey)
+                result.onSuccess { count ->
+                    addedCount = count
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                android.util.Log.e("VideoViewModel", "Error in YouTube sync", e)
             } finally {
                 _isSyncingVideos.value = false
                 onComplete(addedCount)

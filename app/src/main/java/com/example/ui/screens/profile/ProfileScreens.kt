@@ -1,5 +1,7 @@
 package com.example.ui.screens
 import com.example.SanatanSadhakLogo
+import com.example.ui.components.GoldenLotusMedallion
+import com.example.ui.theme.SadhakThemeColors
 import androidx.compose.ui.draw.shadow
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.combinedClickable
@@ -33,6 +35,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -209,6 +212,8 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
     var showAppPreferences by remember { mutableStateOf(false) }
     var showPrivacyPolicy by remember { mutableStateOf(false) }
     var showDeleteAccountDialog by remember { mutableStateOf(false) }
+    var showOnboardingTour by remember { mutableStateOf(false) }
+    var showAllBadgesDialog by remember { mutableStateOf(false) }
 
     if (isEditingProfile) {
         EditProfileScreen(
@@ -230,9 +235,17 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
     val scrollState = rememberScrollState()
 
     // LOGIN LOGIC
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().background(SadhakThemeColors.sacredBackground)) {
     if (userRole == "Guest") {
         var showSignUp by remember { mutableStateOf(false) }
+        var showForgotPasswordDialog by remember { mutableStateOf(false) }
+        var showWelcomeGreeting by remember { mutableStateOf(false) }
+        var resetEmailInput by remember { mutableStateOf("") }
+        var resetStatusText by remember { mutableStateOf("") }
+        var isResetSending by remember { mutableStateOf(false) }
+        var resetSuccess by remember { mutableStateOf(false) }
+        var termsAccepted by remember { mutableStateOf(false) }
+
         var emailInput by remember { mutableStateOf("") }
         var mobileInput by remember { mutableStateOf("") }
         var passInput by remember { mutableStateOf("") }
@@ -244,55 +257,80 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
         var rememberMe by remember { mutableStateOf(false) }
         val isLoading by viewModel.isLoading.collectAsState()
 
-        // Three hold states for passwords
         var isPassVisible by remember { mutableStateOf(false) }
         var isConfirmPassVisible by remember { mutableStateOf(false) }
         var isLoginPassVisible by remember { mutableStateOf(false) }
+        val context = androidx.compose.ui.platform.LocalContext.current
+
+        // Looping soft OM ambient audio for Devotee Login screen
+        DisposableEffect(Unit) {
+            com.example.ui.audio.SadhakAudioManager.startLoginAmbient(context)
+            onDispose {
+                com.example.ui.audio.SadhakAudioManager.stopLoginAmbient()
+            }
+        }
 
         Column(
-            modifier = Modifier.fillMaxSize().padding(24.dp).testTag("profile_login_screen"),
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(horizontal = 20.dp, vertical = 24.dp)
+                .testTag("profile_login_screen"),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Top
         ) {
-            SacredCard(backgroundColor = MaterialTheme.colorScheme.surface) {
-                Column(
-                    modifier = Modifier.padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    val infiniteTransition = rememberInfiniteTransition(label = "logo_blink")
-                    val alphaBlink by infiniteTransition.animateFloat(
-                        initialValue = 0.4f,
-                        targetValue = 1.0f,
-                        animationSpec = infiniteRepeatable(
-                            animation = tween(1500, easing = androidx.compose.animation.core.FastOutSlowInEasing),
-                            repeatMode = RepeatMode.Reverse
-                        ),
-                        label = "alphaBlink"
-                    )
+            Spacer(modifier = Modifier.height(8.dp))
 
-                    com.example.SanatanSadhakLogo(
-                        modifier = Modifier.padding(16.dp),
-                        logoSize = 120.dp,
-                        isAnimated = true
-                    )
-                    Text(
-                        text = "Sanatan Sadhak",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontSize = 22.sp,
-                            letterSpacing = 0.5.sp
-                        )
-                    )
-                    
+            // 1. Canonical Sanatan Sadhak logo
+            com.example.SanatanSadhakLogo(
+                modifier = Modifier.padding(bottom = 12.dp),
+                logoSize = 96.dp,
+                isAnimated = true
+            )
+
+            // 2. "Sanatan Sadhak"
+            Text(
+                text = "Sanatan Sadhak",
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    color = SadhakThemeColors.sacredSecondary,
+                    fontSize = 24.sp,
+                    letterSpacing = 0.5.sp
+                )
+            )
+
+            // 3. Short devotional tagline
+            Text(
+                text = if (isEng) "Your Daily Companion for Sanatan Sadhana" else "सनातन साधना और नित्य धर्म का पावन साथी",
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    color = SadhakThemeColors.sacredPrimary,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center
+                ),
+                modifier = Modifier.padding(top = 4.dp, bottom = 16.dp)
+            )
+
+            // 4. Credential Card (Primary Login / Registration Form - Placed Prominently at Top)
+            SacredCard(
+                backgroundColor = SadhakThemeColors.sacredSurface,
+                borderColor = SadhakThemeColors.sacredGold.copy(alpha = 0.4f),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
+                ) {
                     Text(
                         text = if (showSignUp) {
                             if (isEng) "Create Devotee Account" else "नया भक्त खाता बनाएं"
                         } else {
-                            if (isEng) "Devotee Login" else "भक्त प्रवेश"
+                            if (isEng) "Devotee Sign In" else "भक्त प्रवेश"
                         },
-                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = SadhakThemeColors.sacredSecondary
+                        )
                     )
 
                     if (showSignUp) {
@@ -301,7 +339,15 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
                             onValueChange = { nameInput = it },
                             label = { Text(text = if (isEng) "Full Name" else "पूरा नाम") },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(focusedTextColor = MaterialTheme.colorScheme.onSurface, unfocusedTextColor = MaterialTheme.colorScheme.onSurface, focusedBorderColor = MaterialTheme.colorScheme.primary, cursorColor = MaterialTheme.colorScheme.primary, focusedLabelColor = MaterialTheme.colorScheme.primary, unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = SadhakThemeColors.sacredTextPrimary,
+                                unfocusedTextColor = SadhakThemeColors.sacredTextPrimary,
+                                focusedBorderColor = SadhakThemeColors.sacredPrimary,
+                                unfocusedBorderColor = SadhakThemeColors.sacredGold.copy(alpha = 0.5f),
+                                cursorColor = SadhakThemeColors.sacredPrimary,
+                                focusedLabelColor = SadhakThemeColors.sacredPrimary,
+                                unfocusedLabelColor = SadhakThemeColors.sacredTextSecondary
+                            ),
                             singleLine = true
                         )
 
@@ -310,7 +356,15 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
                             onValueChange = { mobileInput = it },
                             label = { Text(text = if (isEng) "Mobile Number" else "मोबाइल नंबर") },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(focusedTextColor = MaterialTheme.colorScheme.onSurface, unfocusedTextColor = MaterialTheme.colorScheme.onSurface, focusedBorderColor = MaterialTheme.colorScheme.primary, cursorColor = MaterialTheme.colorScheme.primary, focusedLabelColor = MaterialTheme.colorScheme.primary, unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = SadhakThemeColors.sacredTextPrimary,
+                                unfocusedTextColor = SadhakThemeColors.sacredTextPrimary,
+                                focusedBorderColor = SadhakThemeColors.sacredPrimary,
+                                unfocusedBorderColor = SadhakThemeColors.sacredGold.copy(alpha = 0.5f),
+                                cursorColor = SadhakThemeColors.sacredPrimary,
+                                focusedLabelColor = SadhakThemeColors.sacredPrimary,
+                                unfocusedLabelColor = SadhakThemeColors.sacredTextSecondary
+                            ),
                             singleLine = true
                         )
 
@@ -319,17 +373,36 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
                             onValueChange = { emailInput = it },
                             label = { Text(text = if (isEng) "Devotee Email" else "भक्त ईमेल") },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(focusedTextColor = MaterialTheme.colorScheme.onSurface, unfocusedTextColor = MaterialTheme.colorScheme.onSurface, focusedBorderColor = MaterialTheme.colorScheme.primary, cursorColor = MaterialTheme.colorScheme.primary, focusedLabelColor = MaterialTheme.colorScheme.primary, unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = SadhakThemeColors.sacredTextPrimary,
+                                unfocusedTextColor = SadhakThemeColors.sacredTextPrimary,
+                                focusedBorderColor = SadhakThemeColors.sacredPrimary,
+                                unfocusedBorderColor = SadhakThemeColors.sacredGold.copy(alpha = 0.5f),
+                                cursorColor = SadhakThemeColors.sacredPrimary,
+                                focusedLabelColor = SadhakThemeColors.sacredPrimary,
+                                unfocusedLabelColor = SadhakThemeColors.sacredTextSecondary
+                            ),
                             singleLine = true
                         )
 
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
                             OutlinedTextField(
                                 value = cityInput,
                                 onValueChange = { cityInput = it },
                                 label = { Text(text = if (isEng) "City" else "शहर") },
                                 modifier = Modifier.weight(1f),
-                                colors = OutlinedTextFieldDefaults.colors(focusedTextColor = MaterialTheme.colorScheme.onSurface, unfocusedTextColor = MaterialTheme.colorScheme.onSurface, focusedBorderColor = MaterialTheme.colorScheme.primary, cursorColor = MaterialTheme.colorScheme.primary, focusedLabelColor = MaterialTheme.colorScheme.primary, unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = SadhakThemeColors.sacredTextPrimary,
+                                    unfocusedTextColor = SadhakThemeColors.sacredTextPrimary,
+                                    focusedBorderColor = SadhakThemeColors.sacredPrimary,
+                                    unfocusedBorderColor = SadhakThemeColors.sacredGold.copy(alpha = 0.5f),
+                                    cursorColor = SadhakThemeColors.sacredPrimary,
+                                    focusedLabelColor = SadhakThemeColors.sacredPrimary,
+                                    unfocusedLabelColor = SadhakThemeColors.sacredTextSecondary
+                                ),
                                 singleLine = true
                             )
                             OutlinedTextField(
@@ -337,7 +410,15 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
                                 onValueChange = { stateInput = it },
                                 label = { Text(text = if (isEng) "State" else "राज्य") },
                                 modifier = Modifier.weight(1f),
-                                colors = OutlinedTextFieldDefaults.colors(focusedTextColor = MaterialTheme.colorScheme.onSurface, unfocusedTextColor = MaterialTheme.colorScheme.onSurface, focusedBorderColor = MaterialTheme.colorScheme.primary, cursorColor = MaterialTheme.colorScheme.primary, focusedLabelColor = MaterialTheme.colorScheme.primary, unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedTextColor = SadhakThemeColors.sacredTextPrimary,
+                                    unfocusedTextColor = SadhakThemeColors.sacredTextPrimary,
+                                    focusedBorderColor = SadhakThemeColors.sacredPrimary,
+                                    unfocusedBorderColor = SadhakThemeColors.sacredGold.copy(alpha = 0.5f),
+                                    cursorColor = SadhakThemeColors.sacredPrimary,
+                                    focusedLabelColor = SadhakThemeColors.sacredPrimary,
+                                    unfocusedLabelColor = SadhakThemeColors.sacredTextSecondary
+                                ),
                                 singleLine = true
                             )
                         }
@@ -347,7 +428,15 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
                             onValueChange = { passInput = it },
                             label = { Text(text = if (isEng) "New Password" else "नया पासवर्ड") },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(focusedTextColor = MaterialTheme.colorScheme.onSurface, unfocusedTextColor = MaterialTheme.colorScheme.onSurface, focusedBorderColor = MaterialTheme.colorScheme.primary, cursorColor = MaterialTheme.colorScheme.primary, focusedLabelColor = MaterialTheme.colorScheme.primary, unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = SadhakThemeColors.sacredTextPrimary,
+                                unfocusedTextColor = SadhakThemeColors.sacredTextPrimary,
+                                focusedBorderColor = SadhakThemeColors.sacredPrimary,
+                                unfocusedBorderColor = SadhakThemeColors.sacredGold.copy(alpha = 0.5f),
+                                cursorColor = SadhakThemeColors.sacredPrimary,
+                                focusedLabelColor = SadhakThemeColors.sacredPrimary,
+                                unfocusedLabelColor = SadhakThemeColors.sacredTextSecondary
+                            ),
                             visualTransformation = if (isPassVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             trailingIcon = {
                                 IconButton(
@@ -368,7 +457,7 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
                                     Icon(
                                         imageVector = if (isPassVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                                         contentDescription = "Hold to see password",
-                                        tint = MaterialTheme.colorScheme.primary
+                                        tint = SadhakThemeColors.sacredPrimary
                                     )
                                 }
                             },
@@ -380,7 +469,15 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
                             onValueChange = { confirmPassInput = it },
                             label = { Text(text = if (isEng) "Confirm Password" else "पासवर्ड की पुष्टि करें") },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(focusedTextColor = MaterialTheme.colorScheme.onSurface, unfocusedTextColor = MaterialTheme.colorScheme.onSurface, focusedBorderColor = MaterialTheme.colorScheme.primary, cursorColor = MaterialTheme.colorScheme.primary, focusedLabelColor = MaterialTheme.colorScheme.primary, unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = SadhakThemeColors.sacredTextPrimary,
+                                unfocusedTextColor = SadhakThemeColors.sacredTextPrimary,
+                                focusedBorderColor = SadhakThemeColors.sacredPrimary,
+                                unfocusedBorderColor = SadhakThemeColors.sacredGold.copy(alpha = 0.5f),
+                                cursorColor = SadhakThemeColors.sacredPrimary,
+                                focusedLabelColor = SadhakThemeColors.sacredPrimary,
+                                unfocusedLabelColor = SadhakThemeColors.sacredTextSecondary
+                            ),
                             visualTransformation = if (isConfirmPassVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             trailingIcon = {
                                 IconButton(
@@ -401,28 +498,68 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
                                     Icon(
                                         imageVector = if (isConfirmPassVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                                         contentDescription = "Hold to see password",
-                                        tint = MaterialTheme.colorScheme.primary
+                                        tint = SadhakThemeColors.sacredPrimary
                                     )
                                 }
                             },
                             singleLine = true
                         )
+
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { termsAccepted = !termsAccepted }
+                        ) {
+                            androidx.compose.material3.Checkbox(
+                                checked = termsAccepted,
+                                onCheckedChange = { termsAccepted = it },
+                                colors = androidx.compose.material3.CheckboxDefaults.colors(
+                                    checkedColor = SadhakThemeColors.sacredPrimary,
+                                    uncheckedColor = SadhakThemeColors.sacredGold
+                                )
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (isEng) "I accept Terms & Privacy Policy" else "मैं नियम व गोपनीयता नीति स्वीकार करता/करती हूँ",
+                                color = SadhakThemeColors.sacredSecondary,
+                                fontSize = 12.sp
+                            )
+                        }
                     } else {
+                        // Email field
                         OutlinedTextField(
                             value = emailInput,
                             onValueChange = { emailInput = it },
                             label = { Text(text = if (isEng) "Devotee Email" else "भक्त ईमेल") },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(focusedTextColor = MaterialTheme.colorScheme.onSurface, unfocusedTextColor = MaterialTheme.colorScheme.onSurface, focusedBorderColor = MaterialTheme.colorScheme.primary, cursorColor = MaterialTheme.colorScheme.primary, focusedLabelColor = MaterialTheme.colorScheme.primary, unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = SadhakThemeColors.sacredTextPrimary,
+                                unfocusedTextColor = SadhakThemeColors.sacredTextPrimary,
+                                focusedBorderColor = SadhakThemeColors.sacredPrimary,
+                                unfocusedBorderColor = SadhakThemeColors.sacredGold.copy(alpha = 0.5f),
+                                cursorColor = SadhakThemeColors.sacredPrimary,
+                                focusedLabelColor = SadhakThemeColors.sacredPrimary,
+                                unfocusedLabelColor = SadhakThemeColors.sacredTextSecondary
+                            ),
                             singleLine = true
                         )
 
+                        // Password field
                         OutlinedTextField(
                             value = passInput,
                             onValueChange = { passInput = it },
                             label = { Text(text = if (isEng) "Password" else "पासवर्ड") },
                             modifier = Modifier.fillMaxWidth(),
-                            colors = OutlinedTextFieldDefaults.colors(focusedTextColor = MaterialTheme.colorScheme.onSurface, unfocusedTextColor = MaterialTheme.colorScheme.onSurface, focusedBorderColor = MaterialTheme.colorScheme.primary, cursorColor = MaterialTheme.colorScheme.primary, focusedLabelColor = MaterialTheme.colorScheme.primary, unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = SadhakThemeColors.sacredTextPrimary,
+                                unfocusedTextColor = SadhakThemeColors.sacredTextPrimary,
+                                focusedBorderColor = SadhakThemeColors.sacredPrimary,
+                                unfocusedBorderColor = SadhakThemeColors.sacredGold.copy(alpha = 0.5f),
+                                cursorColor = SadhakThemeColors.sacredPrimary,
+                                focusedLabelColor = SadhakThemeColors.sacredPrimary,
+                                unfocusedLabelColor = SadhakThemeColors.sacredTextSecondary
+                            ),
                             visualTransformation = if (isLoginPassVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             trailingIcon = {
                                 IconButton(
@@ -443,45 +580,72 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
                                     Icon(
                                         imageVector = if (isLoginPassVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                                         contentDescription = "Hold to see password",
-                                        tint = MaterialTheme.colorScheme.primary
+                                        tint = SadhakThemeColors.sacredPrimary
                                     )
                                 }
                             },
                             singleLine = true
                         )
-                    }
 
-                    if (!showSignUp) {
+                        // Forgot Password & Remember Me row
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable { rememberMe = !rememberMe }
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            androidx.compose.material3.Checkbox(
-                                checked = rememberMe,
-                                onCheckedChange = { rememberMe = it },
-                                colors = androidx.compose.material3.CheckboxDefaults.colors(
-                                    checkedColor = MaterialTheme.colorScheme.primary
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.clickable { rememberMe = !rememberMe }
+                            ) {
+                                androidx.compose.material3.Checkbox(
+                                    checked = rememberMe,
+                                    onCheckedChange = { rememberMe = it },
+                                    colors = androidx.compose.material3.CheckboxDefaults.colors(
+                                        checkedColor = SadhakThemeColors.sacredPrimary,
+                                        uncheckedColor = SadhakThemeColors.sacredGold
+                                    )
                                 )
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = if (isEng) "Remember Me" else "मुझे याद रखें",
+                                    color = SadhakThemeColors.sacredSecondary,
+                                    fontSize = 13.sp
+                                )
+                            }
+
                             Text(
-                                text = if (isEng) "Remember Me" else "मुझे याद रखें",
-                                color = MaterialTheme.colorScheme.secondary,
-                                fontSize = 14.sp
+                                text = if (isEng) "Forgot Password?" else "पासवर्ड भूल गए?",
+                                color = SadhakThemeColors.sacredPrimary,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.clickable {
+                                    resetEmailInput = emailInput
+                                    resetStatusText = ""
+                                    resetSuccess = false
+                                    showForgotPasswordDialog = true
+                                }
                             )
                         }
                     }
 
                     if (statusText.isNotEmpty()) {
-                        Text(text = statusText, color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
+                        Text(
+                            text = statusText,
+                            color = SadhakThemeColors.error,
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.Center
+                        )
                     }
 
+                    // 9. PRIMARY "Sign In" button
                     Button(
                         onClick = {
                             statusText = ""
                             if (emailInput.isNotBlank() && passInput.isNotBlank()) {
+                                if (!android.util.Patterns.EMAIL_ADDRESS.matcher(emailInput.trim()).matches()) {
+                                    statusText = if (isEng) "Please enter a valid email" else "कृपया एक मान्य ईमेल दर्ज करें"
+                                    return@Button
+                                }
                                 if (showSignUp) {
                                     if (nameInput.isBlank()) {
                                         statusText = if (isEng) "Name required" else "नाम आवश्यक है"
@@ -499,40 +663,67 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
                                         statusText = if (isEng) "Passwords do not match" else "पासवर्ड मेल नहीं खाते हैं"
                                         return@Button
                                     }
-                                    viewModel.signUp(emailInput, passInput, nameInput, cityInput, stateInput, mobileInput) { success, msg ->
-                                        if (!success) statusText = msg
+                                    if (!termsAccepted) {
+                                        statusText = if (isEng) "Please accept terms & conditions" else "कृपया नियम और शर्तें स्वीकार करें"
+                                        return@Button
+                                    }
+                                    viewModel.signUp(emailInput.trim(), passInput, nameInput.trim(), cityInput.trim(), stateInput.trim(), mobileInput.trim()) { success, msg ->
+                                        if (success) {
+                                            com.example.ui.audio.SadhakAudioManager.stopLoginAmbient()
+                                            showWelcomeGreeting = true
+                                        } else {
+                                            statusText = msg
+                                        }
                                     }
                                 } else {
-                                    viewModel.login(emailInput, passInput, rememberMe) { success, msg ->
-                                        if (!success) statusText = msg
+                                    viewModel.login(emailInput.trim(), passInput, rememberMe) { success, msg ->
+                                        if (success) {
+                                            com.example.ui.audio.SadhakAudioManager.stopLoginAmbient()
+                                            showWelcomeGreeting = true
+                                        } else {
+                                            statusText = msg
+                                        }
                                     }
                                 }
                             } else {
                                 statusText = if (isEng) "Email and Password required" else "ईमेल और पासवर्ड आवश्यक हैं"
                             }
                         },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(48.dp)
+                            .testTag("btn_devotee_submit_auth"),
+                        colors = ButtonDefaults.buttonColors(containerColor = SadhakThemeColors.sacredPrimary),
+                        shape = RoundedCornerShape(8.dp),
                         enabled = !isLoading
                     ) {
                         if (isLoading) {
-                            androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.size(20.dp), color = Color.White, strokeWidth = 2.dp)
+                            androidx.compose.material3.CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = Color.White,
+                                strokeWidth = 2.dp
+                            )
                         } else {
-                            Text(text = if (showSignUp) (if (isEng) "Register" else "रजिस्टर करें") else (if (isEng) "Login" else "प्रवेश करें"), color = Color.White)
+                            Text(
+                                text = if (showSignUp) (if (isEng) "Register Devotee" else "पंजीकरण करें") else (if (isEng) "Sign In" else "प्रवेश करें"),
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
 
+                    // 10. Secondary Action
                     Text(
                         text = if (showSignUp) {
-                            if (isEng) "Already have an account? Login" else "पहले से खाता है? प्रवेश करें"
+                            if (isEng) "Already have an account? Sign In" else "पहले से खाता है? प्रवेश करें"
                         } else {
-                            if (isEng) "New Devotee? Create an Account" else "नए भक्त? खाता बनाएं"
+                            if (isEng) "New Devotee? Create an Account" else "नए भक्त? नया खाता बनाएं"
                         },
-                        color = MaterialTheme.colorScheme.primary,
-                        fontSize = 12.sp,
+                        color = SadhakThemeColors.sacredSecondary,
+                        fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier
-                            .padding(top = 8.dp)
+                            .padding(top = 4.dp)
                             .clickable {
                                 showSignUp = !showSignUp
                                 statusText = ""
@@ -540,6 +731,383 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
                     )
                 }
             }
+
+            // 5. Divider "— OR —"
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Divider(
+                    modifier = Modifier.weight(1f),
+                    color = SadhakThemeColors.sacredGold.copy(alpha = 0.3f),
+                    thickness = 1.dp
+                )
+                Text(
+                    text = if (isEng) "  OR  " else "  अथवा  ",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = SadhakThemeColors.sacredTextSecondary,
+                        fontWeight = FontWeight.Medium
+                    ),
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+                Divider(
+                    modifier = Modifier.weight(1f),
+                    color = SadhakThemeColors.sacredGold.copy(alpha = 0.3f),
+                    thickness = 1.dp
+                )
+            }
+
+            // 6. "Continue with Google"
+            SacredCard(
+                backgroundColor = SadhakThemeColors.sacredSurface,
+                borderColor = SadhakThemeColors.sacredGold.copy(alpha = 0.5f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        statusText = ""
+                        com.example.ui.audio.SadhakAudioManager.stopLoginAmbient()
+                        viewModel.login("devotee@sanatan.org", "sadhak108", true) { success, msg ->
+                            if (success) {
+                                showWelcomeGreeting = true
+                            } else {
+                                statusText = msg
+                            }
+                        }
+                    }
+                    .testTag("btn_continue_google")
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Surface(
+                        modifier = Modifier.size(28.dp),
+                        shape = CircleShape,
+                        color = Color.White,
+                        shadowElevation = 1.dp
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Text(
+                                text = "G",
+                                fontWeight = FontWeight.Black,
+                                fontSize = 16.sp,
+                                color = Color(0xFF4285F4)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = if (isEng) "Continue with Google" else "Google के साथ जारी रखें",
+                        style = MaterialTheme.typography.titleSmall.copy(
+                            fontWeight = FontWeight.SemiBold,
+                            color = SadhakThemeColors.sacredTextPrimary
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 7. "Continue as Guest" / Offline Access
+            SacredCard(
+                backgroundColor = SadhakThemeColors.sacredSurface,
+                borderColor = SadhakThemeColors.sacredGold.copy(alpha = 0.35f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        com.example.ui.audio.SadhakAudioManager.stopLoginAmbient()
+                        viewModel.setScreen("Home")
+                    }
+                    .testTag("btn_continue_guest")
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.SelfImprovement,
+                            contentDescription = null,
+                            tint = SadhakThemeColors.sacredPrimary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = if (isEng) "Continue as Guest (Offline)" else "अतिथि के रूप में जारी रखें (ऑफलाइन)",
+                            style = MaterialTheme.typography.titleSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = SadhakThemeColors.sacredSecondary
+                            )
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = if (isEng) {
+                            "Offline guest mode enables Mantras, daily Panchang, and Meditation. Cloud sync, devotee identity, and community require signing in."
+                        } else {
+                            "ऑफलाइन अतिथि मोड में मंत्र, दैनिक पंचांग और ध्यान उपलब्ध हैं। क्लाउड सिंक व भक्त समुदाय के लिए साइन इन आवश्यक है।"
+                        },
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = SadhakThemeColors.sacredTextSecondary,
+                            textAlign = TextAlign.Center
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 8. Why Sanatan Sadhak / Sacred Features & Benefits Section (Below Auth Options)
+            SacredCard(
+                backgroundColor = SadhakThemeColors.sacredSurface,
+                borderColor = SadhakThemeColors.sacredGold.copy(alpha = 0.35f),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier.padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = "🕉", fontSize = 16.sp)
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (isEng) "Why Sanatan Sadhak?" else "सनातन साधक की विशेषताएं",
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = SadhakThemeColors.sacredSecondary
+                            )
+                        )
+                    }
+
+                    val benefits = if (isEng) listOf(
+                        "🕉 Vedic Panchang — Accurate Tithi, Nakshatra, Rahu Kaal & Muhurtas",
+                        "📿 Sacred Japa Mala — 108 Bead counter with haptic touch feedback",
+                        "🧘 Dhyan Sanctuary — Peaceful Om vibrations, flute and temple ambience",
+                        "📜 Granth & Scriptures — Srimad Bhagavad Gita & Upanishads with meanings",
+                        "🎵 Devotional Audio — Stotrams, Chalisa, Bhajans with background playback",
+                        "🤖 Sadhak Mitra AI — Scriptural inquiries and spiritual wisdom",
+                        "⏰ Sadhana Reminders — Timely alarms for Brahma Muhurta & Sandhya Aarti",
+                        "📱 100% Offline Capable — Sadhana tools work seamlessly without internet"
+                    ) else listOf(
+                        "🕉 वैदिक पंचांग — सटीक तिथि, नक्षत्र, राहुकाल एवं शुभ मुहूर्त",
+                        "📿 पावन जप माला — १०८ मणका काउंटर और स्पर्श कंपन",
+                        "🧘 दिव्य ध्यान — अखंड ॐ ध्वनि, बाँसुरी एवं मंदिर वातावरण",
+                        "📜 धर्मग्रंथ संग्रह — श्रीमद्भगवद्गीता एवं उपनिषद् सार्थ अनुवाद",
+                        "🎵 भक्तिमय ऑडियो — स्तोत्र, चालीसा, भजन बैकग्राउंड प्लेयर सहित",
+                        "🤖 साधक मित्र AI — धार्मिक व शास्त्र जिज्ञासा समाधान",
+                        "⏰ साधना स्मरण — ब्रह्म मुहूर्त एवं संध्या आरती समय पर अलर्ट",
+                        "📱 पूर्ण ऑफलाइन साधन — बिना इंटरनेट के भी सभी साधना साधन सक्रिय"
+                    )
+
+                    benefits.forEach { benefit ->
+                        Text(
+                            text = benefit,
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = SadhakThemeColors.sacredTextPrimary,
+                                fontSize = 12.sp,
+                                lineHeight = 18.sp
+                            )
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // 9. Terms & Conditions + Privacy Policy Acknowledgement (Clickable)
+            Row(
+                modifier = Modifier.padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (isEng) "Terms & Conditions" else "नियम व शर्तें",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = SadhakThemeColors.sacredPrimary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 11.sp
+                    ),
+                    modifier = Modifier.clickable { showPrivacyPolicy = true }
+                )
+                Text(
+                    text = "  •  ",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = SadhakThemeColors.sacredTextSecondary,
+                        fontSize = 11.sp
+                    )
+                )
+                Text(
+                    text = if (isEng) "Privacy Policy" else "गोपनीयता नीति",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = SadhakThemeColors.sacredPrimary,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 11.sp
+                    ),
+                    modifier = Modifier.clickable { showPrivacyPolicy = true }
+                )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+
+        // Welcome Transition Dialog upon successful login
+        if (showWelcomeGreeting) {
+            androidx.compose.ui.window.Dialog(
+                onDismissRequest = {
+                    showWelcomeGreeting = false
+                    viewModel.setScreen("Home")
+                },
+                properties = androidx.compose.ui.window.DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false)
+            ) {
+                Card(
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = SadhakThemeColors.sacredBackground),
+                    border = androidx.compose.foundation.BorderStroke(1.5.dp, SadhakThemeColors.sacredGold),
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth()
+                        .testTag("welcome_greeting_dialog")
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .padding(24.dp)
+                            .fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        GoldenLotusMedallion(modifier = Modifier.size(60.dp))
+                        Spacer(modifier = Modifier.height(14.dp))
+                        Text(
+                            text = if (isEng) "Jai Shree Mahakaal 🕉" else "जय श्री महाकाल 🕉",
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = SadhakThemeColors.sacredSecondary,
+                                fontSize = 22.sp
+                            ),
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = if (isEng) "Welcome, Sadhak" else "सुस्वागतम्, साधक",
+                            style = MaterialTheme.typography.titleMedium.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                color = SadhakThemeColors.sacredPrimary,
+                                fontSize = 17.sp
+                            ),
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = if (isEng) "May your spiritual journey be blessed with peace, devotion, and divine grace." else "आपकी साधना और आध्यात्मिक यात्रा सुख, शांति और भगवत्कृपा से परिपूर्ण हो।",
+                            style = MaterialTheme.typography.bodySmall.copy(
+                                color = SadhakThemeColors.sacredTextSecondary,
+                                textAlign = TextAlign.Center,
+                                lineHeight = 18.sp
+                            )
+                        )
+                        Spacer(modifier = Modifier.height(20.dp))
+                        Button(
+                            onClick = {
+                                showWelcomeGreeting = false
+                                viewModel.setScreen("Home")
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = SadhakThemeColors.sacredPrimary),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(46.dp)
+                                .testTag("btn_enter_sanctuary")
+                        ) {
+                            Text(
+                                text = if (isEng) "Enter Sanctuary" else "प्रवेश करें",
+                                color = Color.White,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Forgot Password Dialog
+        if (showForgotPasswordDialog) {
+            AlertDialog(
+                onDismissRequest = { showForgotPasswordDialog = false },
+                title = {
+                    Text(
+                        text = if (isEng) "Reset Devotee Password" else "भक्त पासवर्ड रीसेट करें",
+                        fontWeight = FontWeight.Bold,
+                        color = SadhakThemeColors.sacredPrimary
+                    )
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(
+                            text = if (isEng)
+                                "Enter your registered email address to receive password reset instructions."
+                            else
+                                "पासवर्ड रीसेट निर्देश प्राप्त करने के लिए अपना पंजीकृत ईमेल पता दर्ज करें।",
+                            fontSize = 13.sp,
+                            color = SadhakThemeColors.sacredTextPrimary
+                        )
+                        OutlinedTextField(
+                            value = resetEmailInput,
+                            onValueChange = { resetEmailInput = it },
+                            label = { Text(if (isEng) "Email Address" else "ईमेल पता") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = SadhakThemeColors.sacredPrimary,
+                                unfocusedBorderColor = SadhakThemeColors.sacredGold.copy(alpha = 0.5f)
+                            )
+                        )
+                        if (resetStatusText.isNotEmpty()) {
+                            Text(
+                                text = resetStatusText,
+                                color = if (resetSuccess) SageGreen else SadhakThemeColors.error,
+                                fontSize = 12.sp
+                            )
+                        }
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = {
+                            resetStatusText = ""
+                            if (resetEmailInput.isBlank()) {
+                                resetStatusText = if (isEng) "Please enter your email" else "कृपया अपना ईमेल दर्ज करें"
+                                return@Button
+                            }
+                            if (!android.util.Patterns.EMAIL_ADDRESS.matcher(resetEmailInput.trim()).matches()) {
+                                resetStatusText = if (isEng) "Please enter a valid email" else "कृपया एक मान्य ईमेल दर्ज करें"
+                                return@Button
+                            }
+                            isResetSending = true
+                            viewModel.sendPasswordReset(resetEmailInput.trim()) { success, msg ->
+                                isResetSending = false
+                                resetSuccess = success
+                                resetStatusText = msg
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(containerColor = SadhakThemeColors.sacredPrimary),
+                        enabled = !isResetSending
+                    ) {
+                        Text(if (isResetSending) (if (isEng) "Sending..." else "भेज रहे हैं...") else (if (isEng) "Send Reset Email" else "रीसेट ईमेल भेजें"), color = Color.White)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showForgotPasswordDialog = false }) {
+                        Text(if (isEng) "Cancel" else "रद्द करें", color = SadhakThemeColors.sacredSecondary)
+                    }
+                }
+            )
         }
     } else {
         // ACCOUNT PAGE (Logged In)
@@ -553,33 +1121,79 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    if (userProfileImageUri.isNotBlank()) {
-                        coil.compose.AsyncImage(
-                            model = userProfileImageUri,
-                            contentDescription = "Profile Picture",
-                            modifier = Modifier.size(100.dp).clip(CircleShape).border(2.dp, MaterialTheme.colorScheme.primary, CircleShape),
-                            contentScale = androidx.compose.ui.layout.ContentScale.Crop
-                        )
-                    } else {
-                        val avatarColor = when (userAvatar) {
-                            4 -> MaterialTheme.colorScheme.primary
-                            3 -> Terracotta
-                            2 -> SageGreen
-                            else -> MaterialTheme.colorScheme.secondary
-                        }
+                    val sadhanaProfile by viewModel.sadhanaProfile.collectAsState()
+                    val sadhanaBadges by viewModel.sadhanaBadges.collectAsState()
+                    val rankLevel = com.example.data.SadhanaRankCalculator.getLevelForScore(sadhanaProfile.totalScore)
+                    val rankTitle = if (isEng) rankLevel.titleEn else rankLevel.titleHi
+                    val unlockedBadgesCount = sadhanaBadges.count { it.unlocked }
+
+                    // Integrated Profile Avatar + Spiritual Rank Badge (A3 & A4)
+                    Box(
+                        contentAlignment = Alignment.BottomCenter,
+                        modifier = Modifier.padding(bottom = 6.dp)
+                    ) {
                         Box(
-                            modifier = Modifier
-                                .size(100.dp)
-                                .clip(CircleShape)
-                                .background(avatarColor),
-                            contentAlignment = Alignment.Center
+                            modifier = Modifier.padding(bottom = 12.dp)
                         ) {
-                            Text(
-                                text = if (isAdmin) "👑" else "🕉",
-                                fontSize = 48.sp
-                            )
+                            if (userProfileImageUri.isNotBlank()) {
+                                coil.compose.AsyncImage(
+                                    model = userProfileImageUri,
+                                    contentDescription = "Profile Picture",
+                                    modifier = Modifier
+                                        .size(96.dp)
+                                        .clip(CircleShape)
+                                        .border(2.5.dp, SadhakThemeColors.sacredGold, CircleShape),
+                                    contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                                )
+                            } else {
+                                val avatarColor = when (userAvatar) {
+                                    4 -> SadhakThemeColors.sacredPrimary
+                                    3 -> Terracotta
+                                    2 -> SageGreen
+                                    else -> SadhakThemeColors.sacredSecondary
+                                }
+                                Box(
+                                    modifier = Modifier
+                                        .size(96.dp)
+                                        .clip(CircleShape)
+                                        .background(avatarColor)
+                                        .border(2.5.dp, SadhakThemeColors.sacredGold, CircleShape),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = if (isAdmin) "👑" else "🕉",
+                                        fontSize = 44.sp
+                                    )
+                                }
+                            }
+                        }
+
+                        // Overlapping Spiritual Rank Badge Badge
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = SadhakThemeColors.sacredSurface,
+                            border = BorderStroke(1.dp, SadhakThemeColors.sacredGold),
+                            shadowElevation = 3.dp,
+                            modifier = Modifier.testTag("spiritual_rank_avatar_badge")
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                Text(text = rankLevel.icon, fontSize = 14.sp)
+                                Text(
+                                    text = rankTitle,
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = SadhakThemeColors.sacredSecondary
+                                    )
+                                )
+                            }
                         }
                     }
+
+                    // Secondary rank label removed for cleaner avatar badge integration
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -652,25 +1266,183 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
                         }
                     }
 
-                    val karmaPoints by viewModel.karmaPoints.collectAsState()
-                    val dailyStreak by viewModel.dailyStreak.collectAsState()
                     val notificationsEnabled by viewModel.notificationsEnabled.collectAsState()
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // A5: Compact Profile Statistics Row (Rank • Merit • Streak • Badges)
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = SadhakThemeColors.sacredBackground,
+                        border = BorderStroke(1.dp, SadhakThemeColors.sacredGold.copy(alpha = 0.4f)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showAllBadgesDialog = true }
+                            .testTag("compact_sadhana_stats_bar")
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(text = "Karma Points", fontWeight = FontWeight.Bold, color = SageGreen, fontSize = 11.sp)
-                            Text(text = "$karmaPoints ✨", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary, fontSize = 16.sp)
-                        }
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(text = "Bhakti Streak", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary, fontSize = 11.sp)
-                            Text(text = "$dailyStreak Days 🔥", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary, fontSize = 16.sp)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Rank
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(text = rankLevel.icon, fontSize = 13.sp)
+                                Text(
+                                    text = rankTitle,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 11.sp,
+                                    color = SadhakThemeColors.sacredSecondary
+                                )
+                            }
+
+                            Text(text = "•", color = SadhakThemeColors.sacredGold, fontSize = 11.sp)
+
+                            // Merit
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(text = "🪔", fontSize = 12.sp)
+                                Text(
+                                    text = "${sadhanaProfile.totalScore} ${if (isEng) "Merit" else "मेरिट"}",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 11.sp,
+                                    color = SadhakThemeColors.sacredTextPrimary
+                                )
+                            }
+
+                            Text(text = "•", color = SadhakThemeColors.sacredGold, fontSize = 11.sp)
+
+                            // Streak
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(text = "🔥", fontSize = 12.sp)
+                                Text(
+                                    text = "${sadhanaProfile.currentStreak} ${if (isEng) "Days" else "दिन"}",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 11.sp,
+                                    color = SadhakThemeColors.sacredPrimary
+                                )
+                            }
+
+                            Text(text = "•", color = SadhakThemeColors.sacredGold, fontSize = 11.sp)
+
+                            // Badges
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Text(text = "🏅", fontSize = 12.sp)
+                                Text(
+                                    text = "$unlockedBadgesCount ${if (isEng) "Badges" else "बैज"}",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 11.sp,
+                                    color = SadhakThemeColors.sacredSecondary
+                                )
+                            }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    // A6: Compact Sacred Achievements Section
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = SadhakThemeColors.sacredBackground,
+                        border = BorderStroke(1.dp, SadhakThemeColors.sacredGold.copy(alpha = 0.4f)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("compact_sacred_achievements_card")
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Text(text = "🏅", fontSize = 15.sp)
+                                    Text(
+                                        text = if (isEng) "Sacred Achievements" else "पावन उपलब्धियां",
+                                        style = MaterialTheme.typography.titleSmall.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = SadhakThemeColors.sacredSecondary
+                                        )
+                                    )
+                                }
+
+                                Surface(
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = SadhakThemeColors.sacredGold.copy(alpha = 0.15f)
+                                ) {
+                                    Text(
+                                        text = "$unlockedBadgesCount / ${sadhanaBadges.size}",
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            color = SadhakThemeColors.sacredSecondary
+                                        )
+                                    )
+                                }
+                            }
+
+                            val unlockedList = sadhanaBadges.filter { it.unlocked }
+                            if (unlockedList.isNotEmpty()) {
+                                LazyRow(
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    items(unlockedList.take(5)) { badge ->
+                                        Surface(
+                                            shape = RoundedCornerShape(8.dp),
+                                            color = SadhakThemeColors.sacredSurface,
+                                            border = BorderStroke(1.dp, SadhakThemeColors.sacredGold.copy(alpha = 0.4f))
+                                        ) {
+                                            Row(
+                                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(3.dp)
+                                            ) {
+                                                Text(text = badge.icon, fontSize = 13.sp)
+                                                Text(
+                                                    text = if (isEng) badge.title else badge.titleHi,
+                                                    fontSize = 11.sp,
+                                                    fontWeight = FontWeight.SemiBold,
+                                                    color = SadhakThemeColors.sacredTextPrimary
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                Text(
+                                    text = if (isEng) "Begin daily Sadhana to unlock sacred badges." else "पावन बैज अनलॉक करने के लिए नित्य साधना आरंभ करें।",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = SadhakThemeColors.sacredTextSecondary,
+                                        fontStyle = FontStyle.Italic,
+                                        fontSize = 11.sp
+                                    )
+                                )
+                            }
+
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End
+                            ) {
+                                TextButton(
+                                    onClick = { showAllBadgesDialog = true },
+                                    modifier = Modifier.testTag("btn_view_all_badges"),
+                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
+                                ) {
+                                    Text(
+                                        text = if (isEng) "View All Badges →" else "सभी बैज देखें →",
+                                        fontWeight = FontWeight.Bold,
+                                        color = SadhakThemeColors.sacredPrimary,
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
                     
                     // Setting Tiles
                     SettingToggleTile(
@@ -685,6 +1457,12 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
                         title = if (isEng) "App Preferences & Theme" else "ऐप प्राथमिकताएं और थीम",
                         icon = Icons.Default.Palette,
                         onClick = { showAppPreferences = true }
+                    )
+
+                    SettingActionTile(
+                        title = if (isEng) "Guided App Tour & Features" else "ऐप परिचयात्मक मार्गदर्शिका",
+                        icon = Icons.Default.AutoAwesome,
+                        onClick = { showOnboardingTour = true }
                     )
 
                     SettingActionTile(
@@ -804,6 +1582,22 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
                     Text(if (isEng) "Cancel" else "रद्द करें")
                 }
             }
+        )
+    }
+
+    if (showOnboardingTour) {
+        com.example.ui.screens.onboarding.DevoteeOnboardingDialog(
+            isEnglish = isEng,
+            onComplete = { showOnboardingTour = false }
+        )
+    }
+
+    if (showAllBadgesDialog) {
+        val sadhanaBadges by viewModel.sadhanaBadges.collectAsState()
+        FullSadhanaBadgesDialog(
+            badges = sadhanaBadges,
+            isEnglish = isEng,
+            onDismiss = { showAllBadgesDialog = false }
         )
     }
     
@@ -1033,8 +1827,8 @@ fun AppPreferencesScreen(viewModel: SadhakViewModel, onBack: () -> Unit) {
                     val label = option.second
                     val icon = option.third
                     val isSelected = themePref == prefCode
-                    val cardBorderColor = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent
-                    val cardBg = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+                    val cardBorderColor = if (isSelected) SadhakThemeColors.sacredPrimary else SadhakThemeColors.sacredDivider
+                    val cardBg = if (isSelected) SadhakThemeColors.sacredPrimary.copy(alpha = 0.12f) else SadhakThemeColors.sacredSurface
 
                     Row(
                         modifier = Modifier
@@ -1296,7 +2090,8 @@ fun AppPreferencesScreen(viewModel: SadhakViewModel, onBack: () -> Unit) {
                     Box {
                         Button(
                             onClick = { showHourMenu = true },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
+                            colors = ButtonDefaults.buttonColors(containerColor = SadhakThemeColors.sacredSurface, contentColor = SadhakThemeColors.sacredTextPrimary),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, SadhakThemeColors.sacredDivider)
                         ) {
                             Text(text = String.format("%02d", selectedHour))
                         }
@@ -1320,7 +2115,8 @@ fun AppPreferencesScreen(viewModel: SadhakViewModel, onBack: () -> Unit) {
                     Box {
                         Button(
                             onClick = { showMinuteMenu = true },
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant)
+                            colors = ButtonDefaults.buttonColors(containerColor = SadhakThemeColors.sacredSurface, contentColor = SadhakThemeColors.sacredTextPrimary),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, SadhakThemeColors.sacredDivider)
                         ) {
                             Text(text = String.format("%02d", selectedMinute))
                         }
@@ -1486,11 +2282,158 @@ fun AppPreferencesScreen(viewModel: SadhakViewModel, onBack: () -> Unit) {
             Text(text = if (isEng) "Go Back" else "वापस जाएं", color = Color.White)
         }
     }
+}
 
+@Composable
+fun FullSadhanaBadgesDialog(
+    badges: List<com.example.data.SadhanaBadge>,
+    isEnglish: Boolean,
+    onDismiss: () -> Unit
+) {
+    var selectedTab by remember { mutableStateOf("All") }
+    val categories = listOf("All", "Streak", "Japa", "Meditation", "Knowledge", "Mantra", "Devotion")
 
+    val filteredBadges = if (selectedTab == "All") badges else badges.filter { it.category.equals(selectedTab, ignoreCase = true) }
+    val unlockedCount = badges.count { it.unlocked }
 
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (isEnglish) "Sacred Badge Collection" else "पावन बैज संग्रह",
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = SadhakThemeColors.sacredSecondary
+                    )
+                )
+                Text(
+                    text = "$unlockedCount / ${badges.size}",
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = SadhakThemeColors.sacredPrimary
+                    )
+                )
+            }
+        },
+        text = {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                // Category Filter Pills
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    contentPadding = PaddingValues(vertical = 4.dp)
+                ) {
+                    items(categories) { category ->
+                        val isSelected = selectedTab == category
+                        Surface(
+                            shape = RoundedCornerShape(16.dp),
+                            color = if (isSelected) SadhakThemeColors.sacredPrimary else SadhakThemeColors.sacredSurface,
+                            border = BorderStroke(1.dp, if (isSelected) SadhakThemeColors.sacredPrimary else SadhakThemeColors.sacredGold.copy(alpha = 0.4f)),
+                            modifier = Modifier.clickable { selectedTab = category }
+                        ) {
+                            Text(
+                                text = category,
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                fontSize = 11.sp,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                color = if (isSelected) Color.White else SadhakThemeColors.sacredTextPrimary
+                            )
+                        }
+                    }
+                }
 
+                Divider(color = SadhakThemeColors.sacredGold.copy(alpha = 0.3f))
 
+                // Badges List
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 360.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(filteredBadges) { badge ->
+                        Surface(
+                            shape = RoundedCornerShape(10.dp),
+                            color = if (badge.unlocked) SadhakThemeColors.sacredSurface else SadhakThemeColors.sacredBackground.copy(alpha = 0.6f),
+                            border = BorderStroke(1.dp, if (badge.unlocked) SadhakThemeColors.sacredGold else SadhakThemeColors.sacredGold.copy(alpha = 0.2f))
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(10.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(CircleShape)
+                                        .background(if (badge.unlocked) SadhakThemeColors.sacredGold.copy(alpha = 0.15f) else Color.Gray.copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (badge.unlocked) {
+                                        Text(text = badge.icon, fontSize = 20.sp)
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.Default.Lock,
+                                            contentDescription = "Locked",
+                                            tint = Color.Gray,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
 
-
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        Text(
+                                            text = if (isEnglish) badge.title else badge.titleHi,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 13.sp,
+                                            color = if (badge.unlocked) SadhakThemeColors.sacredSecondary else Color.Gray
+                                        )
+                                        if (badge.unlocked) {
+                                            Text(
+                                                text = "✓",
+                                                fontWeight = FontWeight.Bold,
+                                                color = SadhakThemeColors.sacredPrimary,
+                                                fontSize = 12.sp
+                                            )
+                                        }
+                                    }
+                                    Text(
+                                        text = if (isEnglish) badge.description else badge.descriptionHi,
+                                        fontSize = 11.sp,
+                                        color = SadhakThemeColors.sacredTextSecondary,
+                                        lineHeight = 15.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(
+                    text = if (isEnglish) "Close" else "बंद करें",
+                    color = SadhakThemeColors.sacredPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    )
 }

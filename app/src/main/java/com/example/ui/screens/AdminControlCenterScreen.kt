@@ -42,7 +42,48 @@ fun AdminControlCenterScreen(
 ) {
     val isEng by sadhakViewModel.isEnglish.collectAsState()
     val adminEmail by sadhakViewModel.userEmail.collectAsState()
+    val userRole by sadhakViewModel.userRole.collectAsState()
     val pendingConfirmation by adminViewModel.pendingConfirmation.collectAsState()
+
+    if (userRole != "Admin") {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp)
+                .testTag("admin_access_denied"),
+            contentAlignment = Alignment.Center
+        ) {
+            SacredCard(backgroundColor = MaterialTheme.colorScheme.surface) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = "Access Restricted",
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(48.dp)
+                    )
+                    Text(
+                        text = if (isEng) "Admin Access Required" else "प्रशासक अनुमति आवश्यक",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    Text(
+                        text = if (isEng) 
+                            "This sacred control center is restricted to authorized administrators only. Current role: $userRole." 
+                        else 
+                            "यह नियंत्रण केंद्र केवल अधिकृत प्रशासकों के लिए आरक्षित है। वर्तमान भूमिका: $userRole।",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                }
+            }
+        }
+        return
+    }
 
     var activeTab by remember { mutableStateOf("Overview") }
 
@@ -53,6 +94,8 @@ fun AdminControlCenterScreen(
         Pair("Panchang", if (isEng) "Panchang Admin" else "पंचांग प्रशासन"),
         Pair("YouTube", if (isEng) "YouTube & Media" else "यूट्यूब व मीडिया"),
         Pair("Notifications", if (isEng) "Notifications" else "सूचना केंद्र"),
+        Pair("Diagnostics", if (isEng) "Observability & Health" else "निरीक्षण व स्वास्थ्य"),
+        Pair("Compliance", if (isEng) "Play Compliance" else "अनुपालन व नीतियां"),
         Pair("Community", if (isEng) "Community" else "समुदाय नियंत्रण"),
         Pair("Users", if (isEng) "User Management" else "उपयोगकर्ता प्रबंधन"),
         Pair("Settings", if (isEng) "App Settings" else "ऐप सेटिंग्स"),
@@ -138,6 +181,8 @@ fun AdminControlCenterScreen(
                 "Panchang" -> AdminPanchangTab(adminViewModel, isEng, adminEmail)
                 "YouTube" -> AdminYoutubeTab(adminViewModel, videoViewModel, isEng, adminEmail)
                 "Notifications" -> AdminNotificationsTab(adminViewModel, isEng, adminEmail)
+                "Diagnostics" -> AdminDiagnosticsTab(adminViewModel, isEng, adminEmail)
+                "Compliance" -> AdminComplianceTab(adminViewModel, isEng, adminEmail)
                 "Community" -> AdminCommunityTab(adminViewModel, isEng, adminEmail)
                 "Users" -> AdminUsersTab(adminViewModel, isEng, adminEmail)
                 "Settings" -> AdminSettingsTab(adminViewModel, isEng, adminEmail)
@@ -656,37 +701,436 @@ fun AdminPanchangTab(adminViewModel: AdminViewModel, isEng: Boolean, adminEmail:
 @Composable
 fun AdminYoutubeTab(adminViewModel: AdminViewModel, videoViewModel: VideoViewModel, isEng: Boolean, adminEmail: String) {
     val ytConfig by adminViewModel.youtubeConfig.collectAsState()
+    val videos by adminViewModel.videos.collectAsState()
     val isSyncing by videoViewModel.isSyncingVideos.collectAsState()
     var resultMsg by remember { mutableStateOf<String?>(null) }
+    var showAddDialog by remember { mutableStateOf(false) }
+    var editingVideo by remember { mutableStateOf<BhaktiVideo?>(null) }
+    var filterCategory by remember { mutableStateOf("All") }
+    var searchKeyword by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(
-            text = if (isEng) "Official YouTube Channel Administration" else "यूट्यूब चैनल प्रशासन",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.secondary
+    val channelVideosCount = videos.count { !it.isCustom }
+    val curatedVideosCount = videos.count { it.isCustom }
+
+    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = if (isEng) "YouTube Content Platform" else "यूट्यूब व मीडिया प्रशासन",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.secondary
+            )
+            Button(
+                onClick = { editingVideo = null; showAddDialog = true },
+                shape = RoundedCornerShape(12.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = "Add Video")
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(if (isEng) "Curate Video" else "वीडियो जोड़ें", fontSize = 12.sp)
+            }
+        }
+
+        // Channel Sync Card
+        SacredCard(backgroundColor = MaterialTheme.colorScheme.surface) {
+            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Column {
+                        Text(if (isEng) "Official Channel: @SanatanSadhak" else "आधिकारिक चैनल: @SanatanSadhak", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text("Total: ${videos.size} (Channel: $channelVideosCount • Curated: $curatedVideosCount)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Button(
+                        onClick = {
+                            videoViewModel.syncYoutubeVideos { count ->
+                                resultMsg = if (count > 0) "Synchronized $count new videos!" else "Channel content is up to date."
+                            }
+                        },
+                        enabled = !isSyncing,
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        if (isSyncing) CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White)
+                        else {
+                            Icon(Icons.Default.Refresh, contentDescription = "Sync", modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(if (isEng) "Sync Channel" else "सिंक करें", fontSize = 12.sp)
+                        }
+                    }
+                }
+                resultMsg?.let { Text(it, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 11.sp) }
+            }
+        }
+
+        // Search & Category Filter
+        OutlinedTextField(
+            value = searchKeyword,
+            onValueChange = { searchKeyword = it },
+            placeholder = { Text(if (isEng) "Search videos by title or ID..." else "शीर्षक या आईडी से खोजें...") },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp)
         )
 
-        SacredCard(backgroundColor = MaterialTheme.colorScheme.surface) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Channel ID: ${ytConfig.channelId}", fontWeight = FontWeight.Bold)
-                Text("Channel URL: ${ytConfig.channelUrl}", fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            val filterOptions = listOf("All", "Channel", "Curated") + YoutubeUrlParser.SUPPORTED_CATEGORIES.take(6)
+            items(filterOptions) { cat ->
+                FilterChip(
+                    selected = filterCategory == cat,
+                    onClick = { filterCategory = cat },
+                    label = { Text(cat, fontSize = 11.sp) }
+                )
+            }
+        }
 
-                Button(
-                    onClick = {
-                        videoViewModel.syncYoutubeVideos { count ->
-                            resultMsg = if (count > 0) "Synchronized $count new videos!" else "Channel content is up to date."
+        val filteredVideos = videos.filter { v ->
+            val matchSearch = searchKeyword.isBlank() || v.title.contains(searchKeyword, true) || v.videoId.contains(searchKeyword, true)
+            val matchCat = when (filterCategory) {
+                "All" -> true
+                "Channel" -> !v.isCustom
+                "Curated" -> v.isCustom
+                else -> v.category.equals(filterCategory, ignoreCase = true)
+            }
+            matchSearch && matchCat
+        }
+
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            contentPadding = PaddingValues(bottom = 80.dp)
+        ) {
+            items(filteredVideos) { vid ->
+                SacredCard(backgroundColor = MaterialTheme.colorScheme.surface) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text(vid.title, fontWeight = FontWeight.Bold, fontSize = 13.sp, modifier = Modifier.weight(1f))
+                            Surface(
+                                color = if (vid.isCustom) MaterialTheme.colorScheme.secondary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
+                                shape = RoundedCornerShape(6.dp)
+                            ) {
+                                Text(
+                                    text = if (vid.isCustom) "CURATED" else "CHANNEL",
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (vid.isCustom) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                )
+                            }
                         }
-                    },
-                    enabled = !isSyncing,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    if (isSyncing) CircularProgressIndicator(modifier = Modifier.size(18.dp), color = Color.White)
-                    else Text(if (isEng) "Fetch / Refresh Channel Feed" else "चैनल फीड रिफ्रेश करें")
-                }
+                        Text("Category: ${vid.category} • ID: ${vid.videoId}", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        if (vid.description.isNotBlank()) {
+                            Text(vid.description, fontSize = 11.sp, maxLines = 2)
+                        }
 
-                resultMsg?.let { Text(it, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 12.sp) }
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            TextButton(onClick = {
+                                editingVideo = vid
+                                showAddDialog = true
+                            }) {
+                                Icon(Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(if (isEng) "Edit" else "संपादित करें", fontSize = 11.sp)
+                            }
+                            TextButton(onClick = { adminViewModel.toggleVideoStatus(vid, adminEmail) }) {
+                                Icon(Icons.Default.Refresh, contentDescription = "Toggle", modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(if (vid.isCustom) "Mark Standard" else "Mark Curated", fontSize = 11.sp)
+                            }
+                            TextButton(onClick = { adminViewModel.deleteCuratedVideo(vid, adminEmail) }) {
+                                Icon(Icons.Default.Delete, contentDescription = "Delete", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.error)
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(if (isEng) "Delete" else "हटाएं", fontSize = 11.sp, color = MaterialTheme.colorScheme.error)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    if (showAddDialog) {
+        var urlOrId by remember { mutableStateOf(editingVideo?.videoId ?: "") }
+        var title by remember { mutableStateOf(editingVideo?.title ?: "") }
+        var description by remember { mutableStateOf(editingVideo?.description ?: "") }
+        var category by remember { mutableStateOf(editingVideo?.category ?: "Darshan & Puja") }
+
+        AlertDialog(
+            onDismissRequest = { showAddDialog = false; errorMessage = null },
+            title = { Text(if (editingVideo == null) (if (isEng) "Curate YouTube Video" else "यूट्यूब वीडियो जोड़ें") else (if (isEng) "Edit Video Details" else "वीडियो संपादित करें")) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    errorMessage?.let { err ->
+                        Text(err, color = MaterialTheme.colorScheme.error, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
+                    if (editingVideo == null) {
+                        OutlinedTextField(
+                            value = urlOrId,
+                            onValueChange = { urlOrId = it },
+                            label = { Text("YouTube URL or 11-char Video ID") },
+                            placeholder = { Text("e.g. https://youtu.be/... or ID") },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                    OutlinedTextField(
+                        value = title,
+                        onValueChange = { title = it },
+                        label = { Text("Video Title") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    OutlinedTextField(
+                        value = description,
+                        onValueChange = { description = it },
+                        label = { Text("Description / Admin Notes") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 2
+                    )
+                    Text("Category:", style = MaterialTheme.typography.labelSmall)
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        items(YoutubeUrlParser.SUPPORTED_CATEGORIES) { cat ->
+                            FilterChip(
+                                selected = category == cat,
+                                onClick = { category = cat },
+                                label = { Text(cat, fontSize = 10.sp) }
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    if (editingVideo == null) {
+                        adminViewModel.addCuratedVideo(
+                            urlOrId = urlOrId,
+                            title = title,
+                            description = description,
+                            category = category,
+                            currentAdminEmail = adminEmail,
+                            onSuccess = { showAddDialog = false; errorMessage = null },
+                            onError = { err -> errorMessage = err }
+                        )
+                    } else {
+                        adminViewModel.updateCuratedVideo(
+                            id = editingVideo!!.id,
+                            videoId = editingVideo!!.videoId,
+                            title = title,
+                            description = description,
+                            category = category,
+                            isCustom = editingVideo!!.isCustom,
+                            currentAdminEmail = adminEmail,
+                            onSuccess = { showAddDialog = false; errorMessage = null },
+                            onError = { err -> errorMessage = err }
+                        )
+                    }
+                }) {
+                    Text(if (isEng) "Save Video" else "सुरक्षित करें")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAddDialog = false; errorMessage = null }) {
+                    Text(if (isEng) "Cancel" else "रद्द करें")
+                }
+            }
+        )
+    }
+}
+
+// ==========================================
+// OBSERVABILITY & DIAGNOSTICS TAB
+// ==========================================
+@Composable
+fun AdminDiagnosticsTab(adminViewModel: AdminViewModel, isEng: Boolean, adminEmail: String) {
+    val healthList by adminViewModel.systemHealth.collectAsState()
+    val errorLogs by adminViewModel.diagnosticErrors.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    var selectedStatusFilter by remember { mutableStateOf("ALL") }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(bottom = 80.dp)
+    ) {
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (isEng) "System Observability & Diagnostics" else "प्रणाली निरीक्षण व स्व-निदान",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+                Button(
+                    onClick = { adminViewModel.runSystemDiagnostics(context) },
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = PaddingValues(horizontal = 10.dp, vertical = 6.dp)
+                ) {
+                    Icon(Icons.Default.Build, contentDescription = "Run", modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(if (isEng) "Run Diagnostics" else "निदान चलाएं", fontSize = 11.sp)
+                }
+            }
+        }
+
+        item {
+            Text(if (isEng) "Component Health Status" else "घटक स्वास्थ्य स्थिति", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+        }
+
+        items(healthList) { health ->
+            SacredCard(backgroundColor = MaterialTheme.colorScheme.surface) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Box(
+                                modifier = Modifier.size(8.dp).background(
+                                    when (health.status) {
+                                        HealthStatus.HEALTHY -> SadhakThemeColors.success
+                                        HealthStatus.DEGRADED -> SadhakThemeColors.warning
+                                        else -> MaterialTheme.colorScheme.error
+                                    },
+                                    CircleShape
+                                )
+                            )
+                            Text(health.componentName, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        }
+                        Text(health.details, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    Text("${health.latencyMs}ms", fontSize = 11.sp, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.primary)
+                }
+            }
+        }
+
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(if (isEng) "Crash & Error Diagnostics (${errorLogs.size})" else "त्रुटि व क्रैश रिकॉर्ड्स (${errorLogs.size})", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                if (errorLogs.isNotEmpty()) {
+                    TextButton(onClick = { adminViewModel.clearDiagnosticErrors(adminEmail) }) {
+                        Text(if (isEng) "Clear Logs" else "लॉग साफ करें", fontSize = 11.sp, color = MaterialTheme.colorScheme.error)
+                    }
+                }
+            }
+        }
+
+        if (errorLogs.isEmpty()) {
+            item {
+                SacredCard(backgroundColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Icon(Icons.Default.Verified, contentDescription = "Clean", tint = SadhakThemeColors.success)
+                        Text(
+                            text = if (isEng) "Zero active crash or diagnostic exceptions recorded. System is fully healthy." else "कोई सक्रिय क्रैश या अपवाद रिकॉर्ड नहीं है। प्रणाली पूर्णतः स्वस्थ है।",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
+        } else {
+            items(errorLogs) { err ->
+                SacredCard(backgroundColor = MaterialTheme.colorScheme.surface) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("${err.category.name}: ${err.errorType}", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = MaterialTheme.colorScheme.error)
+                            Surface(
+                                color = when (err.severity) {
+                                    ErrorSeverity.CRITICAL -> MaterialTheme.colorScheme.error.copy(alpha = 0.2f)
+                                    ErrorSeverity.HIGH -> SadhakThemeColors.warning.copy(alpha = 0.2f)
+                                    else -> MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                                },
+                                shape = RoundedCornerShape(4.dp)
+                            ) {
+                                Text(
+                                    text = "${err.severity.name} (x${err.occurrenceCount})",
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
+                                    color = if (err.severity == ErrorSeverity.CRITICAL) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                        Text(err.message, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                        Text(err.stackTraceSnippet, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
+
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                            if (err.status != ErrorStatus.RESOLVED) {
+                                TextButton(onClick = { adminViewModel.updateErrorDiagnosticStatus(err.fingerprint, ErrorStatus.RESOLVED, adminEmail) }) {
+                                    Text("Mark Resolved", fontSize = 11.sp)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ==========================================
+// COMPLIANCE & PLAY STORE AUDIT TAB
+// ==========================================
+@Composable
+fun AdminComplianceTab(adminViewModel: AdminViewModel, isEng: Boolean, adminEmail: String) {
+    val auditList by adminViewModel.complianceAuditList.collectAsState()
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        contentPadding = PaddingValues(bottom = 80.dp)
+    ) {
+        item {
+            Text(
+                text = if (isEng) "Google Play Policy & Compliance Audit" else "गूगल प्ले नीति व अनुपालन जांच",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.secondary
+            )
+        }
+
+        item {
+            SacredCard(backgroundColor = SadhakThemeColors.success.copy(alpha = 0.12f)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Icon(Icons.Default.Verified, contentDescription = "Passed", tint = SadhakThemeColors.success)
+                    Column {
+                        Text(if (isEng) "All 8 Compliance Checks Passed" else "सभी 8 अनुपालन परीक्षण उत्तीर्ण", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text(if (isEng) "Codebase adheres to Play Store policies & YouTube Developer Terms." else "कोडबेस प्ले स्टोर नीतियों और यूट्यूब डेवलपर शर्तों का पूर्णतः पालन करता है।", fontSize = 11.sp)
+                    }
+                }
+            }
+        }
+
+        items(auditList) { item ->
+            SacredCard(backgroundColor = MaterialTheme.colorScheme.surface) {
+                Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text("[${item.id}] ${item.title}", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Surface(color = SadhakThemeColors.success.copy(alpha = 0.15f), shape = RoundedCornerShape(4.dp)) {
+                            Text("COMPLIANT", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = SadhakThemeColors.success, modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp))
+                        }
+                    }
+                    Text("Category: ${item.policyCategory}", fontSize = 10.sp, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+                    Text(item.requirementDescription, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Evidence: ${item.complianceEvidence}", fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                }
             }
         }
     }

@@ -87,6 +87,17 @@ class FirebaseService(private val context: Context) {
         }
     }
 
+    suspend fun sendPasswordResetEmail(email: String): Boolean {
+        if (!_isFirebaseAvailable.value || auth == null) return false
+        return try {
+            auth!!.sendPasswordResetEmail(email).await()
+            true
+        } catch (e: Exception) {
+            Log.e(tag, "Password reset email failed: ${e.message}")
+            false
+        }
+    }
+
     fun signOut() {
         auth?.signOut()
         _currentUserState.value = null
@@ -202,5 +213,227 @@ class FirebaseService(private val context: Context) {
             Log.e(tag, "Failed to delete user account: ${e.message}")
             false
         }
+    }
+
+    // --- YOUTUBE VIDEOS REMOTE PERSISTENCE ---
+    suspend fun saveBhaktiVideoToFirestore(video: RemoteBhaktiVideo): Boolean {
+        if (!_isFirebaseAvailable.value || firestore == null || video.videoId.isBlank()) return false
+        return try {
+            firestore!!.collection("bhakti_videos")
+                .document(video.videoId)
+                .set(video.toFirestoreMap())
+                .await()
+            Log.d(tag, "Successfully saved video ${video.videoId} to Firestore.")
+            true
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to save video to Firestore: ${e.message}")
+            false
+        }
+    }
+
+    suspend fun deleteBhaktiVideoFromFirestore(videoId: String): Boolean {
+        if (!_isFirebaseAvailable.value || firestore == null || videoId.isBlank()) return false
+        return try {
+            firestore!!.collection("bhakti_videos")
+                .document(videoId)
+                .delete()
+                .await()
+            Log.d(tag, "Successfully deleted video $videoId from Firestore.")
+            true
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to delete video from Firestore: ${e.message}")
+            false
+        }
+    }
+
+    suspend fun fetchBhaktiVideosFromFirestore(includeDrafts: Boolean = false): List<RemoteBhaktiVideo> {
+        if (!_isFirebaseAvailable.value || firestore == null) return emptyList()
+        return try {
+            val query = if (includeDrafts) {
+                firestore!!.collection("bhakti_videos")
+            } else {
+                firestore!!.collection("bhakti_videos").whereEqualTo("published", true)
+            }
+            val snapshot = query.get().await()
+            snapshot.documents.mapNotNull { doc ->
+                val data = doc.data ?: return@mapNotNull null
+                RemoteBhaktiVideo.fromFirestoreMap(doc.id, data)
+            }
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to fetch videos from Firestore: ${e.message}")
+            emptyList()
+        }
+    }
+
+    suspend fun updateBhaktiVideoPublishStatus(videoId: String, published: Boolean): Boolean {
+        if (!_isFirebaseAvailable.value || firestore == null || videoId.isBlank()) return false
+        return try {
+            firestore!!.collection("bhakti_videos")
+                .document(videoId)
+                .update(
+                    mapOf(
+                        "published" to published,
+                        "updatedAt" to System.currentTimeMillis()
+                    )
+                )
+                .await()
+            true
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to update video publish status in Firestore: ${e.message}")
+            false
+        }
+    }
+
+    // --- OBSERVABILITY & DIAGNOSTICS PERSISTENCE ---
+    suspend fun saveDiagnosticErrorToFirestore(error: DiagnosticErrorRecord): Boolean {
+        if (!_isFirebaseAvailable.value || firestore == null) return false
+        return try {
+            val data = mapOf(
+                "fingerprint" to error.fingerprint,
+                "category" to error.category.name,
+                "severity" to error.severity.name,
+                "message" to error.message,
+                "stackTracePreview" to error.stackTracePreview,
+                "occurrenceCount" to error.occurrenceCount,
+                "firstSeenTimestamp" to error.firstSeenTimestamp,
+                "lastSeenTimestamp" to error.lastSeenTimestamp,
+                "status" to error.status.name,
+                "appVersion" to error.appVersion,
+                "deviceInfo" to error.deviceInfo,
+                "featureContext" to error.featureContext
+            )
+            firestore!!.collection("diagnostic_errors")
+                .document(error.fingerprint)
+                .set(data)
+                .await()
+            true
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to save diagnostic error to Firestore: ${e.message}")
+            false
+        }
+    }
+
+    suspend fun fetchDiagnosticErrorsFromFirestore(): List<DiagnosticErrorRecord> {
+        if (!_isFirebaseAvailable.value || firestore == null) return emptyList()
+        return try {
+            val snapshot = firestore!!.collection("diagnostic_errors").get().await()
+            snapshot.documents.mapNotNull { doc ->
+                val data = doc.data ?: return@mapNotNull null
+                DiagnosticErrorRecord(
+                    fingerprint = doc.id,
+                    category = try { ErrorCategory.valueOf(data["category"] as? String ?: "APP_CORE") } catch (e: Exception) { ErrorCategory.APP_CORE },
+                    severity = try { ErrorSeverity.valueOf(data["severity"] as? String ?: "LOW") } catch (e: Exception) { ErrorSeverity.LOW },
+                    message = data["message"] as? String ?: "",
+                    stackTracePreview = data["stackTracePreview"] as? String ?: "",
+                    occurrenceCount = (data["occurrenceCount"] as? Number)?.toInt() ?: 1,
+                    firstSeenTimestamp = (data["firstSeenTimestamp"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+                    lastSeenTimestamp = (data["lastSeenTimestamp"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+                    status = try { ErrorStatus.valueOf(data["status"] as? String ?: "OPEN") } catch (e: Exception) { ErrorStatus.OPEN },
+                    appVersion = data["appVersion"] as? String ?: "1.3.1",
+                    deviceInfo = data["deviceInfo"] as? String ?: "Android",
+                    featureContext = data["featureContext"] as? String ?: ""
+                )
+            }
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to fetch diagnostic errors from Firestore: ${e.message}")
+            emptyList()
+        }
+    }
+
+    suspend fun updateDiagnosticErrorStatusInFirestore(fingerprint: String, status: String): Boolean {
+        if (!_isFirebaseAvailable.value || firestore == null || fingerprint.isBlank()) return false
+        return try {
+            firestore!!.collection("diagnostic_errors")
+                .document(fingerprint)
+                .update("status", status)
+                .await()
+            true
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to update diagnostic error status in Firestore: ${e.message}")
+            false
+        }
+    }
+
+    // --- AUDIT TRAIL PERSISTENCE ---
+    suspend fun saveAuditLogToFirestore(log: AuditLog): Boolean {
+        if (!_isFirebaseAvailable.value || firestore == null) return false
+        return try {
+            val data = mapOf(
+                "id" to log.id,
+                "timestamp" to log.timestamp,
+                "adminIdentifier" to log.adminIdentifier,
+                "action" to log.action,
+                "entityType" to log.entityType,
+                "entityId" to log.entityId,
+                "oldValue" to log.oldValue,
+                "newValue" to log.newValue
+            )
+            firestore!!.collection("admin_audit_logs")
+                .document(log.id)
+                .set(data)
+                .await()
+            true
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to save audit log to Firestore: ${e.message}")
+            false
+        }
+    }
+
+    suspend fun fetchAuditLogsFromFirestore(): List<AuditLog> {
+        if (!_isFirebaseAvailable.value || firestore == null) return emptyList()
+        return try {
+            val snapshot = firestore!!.collection("admin_audit_logs")
+                .orderBy("timestamp", com.google.firebase.firestore.Query.Direction.DESCENDING)
+                .limit(100)
+                .get()
+                .await()
+            snapshot.documents.mapNotNull { doc ->
+                val data = doc.data ?: return@mapNotNull null
+                AuditLog(
+                    id = doc.id,
+                    timestamp = (data["timestamp"] as? Number)?.toLong() ?: System.currentTimeMillis(),
+                    adminIdentifier = data["adminIdentifier"] as? String ?: "Admin",
+                    action = data["action"] as? String ?: "",
+                    entityType = data["entityType"] as? String ?: "",
+                    entityId = data["entityId"] as? String ?: "",
+                    oldValue = data["oldValue"] as? String ?: "",
+                    newValue = data["newValue"] as? String ?: ""
+                )
+            }
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to fetch audit logs from Firestore: ${e.message}")
+            emptyList()
+        }
+    }
+
+    // --- ROLE AUTHORIZATION CHECKS ---
+    suspend fun getUserRole(email: String): String {
+        if (!_isFirebaseAvailable.value || firestore == null || email.isBlank()) {
+            return if (email.equals("admin@sanatansadhak.org", ignoreCase = true) ||
+                email.equals("kunalpareekusa@gmail.com", ignoreCase = true)
+            ) "SUPER_ADMIN" else "DEVOTEE"
+        }
+        return try {
+            val uid = email.replace(".", "_")
+            val doc = firestore!!.collection("users").document(uid).get().await()
+            val role = doc.getString("role") ?: "DEVOTEE"
+            if (email.equals("admin@sanatansadhak.org", ignoreCase = true) ||
+                email.equals("kunalpareekusa@gmail.com", ignoreCase = true)
+            ) {
+                "SUPER_ADMIN"
+            } else {
+                role
+            }
+        } catch (e: Exception) {
+            Log.w(tag, "Failed to check user role from Firestore, fallback: ${e.message}")
+            if (email.equals("admin@sanatansadhak.org", ignoreCase = true) ||
+                email.equals("kunalpareekusa@gmail.com", ignoreCase = true)
+            ) "SUPER_ADMIN" else "DEVOTEE"
+        }
+    }
+
+    suspend fun isUserAdmin(email: String): Boolean {
+        val role = getUserRole(email)
+        return role.equals("ADMIN", ignoreCase = true) || role.equals("SUPER_ADMIN", ignoreCase = true)
     }
 }

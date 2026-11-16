@@ -82,7 +82,7 @@ class UserRepository private constructor(context: Context) {
                     settingDao.insertSetting(AppSetting("public_posting_enabled", "false"))
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                android.util.Log.e("UserRepository", "Error pre-populating database", e)
             }
         }
     }
@@ -121,6 +121,7 @@ class UserRepository private constructor(context: Context) {
     }
 
     fun getAllUsers() = userDao.getAllUsers()
+    suspend fun getUserByEmail(email: String) = userDao.getUserByEmail(email)
     suspend fun updateUserCanPost(email: String, canPost: Boolean) = userDao.updateUserCanPost(email, canPost)
     suspend fun updateUserRole(email: String, role: String) = userDao.updateUserRole(email, role)
 

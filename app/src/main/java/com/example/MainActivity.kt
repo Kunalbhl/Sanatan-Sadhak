@@ -119,7 +119,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         com.example.ui.audio.SadhakAudioManager.init(this)
         enableEdgeToEdge()
-        
+
         // Pre-create WebView cache directories to prevent Chromium opendir errors on startup
         try {
             val webViewCacheDirWasm = java.io.File(cacheDir, "WebView/Default/HTTP Cache/Code Cache/wasm")
@@ -131,7 +131,7 @@ class MainActivity : ComponentActivity() {
                 webViewCacheDirJs.mkdirs()
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            android.util.Log.w("MainActivity", "Note: WebView cache directory initialization handled", e)
         }
 
 
@@ -174,6 +174,7 @@ class MainActivity : ComponentActivity() {
                 val userRole by viewModel.userRole.collectAsState()
                 val showLanguagePref by viewModel.showLanguagePrefDialog.collectAsState()
                 val showGuestPromo by viewModel.showGuestPromoDialog.collectAsState()
+                val shouldShowAutomaticOnboarding by viewModel.shouldShowAutomaticOnboarding.collectAsState()
 
                 var showNotificationDialog by remember { mutableStateOf(false) }
                 val hasNewNotifications by viewModel.hasNewNotifications.collectAsState()
@@ -196,10 +197,7 @@ class MainActivity : ComponentActivity() {
                         val isBottomBarVisible by viewModel.isBottomBarVisible.collectAsState()
                         if (isBottomBarVisible) {
                             Column {
-                                val isPlayerVisible by viewModel.isAudioPlayerVisible.collectAsState()
-                                if (isPlayerVisible) {
-                                    PersistentAudioPlayer(viewModel = viewModel, isEnglish = isEng)
-                                }
+                                com.example.ui.audio.PersistentMiniPlayer(isEnglish = isEng)
                                 SadhakBottomBar(
                                     currentScreen = currentScreen,
                                     userRole = userRole,
@@ -237,6 +235,8 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                         }
+
+                        com.example.ui.audio.FullAudioPlayerModal(isEnglish = isEng)
 
                         if (showNotificationDialog) {
                             val notificationsList by viewModel.notifications.collectAsState()
@@ -480,6 +480,19 @@ class MainActivity : ComponentActivity() {
                                 modifier = Modifier.testTag("guest_promo_dialog")
                             )
                         }
+
+                        // 3. First-Time Devotee Guided Onboarding Tour
+                        if (shouldShowAutomaticOnboarding && !showLanguagePref) {
+                            com.example.ui.screens.onboarding.DevoteeOnboardingDialog(
+                                isEnglish = isEng,
+                                onComplete = {
+                                    viewModel.completeOnboardingForActiveUser()
+                                },
+                                onSkip = {
+                                    viewModel.skipOnboardingForActiveUser()
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -594,84 +607,32 @@ fun SadhakTopAppBar(
 
 @Composable
 fun SanatanSadhakLogo(modifier: Modifier = Modifier, logoSize: androidx.compose.ui.unit.Dp = 36.dp, isAnimated: Boolean = false) {
-    
-    val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition()
+    val infiniteTransition = androidx.compose.animation.core.rememberInfiniteTransition(label = "logo_anim")
     val alpha by infiniteTransition.animateFloat(
-        initialValue = if (isAnimated) 0.4f else 1f,
+        initialValue = if (isAnimated) 0.6f else 1f,
         targetValue = 1f,
         animationSpec = androidx.compose.animation.core.infiniteRepeatable(
-            animation = androidx.compose.animation.core.tween(800),
+            animation = androidx.compose.animation.core.tween(1200),
             repeatMode = androidx.compose.animation.core.RepeatMode.Reverse
         ),
         label = "blink"
     )
 
-    val primaryColor = SadhakThemeColors.primary
     Box(
         modifier = Modifier
             .size(logoSize)
             .then(modifier)
             .alpha(if (isAnimated) alpha else 1f)
             .clip(CircleShape)
-            .background(Color(0xFF4A0E17)) // Deep sacred wine/maroon
-            .border(2.dp, SadhakThemeColors.accent, CircleShape),
+            .background(Color(0xFF2B090F))
+            .border(1.5.dp, SadhakThemeColors.sacredGold, CircleShape),
         contentAlignment = Alignment.Center
     ) {
-        // Draw Trishula (Trident) using Canvas
-        Canvas(modifier = Modifier.fillMaxSize().padding(4.dp)) {
-            val w = size.width
-            val h = size.height
-            
-            // Central prong
-            drawLine(
-                color = primaryColor,
-                start = Offset(w / 2, h * 0.15f),
-                end = Offset(w / 2, h * 0.85f),
-                strokeWidth = 2.dp.toPx()
-            )
-            
-            // Left curve
-            val leftPath = Path().apply {
-                moveTo(w / 2, h * 0.7f)
-                quadraticTo(w * 0.2f, h * 0.65f, w * 0.25f, h * 0.3f)
-            }
-            drawPath(
-                path = leftPath,
-                color = primaryColor,
-                style = Stroke(width = 1.5.dp.toPx())
-            )
-            
-            // Right curve
-            val rightPath = Path().apply {
-                moveTo(w / 2, h * 0.7f)
-                quadraticTo(w * 0.8f, h * 0.65f, w * 0.75f, h * 0.3f)
-            }
-            drawPath(
-                path = rightPath,
-                color = primaryColor,
-                style = Stroke(width = 1.5.dp.toPx())
-            )
-            
-            // Flame Glow on top
-            drawCircle(
-                color = Color(0xFFFF9800).copy(alpha = 0.8f),
-                radius = 3.dp.toPx(),
-                center = Offset(w / 2, h * 0.15f)
-            )
-            drawCircle(
-                color = Color(0xFFFFEB3B),
-                radius = 1.5.dp.toPx(),
-                center = Offset(w / 2, h * 0.15f)
-            )
-        }
-        
-        // Golden OM symbol overlay in the center
-        Text(
-            text = "ॐ",
-            color = Color(0xFFFFC107),
-            fontWeight = FontWeight.Bold,
-            fontSize = 13.sp,
-            modifier = Modifier.offset(y = 1.dp)
+        androidx.compose.foundation.Image(
+            painter = androidx.compose.ui.res.painterResource(id = R.drawable.app_logo),
+            contentDescription = "Sanatan Sadhak Logo",
+            modifier = Modifier.fillMaxSize(),
+            contentScale = androidx.compose.ui.layout.ContentScale.Crop
         )
     }
 }

@@ -34,6 +34,15 @@ class AppPreferencesRepository(private val context: Context) {
     private val _soundEnabled = MutableStateFlow(prefs.getBoolean("sound_enabled", true))
     val soundEnabled: StateFlow<Boolean> = _soundEnabled
 
+    private val _hasCompletedOnboarding = MutableStateFlow(prefs.getBoolean("onboarding_completed", false))
+    val hasCompletedOnboarding: StateFlow<Boolean> = _hasCompletedOnboarding
+
+    fun setOnboardingCompleted(completed: Boolean) {
+        _hasCompletedOnboarding.value = completed
+        prefs.edit().putBoolean("onboarding_completed", completed).apply()
+        AppPreferences.setOnboardingCompleted(completed)
+    }
+
     fun setSoundEnabled(enabled: Boolean) {
         _soundEnabled.value = enabled
         prefs.edit().putBoolean("sound_enabled", enabled).apply()

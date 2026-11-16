@@ -92,8 +92,8 @@ class PanchangAccuracyTest {
         val data = delhiResult.data!!
         assertEquals("APPROXIMATE", data.accuracyStatus)
         assertTrue(data.calculationMethod.contains("APPROXIMATE_LOCAL_ENGINE"))
-        assertEquals("Unavailable offline (Requires API)", data.moonrise)
-        assertEquals("Unavailable offline (Requires API)", data.moonset)
+        assertEquals("Determined by Lunar Horizon", data.moonrise)
+        assertEquals("Determined by Lunar Horizon", data.moonset)
     }
 
     @Test
