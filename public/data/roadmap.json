@@ -1,0 +1,9 @@
+[
+  { "status": "progress", "title": "Daily reminders for Ekadashi & festivals", "titleHi": "एकादशी व त्योहार रिमाइंडर", "text": "A gentle notification the evening before every vrat." },
+  { "status": "progress", "title": "Moonrise & moonset times", "titleHi": "चंद्रोदय व चंद्रास्त", "text": "Precise moonrise for Karva Chauth and Sankashti Chaturthi." },
+  { "status": "planned", "title": "Home-screen widget", "titleHi": "होम-स्क्रीन विजेट", "text": "Today's tithi, nakshatra and a tap-to-count japa widget." },
+  { "status": "planned", "title": "Family sankalpa", "titleHi": "पारिवारिक संकल्प", "text": "Share a japa goal with family and chant together." },
+  { "status": "planned", "title": "Offline audio downloads", "titleHi": "ऑफ़लाइन ऑडियो", "text": "Save chalisas and stotras for travel." },
+  { "status": "done", "title": "Accurate sidereal Panchang", "titleHi": "सटीक निरयन पंचांग", "text": "Shipped in 1.2." },
+  { "status": "done", "title": "Temple Finder", "titleHi": "मंदिर खोज", "text": "Shipped in 1.1." }
+]

@@ -740,6 +740,7 @@ fun MantraLibraryView(viewModel: SadhakViewModel, isEnglish: Boolean, onMantraCl
     val userRole by viewModel.userRole.collectAsState()
     val favoriteMantras by viewModel.favoriteMantras.collectAsState(initial = emptyList())
     val uriHandler = LocalUriHandler.current
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     var newTitle by remember { mutableStateOf("") }
     var newContent by remember { mutableStateOf("") }
@@ -960,9 +961,13 @@ fun MantraLibraryView(viewModel: SadhakViewModel, isEnglish: Boolean, onMantraCl
                             TextButton(
                                 onClick = {
                                     try {
-                                        uriHandler.openUri(fav.youtubeId)
+                                        // The field can hold a full link or a bare video ID
+                                        val link = fav.youtubeId.trim().let {
+                                            if (it.startsWith("http")) it else "https://www.youtube.com/watch?v=$it"
+                                        }
+                                        uriHandler.openUri(link)
                                     } catch (e: Exception) {
-                                        // Ignore
+                                        android.widget.Toast.makeText(context, if (isEnglish) "Couldn't open YouTube" else "यूट्यूब नहीं खुल सका", android.widget.Toast.LENGTH_SHORT).show()
                                     }
                                 }
                             ) {

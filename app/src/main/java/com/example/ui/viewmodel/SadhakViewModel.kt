@@ -1147,26 +1147,58 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
     private val _navigationHistory = MutableStateFlow<List<String>>(listOf("Home"))
     val navigationHistory: StateFlow<List<String>> = _navigationHistory
 
+    private val bhaktiTabs = listOf("Dashboard", "Mantras", "Timer", "My Mantras")
+    private val bhaktiToolTabs = listOf("Bell", "Counter", "KarmaLog", "Gratitude", "TempleFinder")
+
+    /**
+     * Maps any screen name (including loose names coming from AI chips or
+     * notification extras) to a screen the app can actually render.
+     * Returns null for unknown names so we never show a blank page.
+     */
+    private fun resolveRoute(raw: String): String? = when (raw.trim().lowercase()) {
+        "home" -> "Home"
+        "knowledge", "library", "articles", "vediclibrary" -> "Knowledge"
+        "community", "posts" -> "Community"
+        "bhakti", "sadhana", "mantras", "mantra" -> "Bhakti"
+        "bhaktitools", "tools", "counter", "japa", "bell", "temples", "templefinder" -> "BhaktiTools"
+        "videos", "video", "darshan" -> "Videos"
+        "instagramupdates", "updates", "divineupdates" -> "InstagramUpdates"
+        "chat", "aimitra", "ai" -> "Chat"
+        "calendar", "panchang" -> "Calendar"
+        "profile", "settings" -> "Profile"
+        "admin" -> "Admin"
+        else -> null
+    }
+
     fun setScreen(screen: String) {
-        com.example.ui.audio.SadhakAudioManager.stop()
-        if (screen == "Bhakti" && _bhaktiTab.value !in listOf("Dashboard", "Mantras", "Timer", "My Mantras")) {
+        if (screen.startsWith("Tab:")) { navigateToBhakti(screen.removePrefix("Tab:")); return }
+        val route = resolveRoute(screen) ?: run {
+            android.util.Log.w("SadhakNav", "Ignoring unknown screen '$screen'")
+            return
+        }
+        com.example.ui.audio.SadhakAudioManager.stopForNavigation()
+        // Deep links straight to a specific tool tab
+        when (screen.trim().lowercase()) {
+            "counter", "japa" -> _bhaktiTab.value = "Counter"
+            "bell" -> _bhaktiTab.value = "Bell"
+            "temples", "templefinder" -> _bhaktiTab.value = "TempleFinder"
+        }
+        if (route == "Bhakti" && _bhaktiTab.value !in bhaktiTabs) {
             _bhaktiTab.value = "Dashboard"
-        } else if (screen == "BhaktiTools" && _bhaktiTab.value !in listOf("Bell", "Counter", "KarmaLog", "Gratitude", "TempleFinder")) {
+        } else if (route == "BhaktiTools" && _bhaktiTab.value !in bhaktiToolTabs) {
             _bhaktiTab.value = "Counter"
         }
 
         // Manage navigation backstack cleanly
         val currentHistory = _navigationHistory.value.toMutableList()
-        if (screen == "Home") {
+        if (route == "Home") {
             _navigationHistory.value = listOf("Home")
-        } else {
-            if (currentHistory.isEmpty() || currentHistory.last() != screen) {
-                currentHistory.add(screen)
-                _navigationHistory.value = currentHistory
-            }
+        } else if (currentHistory.isEmpty() || currentHistory.last() != route) {
+            currentHistory.add(route)
+            _navigationHistory.value = currentHistory
         }
 
-        _currentScreen.value = screen
+        _currentScreen.value = route
     }
 
     fun navigateBack(): Boolean {
@@ -1176,10 +1208,10 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
             _navigationHistory.value = currentHistory
             
             val prevScreen = currentHistory.last()
-            com.example.ui.audio.SadhakAudioManager.stop()
-            if (prevScreen == "Bhakti" && _bhaktiTab.value !in listOf("Dashboard", "Mantras", "Timer", "My Mantras")) {
+            com.example.ui.audio.SadhakAudioManager.stopForNavigation()
+            if (prevScreen == "Bhakti" && _bhaktiTab.value !in bhaktiTabs) {
                 _bhaktiTab.value = "Dashboard"
-            } else if (prevScreen == "BhaktiTools" && _bhaktiTab.value !in listOf("Bell", "Counter", "KarmaLog", "Gratitude", "TempleFinder")) {
+            } else if (prevScreen == "BhaktiTools" && _bhaktiTab.value !in bhaktiToolTabs) {
                 _bhaktiTab.value = "Counter"
             }
             _currentScreen.value = prevScreen
@@ -1189,13 +1221,9 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
     }
 
     fun navigateToBhakti(tab: String) {
-        com.example.ui.audio.SadhakAudioManager.stop()
         _bhaktiTab.value = tab
-        if (tab in listOf("Dashboard", "Mantras", "Timer", "My Mantras")) {
-            setScreen("Bhakti")
-        } else {
-            setScreen("BhaktiTools")
-        }
+        // Go through setScreen so the back stack stays correct
+        setScreen(if (tab in bhaktiTabs) "Bhakti" else "BhaktiTools")
     }
 
 

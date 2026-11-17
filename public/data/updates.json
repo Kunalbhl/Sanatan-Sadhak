@@ -1,0 +1,30 @@
+[
+  {
+    "version": "1.2",
+    "date": "2026-11-17",
+    "title": "Accurate Panchang & a calmer, steadier app",
+    "titleHi": "सटीक पंचांग और अधिक स्थिर ऐप",
+    "tag": "new",
+    "highlights": [
+      { "icon": "🗓️", "title": "Panchang now uses true Sun & Moon positions", "titleHi": "पंचांग अब वास्तविक सूर्य-चंद्र स्थिति से", "text": "Sidereal zodiac with Lahiri ayanamsa, so nakshatra, yoga and rashi now match traditional panchangs (for example, Shravana on 16 Nov 2026)." },
+      { "icon": "🕉️", "title": "Background Om chant keeps playing", "titleHi": "पृष्ठभूमि ॐ जप चलता रहता है", "text": "The ambient chant no longer stops when you switch screens. It resumes after a mantra ends, and changing the volume doesn't restart it." },
+      { "icon": "🧭", "title": "Smoother navigation", "titleHi": "बेहतर नेविगेशन", "text": "Screens fade in, Back works correctly across tool tabs, and the Japa and Mala tiles on Home open the counter directly." }
+    ],
+    "more": ["Mitra links like 'View Daily Panchang' now open the right screen", "YouTube links work with bare video IDs", "Clearer messages when a link can't open", "Safer database upgrades (no crash on update)"],
+    "screens": ["home", "japa"]
+  },
+  {
+    "version": "1.1",
+    "date": "2026-08-14",
+    "title": "Video Hub, Temple Finder & guest mode",
+    "titleHi": "वीडियो हब, मंदिर खोज और अतिथि मोड",
+    "tag": "",
+    "highlights": [
+      { "icon": "▶️", "title": "Sacred Video Hub", "titleHi": "पवित्र वीडियो हब", "text": "Darshan, aarti and katha from curated YouTube channels, with festival specials and favourites." },
+      { "icon": "🛕", "title": "Temple Finder", "titleHi": "मंदिर खोज", "text": "A directory of sacred mandirs by city and deity, with distance, story and directions." },
+      { "icon": "🕊️", "title": "Guest mode", "titleHi": "अतिथि मोड", "text": "Use japa, Panchang, meditation and the library without an account." }
+    ],
+    "more": ["Knowledge Hub filters by deity, difficulty and format", "Gratitude log and Karma tracker", "Dark mode and Hindi language"],
+    "screens": ["temples", "knowledge"]
+  }
+]

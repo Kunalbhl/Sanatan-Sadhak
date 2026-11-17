@@ -1,0 +1,67 @@
+name: Build test APK
+
+# Builds an installable debug APK on every push to an app branch.
+# Download it from the run's "Artifacts" section (Actions tab) while signed in to GitHub.
+on:
+  push:
+    branches-ignore: [website/sanatan-sadhak-site]
+    paths-ignore: ['public/**', 'website/**', '*.md']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '21' }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: '9.3.1' }
+
+      - name: API keys (.env from repo secrets, empty if not set)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          PANCHANG_API_KEY: ${{ secrets.PANCHANG_API_KEY }}
+        run: |
+          : > .env
+          for k in GEMINI_API_KEY YOUTUBE_API_KEY PANCHANG_API_KEY; do
+            v="${!k}"; [ -n "$v" ] && echo "$k=$v" >> .env || echo "$k not set; using .env.example placeholder"
+          done
+
+      - name: Google Cloud auth (for Firebase config)
+        id: fb
+        continue-on-error: true
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/420062423164/locations/global/workloadIdentityPools/github/providers/github
+          service_account: github-deployer@sanatan-sadhak.iam.gserviceaccount.com
+      - name: Fetch google-services.json (if the Android app is registered in Firebase)
+        if: steps.fb.outcome == 'success'
+        continue-on-error: true
+        run: |
+          PKG=com.aistudio.sanatansadhak.ksdfgh
+          APP=$(npx --yes firebase-tools@13 apps:list ANDROID --project sanatan-sadhak --json | jq -r --arg p "$PKG" '.result[] | select(.packageName==$p) | .appId' | head -1)
+          if [ -z "$APP" ]; then echo "No Android app registered in Firebase yet; building without it."; exit 0; fi
+          npx --yes firebase-tools@13 apps:sdkconfig ANDROID "$APP" --project sanatan-sadhak -o app/google-services.json
+
+      - name: Debug signing key
+        run: keytool -genkeypair -keystore debug.keystore -storepass android -keypass android -alias androiddebugkey -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000
+
+      - name: Build debug APK
+        run: gradle :app:assembleDebug --stacktrace
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SanatanSadhak-${{ github.run_number }}
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 14

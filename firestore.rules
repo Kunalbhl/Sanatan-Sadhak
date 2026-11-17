@@ -46,6 +46,84 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+    // ---- Website forms (sanatan-sadhak.chaloone.com) ----
+    // Anyone may CREATE a validated document; nobody can read, change or delete from the
+    // site. Admins read them in the console or the app's admin panel.
+    function validEmail(e) {
+      return e is string && e.size() <= 200 && e.matches('^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$');
+    }
+    function optStr(d, k, max) {
+      return !(k in d) || (d[k] is string && d[k].size() <= max);
+    }
+    function siteMeta(d) {
+      return d.source == 'website' && d.page is string && d.page.size() <= 100
+        && d.createdAt == request.time;
+    }
+
+    match /early_access/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['name', 'email', 'city', 'interest', 'consent', 'source', 'page', 'createdAt'])
+        && validEmail(request.resource.data.email)
+        && request.resource.data.consent == true
+        && optStr(request.resource.data, 'name', 100)
+        && optStr(request.resource.data, 'city', 100)
+        && optStr(request.resource.data, 'interest', 60)
+        && siteMeta(request.resource.data);
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /deletion_requests/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['name', 'email', 'scope', 'reason', 'status', 'source', 'page', 'createdAt'])
+        && validEmail(request.resource.data.email)
+        && request.resource.data.scope in ['account', 'data_only']
+        && request.resource.data.status == 'pending'
+        && optStr(request.resource.data, 'name', 100)
+        && optStr(request.resource.data, 'reason', 1000)
+        && siteMeta(request.resource.data);
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /contact_messages/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['name', 'email', 'topic', 'message', 'source', 'page', 'createdAt'])
+        && validEmail(request.resource.data.email)
+        && request.resource.data.message is string
+        && request.resource.data.message.size() >= 5 && request.resource.data.message.size() <= 2000
+        && optStr(request.resource.data, 'name', 100)
+        && optStr(request.resource.data, 'topic', 40)
+        && siteMeta(request.resource.data);
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /suggestions/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['type', 'message', 'screen', 'consent', 'name', 'email', 'source', 'page', 'createdAt'])
+        && request.resource.data.type in ['idea', 'bug', 'feedback']
+        && request.resource.data.message is string
+        && request.resource.data.message.size() >= 5 && request.resource.data.message.size() <= 2000
+        && request.resource.data.consent is bool
+        && optStr(request.resource.data, 'screen', 60)
+        && optStr(request.resource.data, 'name', 100)
+        && (!('email' in request.resource.data) || validEmail(request.resource.data.email))
+        && siteMeta(request.resource.data);
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Public release notes (admin-written, readable by anyone)
+    // YouTube channels shown in the app's video library (managed in the admin panel)
+    match /youtube_channels/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Videos an admin hid from the app's video library
+    match /hidden_videos/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /app_updates/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     // Default deny
     match /{document=**} {
       allow read, write: if false;

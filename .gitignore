@@ -16,3 +16,9 @@
 local.properties
 .env
 debug.keystore
+
+# Local scratch
+*.log
+/tmp/
+scripts/scratch/
+website/__pycache__/
