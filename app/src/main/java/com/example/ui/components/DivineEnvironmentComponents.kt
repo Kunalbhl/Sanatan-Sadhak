@@ -180,25 +180,21 @@ fun DivineEnvironmentBanner(
                 shape = RoundedCornerShape(20.dp)
             )
     ) {
-        // Dynamic Canvas Artwork (Temple, Animated Flag, Flying Birds, Celestial Aura)
-        Canvas(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(130.dp)
-        ) {
-            drawDivineAtmosphere(
-                atmosphere = atmosphere,
-                flagWavePhase = flagWavePhase,
-                templeParallax = templeParallaxOffset,
-                birdsProgress = birdsProgress,
-                birdFlapPhase = birdFlapPhase
-            )
-        }
+        // Temple photo scene (same artwork as the website): sun/moon by local time,
+        // waving dhwaja and flying birds; a soft scrim keeps the greeting readable.
+        TemplePhotoScene(Modifier.matchParentSize())
+        Box(
+            Modifier
+                .matchParentSize()
+                .background(Brush.horizontalGradient(listOf(Color(0x8C320F05), Color(0x26320F05), Color.Transparent)))
+        )
+        Spacer(Modifier.fillMaxWidth().height(180.dp))
 
         // Foreground Devotee Greeting Content
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .align(Alignment.CenterStart)
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
@@ -252,6 +248,17 @@ fun DivineEnvironmentBanner(
 
                 Spacer(modifier = Modifier.height(2.dp))
 
+                Text(
+                    text = "✦ ॥ JAI SHREE RAM ॥ ✦",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFFFD58A),
+                        fontSize = 10.sp,
+                        letterSpacing = 1.2.sp
+                    ),
+                    maxLines = 1
+                )
+
                 // 3. Secondary Devotee Greeting (Strictly "Welcome Devotee" / "Welcome [Name]")
                 Text(
                     text = greetingTargetText,
@@ -286,34 +293,7 @@ fun DivineEnvironmentBanner(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                IconButton(
-                    onClick = onNotificationClick,
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFFFF8EE).copy(alpha = 0.85f))
-                        .border(1.dp, Color(0xFFD4A23A).copy(alpha = 0.4f), CircleShape)
-                        .testTag("home_notifications_button")
-                ) {
-                    BadgedBox(
-                        badge = {
-                            if (hasNotifications) {
-                                Badge(
-                                    containerColor = Color(0xFF7A1720),
-                                    contentColor = Color.White
-                                )
-                            }
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = "Notifications",
-                            tint = Color(0xFF7A1720),
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-
+                // Notifications live in the top app header only (no bell on the banner).
                 if (showProfileControl) {
                     IconButton(
                         onClick = onProfileClick,
@@ -373,26 +353,17 @@ private fun getAtmosphereBackgroundBrush(atmosphere: DivineTimeAtmosphere): Brus
     }
 }
 
-private fun getAtmosphereTitleColor(atmosphere: DivineTimeAtmosphere): Color {
-    return when (atmosphere) {
-        DivineTimeAtmosphere.NIGHT -> Color(0xFFFFF8EE)
-        else -> Color(0xFF7A1720)
-    }
-}
+// Text sits on the temple photo, so it stays light at every time of day
+@Suppress("UNUSED_PARAMETER")
+private fun getAtmosphereTitleColor(atmosphere: DivineTimeAtmosphere): Color = Color(0xFFFFF8EE)
 
-private fun getAtmosphereSubtitleColor(atmosphere: DivineTimeAtmosphere): Color {
-    return when (atmosphere) {
-        DivineTimeAtmosphere.NIGHT -> Color(0xFFD4A23A)
-        else -> Color(0xFF6E4D3E)
-    }
-}
+// Text sits on the temple photo, so it stays light at every time of day
+@Suppress("UNUSED_PARAMETER")
+private fun getAtmosphereSubtitleColor(atmosphere: DivineTimeAtmosphere): Color = Color(0xFFFDE7C2)
 
-private fun getAtmosphereAccentColor(atmosphere: DivineTimeAtmosphere): Color {
-    return when (atmosphere) {
-        DivineTimeAtmosphere.NIGHT -> Color(0xFFFFB74D)
-        else -> Color(0xFFE58A16)
-    }
-}
+// Text sits on the temple photo, so it stays light at every time of day
+@Suppress("UNUSED_PARAMETER")
+private fun getAtmosphereAccentColor(atmosphere: DivineTimeAtmosphere): Color = Color(0xFFFFC56B)
 
 // Reusable Path instances to prevent heap allocations during Canvas frame callbacks
 private object ReusableCanvasPath {

@@ -1171,6 +1171,7 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
     }
 
     fun setScreen(screen: String) {
+        if (screen.startsWith("Tab:")) { navigateToBhakti(screen.removePrefix("Tab:")); return }
         val route = resolveRoute(screen) ?: run {
             android.util.Log.w("SadhakNav", "Ignoring unknown screen '$screen'")
             return

@@ -33,6 +33,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Campaign
+import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Article
 import androidx.compose.material.icons.filled.AutoAwesome
@@ -1058,13 +1060,13 @@ private fun HomeExploreSection(
                     title = if (isEng) "Mantra & Japa" else "मंत्र एवं जाप",
                     desc = if (isEng) "Sacred Chants & Mala counter" else "पवित्र मंत्र एवं माला जप",
                     icon = Icons.Default.SelfImprovement,
-                    route = "Bhakti"
+                    route = "Tab:Counter"
                 ),
                 ExploreCategoryItem(
                     title = if (isEng) "Chants / Stotra" else "स्तोत्र एवं आरती",
                     desc = if (isEng) "Aarti, Chalisa & Stotras" else "आरती, चालीसा एवं स्तोत्र",
                     icon = Icons.Default.MusicNote,
-                    route = "Bhakti"
+                    route = "Tab:Mantras"
                 ),
                 ExploreCategoryItem(
                     title = if (isEng) "Pooja Vidhi" else "पूजा विधि",
@@ -1076,13 +1078,13 @@ private fun HomeExploreSection(
                     title = if (isEng) "Dhyan Sadhana" else "ध्यान साधना",
                     desc = if (isEng) "Meditation & Mindful Peace" else "ध्यान एवं मानस शांति",
                     icon = Icons.Default.Star,
-                    route = "Bhakti"
+                    route = "Tab:Timer"
                 ),
                 ExploreCategoryItem(
                     title = if (isEng) "Temples & Darshan" else "तीर्थ एवं मंदिर",
                     desc = if (isEng) "Sacred Shrines & Darshan Guide" else "प्रसिद्ध मंदिर एवं दर्शन निर्देश",
                     icon = Icons.Default.AccountBalance,
-                    route = "BhaktiTools"
+                    route = "Tab:TempleFinder"
                 ),
                 ExploreCategoryItem(
                     title = if (isEng) "Spiritual Books" else "साहित्य एवं पुस्तकें",
@@ -1095,6 +1097,30 @@ private fun HomeExploreSection(
                     desc = if (isEng) "Sacred Chants & Audio Player" else "मंत्र, भजन एवं आरती ध्वनि",
                     icon = Icons.Default.Headphones,
                     route = "Bhakti"
+                ),
+                ExploreCategoryItem(
+                    title = if (isEng) "Community" else "सत्संग समुदाय",
+                    desc = if (isEng) "Ask, share & discuss with devotees" else "भक्तों से पूछें, साझा करें",
+                    icon = Icons.Default.Forum,
+                    route = "Community"
+                ),
+                ExploreCategoryItem(
+                    title = if (isEng) "Divine Updates" else "दिव्य अपडेट",
+                    desc = if (isEng) "Latest posts & temple news" else "नवीनतम पोस्ट एवं समाचार",
+                    icon = Icons.Default.Campaign,
+                    route = "InstagramUpdates"
+                ),
+                ExploreCategoryItem(
+                    title = if (isEng) "Panchang Calendar" else "पंचांग कैलेंडर",
+                    desc = if (isEng) "Tithi, vrat & festivals" else "तिथि, व्रत एवं पर्व",
+                    icon = Icons.Default.CalendarMonth,
+                    route = "Calendar"
+                ),
+                ExploreCategoryItem(
+                    title = if (isEng) "AI Mitra" else "एआई मित्र",
+                    desc = if (isEng) "Ask any dharma question" else "धर्म संबंधी कोई भी प्रश्न",
+                    icon = Icons.Default.AutoAwesome,
+                    route = "Chat"
                 ),
                 ExploreCategoryItem(
                     title = if (isEng) "Video Hub" else "वीडियो हब",
