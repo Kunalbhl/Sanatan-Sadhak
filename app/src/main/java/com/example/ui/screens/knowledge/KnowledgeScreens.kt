@@ -285,7 +285,7 @@ fun KnowledgeScreen(
             onWatchVideo = {
                 viewModel.setScreen("Videos")
             },
-            discussion = { com.example.ui.screens.community.SourceDiscussion(viewModel, "article", activeArticle!!.title, activeArticle!!.title) }
+            discussion = { com.example.ui.screens.SourceDiscussion(viewModel, "article", activeArticle!!.title, activeArticle!!.title) }
         )
     } else {
         val knowledgeListState = androidx.compose.foundation.lazy.rememberLazyListState()
