@@ -102,8 +102,12 @@ object YoutubeFetcher {
                     if (response.isSuccessful) {
                         val body = response.body?.string()
                         if (body != null) {
-                            return parseFeedXml(body)
+                            val parsed = parseFeedXml(body)
+                            Log.i("YoutubeFetcher", "RSS for $channelId: ${parsed.size} videos")
+                            return parsed
                         }
+                    } else {
+                        Log.w("YoutubeFetcher", "RSS for $channelId failed: HTTP ${response.code}")
                     }
                 }
             } catch (e: Exception) {
