@@ -254,6 +254,17 @@ fun KnowledgeScreen(
         }
     }
 
+    // Fetch / refresh the Vedas, Upanishads, Puranas … library from Wikipedia (weekly, in background)
+    val libCtx = androidx.compose.ui.platform.LocalContext.current
+    val libScope = rememberCoroutineScope()
+    LaunchedEffect(Unit) { com.example.data.ScriptureLibrary.syncIfStale(libCtx) }
+
+    val pendingArticle by viewModel.pendingArticleTitle.collectAsState()
+    LaunchedEffect(pendingArticle, articles) {
+        val t = pendingArticle ?: return@LaunchedEffect
+        articles.firstOrNull { it.title == t }?.let { activeArticle = it; viewModel.clearPendingArticle() }
+    }
+
     if (activeArticle != null) {
         LaunchedEffect(activeArticle) {
             viewModel.setBottomBarVisibility(false)
@@ -273,7 +284,8 @@ fun KnowledgeScreen(
             onBack = { activeArticle = null },
             onWatchVideo = {
                 viewModel.setScreen("Videos")
-            }
+            },
+            discussion = { com.example.ui.screens.SourceDiscussion(viewModel, "article", activeArticle!!.title, activeArticle!!.title) }
         )
     } else {
         val knowledgeListState = androidx.compose.foundation.lazy.rememberLazyListState()
@@ -285,7 +297,7 @@ fun KnowledgeScreen(
         val isRefreshing by viewModel.isRefreshing.collectAsState()
         androidx.compose.material3.pulltorefresh.PullToRefreshBox(
             isRefreshing = isRefreshing,
-            onRefresh = { viewModel.refreshGeneric() },
+            onRefresh = { viewModel.refreshGeneric(); libScope.launch { com.example.data.ScriptureLibrary.syncIfStale(libCtx, force = true) } },
             modifier = Modifier.fillMaxSize()
         ) {
             LazyColumn(
@@ -775,7 +787,8 @@ fun ArticleDetailScreen(
     article: KnowledgeArticle,
     isEnglish: Boolean,
     onBack: () -> Unit,
-    onWatchVideo: () -> Unit
+    onWatchVideo: () -> Unit,
+    discussion: @Composable () -> Unit = {}
 ) {
     val scrollState = rememberScrollState()
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -1311,6 +1324,11 @@ fun ArticleDetailScreen(
                     }
                 }
             }
+
+            // Discussion about this article (lives in the one Sanatan Community)
+            Spacer(modifier = Modifier.height(16.dp))
+            discussion()
+            Spacer(modifier = Modifier.height(80.dp))
         }
     }
 }

@@ -616,155 +616,6 @@ fun TempleFinderView(viewModel: SadhakViewModel) {
             .fillMaxSize()
             .testTag("temple_finder_container")
     ) {
-        // Controls Header Card
-        SacredCard(backgroundColor = MaterialTheme.colorScheme.surface) {
-            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.LocationOn, contentDescription = "Loc", tint = MaterialTheme.colorScheme.primary)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = if (isEng) "Sacred Mandir Directory" else "पावन हिंदू मंदिर निर्देशिका",
-                        fontWeight = FontWeight.Bold,
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.weight(1f))
-                    
-                    if (isLocating) {
-                        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                    } else {
-                        IconButton(
-                            onClick = {
-                                if (hasPermission) {
-                                    requestLocationUpdate()
-                                } else {
-                                    permissionLauncher.launch(
-                                        arrayOf(
-                                            Manifest.permission.ACCESS_FINE_LOCATION,
-                                            Manifest.permission.ACCESS_COARSE_LOCATION
-                                        )
-                                    )
-                                }
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.MyLocation, 
-                                contentDescription = "Use My Location", 
-                                tint = if (selectedCityName == "Current GPS") MaterialTheme.colorScheme.primary else Color.Gray
-                            )
-                        }
-                    }
-                }
-
-                locationError?.let { err ->
-                    Text(text = err, color = MaterialTheme.colorScheme.error, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-                }
-
-                // Pilgrimage Shortcuts
-                Text(
-                    text = if (isEng) "Set reference city or explore:" else "तीर्थ नगरी चुनें (दूरी गणना हेतु):",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                androidx.compose.foundation.lazy.LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    items(holyCities) { city ->
-                        val isSelected = selectedCityName == city.nameEn
-                        FilterChip(
-                            selected = isSelected,
-                            onClick = {
-                                isLocating = false
-                                locationError = null
-                                currentLatitude = city.lat
-                                currentLongitude = city.lon
-                                selectedCityName = city.nameEn
-                            },
-                            label = { Text(if (isEng) city.nameEn else city.nameHi, fontSize = 11.sp) },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                                selectedLabelColor = MaterialTheme.colorScheme.primary
-                            )
-                        )
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Search Field
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
-            placeholder = { Text(if (isEng) "Search temples by name or deity..." else "मंदिर या देवता के नाम से खोजें...") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline
-            ),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Deity Category Chips
-        androidx.compose.foundation.lazy.LazyRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            val filters = listOf(
-                Pair("All", if (isEng) "All Deities" else "सभी देव"),
-                Pair("Shiva", if (isEng) "Mahadev Shiva" else "शिव शंकर"),
-                Pair("Krishna", if (isEng) "Shri Krishna" else "श्री कृष्ण"),
-                Pair("Rama", if (isEng) "Bhagwan Ram" else "श्री राम"),
-                Pair("Hanuman", if (isEng) "Hanuman Ji" else "हनुमान जी"),
-                Pair("Devi", if (isEng) "Maa Shakti" else "भगवती देवी")
-            )
-            items(filters) { item ->
-                val isSelected = selectedDeityFilter == item.first
-                SuggestionChip(
-                    onClick = { selectedDeityFilter = item.first },
-                    label = { Text(item.second, fontSize = 11.sp) },
-                    colors = SuggestionChipDefaults.suggestionChipColors(
-                        containerColor = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surface,
-                        labelColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                    )
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = if (isEng) "Discovered Temples (${processedTemples.size})" else "पावन तीर्थ स्थल (${processedTemples.size})",
-                fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.secondary
-            )
-            Text(
-                text = if (isEng) "Calculated from: $selectedCityName" else "गणना केंद्र: ${if (selectedCityName == "Varanasi") "वाराणसी" else if (selectedCityName == "Vrindavan") "वृंदावन" else if (selectedCityName == "Ayodhya") "अयोध्या" else if (selectedCityName == "Haridwar") "हरिद्वार" else if (selectedCityName == "Rameshwaram") "रामेश्वरम" else if (selectedCityName == "Kedarnath") "केदारनाथ" else if (selectedCityName == "Current GPS") "वर्तमान स्थान" else selectedCityName}",
-                fontSize = 10.sp,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-
-        Spacer(modifier = Modifier.height(4.dp))
-        
         Box(modifier = Modifier.weight(1f)) {
             LazyColumn(
                 state = listState,
@@ -772,6 +623,160 @@ fun TempleFinderView(viewModel: SadhakViewModel) {
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
+                // Search, location and filters scroll away with the list
+                item {
+                    Column {
+                // Controls Header Card
+                SacredCard(backgroundColor = MaterialTheme.colorScheme.surface) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.LocationOn, contentDescription = "Loc", tint = MaterialTheme.colorScheme.primary)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (isEng) "Sacred Mandir Directory" else "पावन हिंदू मंदिर निर्देशिका",
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.weight(1f))
+                    
+                            if (isLocating) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                            } else {
+                                IconButton(
+                                    onClick = {
+                                        if (hasPermission) {
+                                            requestLocationUpdate()
+                                        } else {
+                                            permissionLauncher.launch(
+                                                arrayOf(
+                                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                                )
+                                            )
+                                        }
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.MyLocation, 
+                                        contentDescription = "Use My Location", 
+                                        tint = if (selectedCityName == "Current GPS") MaterialTheme.colorScheme.primary else Color.Gray
+                                    )
+                                }
+                            }
+                        }
+
+                        locationError?.let { err ->
+                            Text(text = err, color = MaterialTheme.colorScheme.error, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        }
+
+                        // Pilgrimage Shortcuts
+                        Text(
+                            text = if (isEng) "Set reference city or explore:" else "तीर्थ नगरी चुनें (दूरी गणना हेतु):",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        androidx.compose.foundation.lazy.LazyRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            items(holyCities) { city ->
+                                val isSelected = selectedCityName == city.nameEn
+                                FilterChip(
+                                    selected = isSelected,
+                                    onClick = {
+                                        isLocating = false
+                                        locationError = null
+                                        currentLatitude = city.lat
+                                        currentLongitude = city.lon
+                                        selectedCityName = city.nameEn
+                                    },
+                                    label = { Text(if (isEng) city.nameEn else city.nameHi, fontSize = 11.sp) },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                                        selectedLabelColor = MaterialTheme.colorScheme.primary
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Search Field
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    placeholder = { Text(if (isEng) "Search temples by name or deity..." else "मंदिर या देवता के नाम से खोजें...") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                    ),
+                    singleLine = true
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Deity Category Chips
+                androidx.compose.foundation.lazy.LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    val filters = listOf(
+                        Pair("All", if (isEng) "All Deities" else "सभी देव"),
+                        Pair("Shiva", if (isEng) "Mahadev Shiva" else "शिव शंकर"),
+                        Pair("Krishna", if (isEng) "Shri Krishna" else "श्री कृष्ण"),
+                        Pair("Rama", if (isEng) "Bhagwan Ram" else "श्री राम"),
+                        Pair("Hanuman", if (isEng) "Hanuman Ji" else "हनुमान जी"),
+                        Pair("Devi", if (isEng) "Maa Shakti" else "भगवती देवी")
+                    )
+                    items(filters) { item ->
+                        val isSelected = selectedDeityFilter == item.first
+                        SuggestionChip(
+                            onClick = { selectedDeityFilter = item.first },
+                            label = { Text(item.second, fontSize = 11.sp) },
+                            colors = SuggestionChipDefaults.suggestionChipColors(
+                                containerColor = if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f) else MaterialTheme.colorScheme.surface,
+                                labelColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                            )
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(
+                        text = if (isEng) "Discovered Temples (${processedTemples.size})" else "पावन तीर्थ स्थल (${processedTemples.size})",
+                        fontWeight = FontWeight.Bold,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    Text(
+                        text = if (isEng) "Calculated from: $selectedCityName" else "गणना केंद्र: ${if (selectedCityName == "Varanasi") "वाराणसी" else if (selectedCityName == "Vrindavan") "वृंदावन" else if (selectedCityName == "Ayodhya") "अयोध्या" else if (selectedCityName == "Haridwar") "हरिद्वार" else if (selectedCityName == "Rameshwaram") "रामेश्वरम" else if (selectedCityName == "Kedarnath") "केदारनाथ" else if (selectedCityName == "Current GPS") "वर्तमान स्थान" else selectedCityName}",
+                        fontSize = 10.sp,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(4.dp))
+        
+                    }
+                }
                 if (processedTemples.isEmpty()) {
                     item {
                         Box(

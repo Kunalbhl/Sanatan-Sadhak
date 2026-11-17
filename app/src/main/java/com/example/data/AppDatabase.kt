@@ -274,7 +274,7 @@ interface FestivalDao {
         SadhanaActivityLog::class,
         SadhanaBadgeEntity::class
     ],
-    version = 19,
+    version = 20,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -302,6 +302,15 @@ abstract class AppDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
+        /** v20: community posts remember where they were written + who wrote them (keeps all data). */
+        val MIGRATION_19_20 = object : androidx.room.migration.Migration(19, 20) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                listOf("sourceType", "sourceId", "sourceTitle", "authorEmail", "authorCity").forEach {
+                    db.execSQL("ALTER TABLE community_posts ADD COLUMN $it TEXT NOT NULL DEFAULT ''")
+                }
+            }
+        }
+
         fun getInstance(context: android.content.Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = androidx.room.Room.databaseBuilder(
@@ -313,6 +322,7 @@ abstract class AppDatabase : RoomDatabase() {
                 // crashes the app on launch for existing users. Cached data is rebuilt
                 // from Firebase/defaults. Add real Migrations before a public release
                 // to keep journals and karma logs across upgrades.
+                .addMigrations(MIGRATION_19_20)
                 .fallbackToDestructiveMigration(dropAllTables = true)
                 .build()
                 INSTANCE = instance

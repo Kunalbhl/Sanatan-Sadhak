@@ -486,6 +486,14 @@ fun VideoHubScreen(viewModel: SadhakViewModel, videoViewModel: com.example.ui.vi
                                         videoId = video.videoId,
                                         modifier = Modifier.fillMaxSize()
                                     )
+                                    val ytCtx = androidx.compose.ui.platform.LocalContext.current
+                                    androidx.compose.material3.TextButton(
+                                        onClick = { openInYouTube(ytCtx, video.videoId) },
+                                        modifier = Modifier
+                                            .align(Alignment.BottomEnd)
+                                            .padding(6.dp)
+                                            .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
+                                    ) { Text("Open in YouTube", color = Color.White, fontSize = 12.sp) }
                                     IconButton(
                                         onClick = { activeVideoUrl = null },
                                         modifier = Modifier
@@ -698,17 +706,10 @@ fun YouTubeWebView(
                 }
                 webChromeClient = android.webkit.WebChromeClient()
                 webViewClient = android.webkit.WebViewClient()
-                val html = """
-                    <html>
-                    <head>
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    </head>
-                    <body style="margin:0;padding:0;background-color:black;">
-                        <iframe width="100%" height="100%" src="https://www.youtube.com/embed/$videoId?autoplay=1&rel=0&playsinline=1" frameborder="0" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
-                    </body>
-                    </html>
-                """.trimIndent()
-                loadDataWithBaseURL("https://www.youtube.com", html, "text/html", "utf-8", null)
+                loadUrl(
+                    "https://www.youtube.com/embed/$videoId?autoplay=1&rel=0&playsinline=1&origin=https://sanatan-sadhak.chaloone.com",
+                    mapOf("Referer" to "https://sanatan-sadhak.chaloone.com")
+                )
             }
         },
         update = { webView ->
@@ -716,4 +717,22 @@ fun YouTubeWebView(
         },
         modifier = modifier
     )
+}
+
+
+/** Opens a video in the YouTube app, falling back to any browser; shows a toast if nothing can handle it. */
+fun openInYouTube(context: android.content.Context, videoId: String) {
+    val app = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("vnd.youtube:$videoId"))
+        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+    val web = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://www.youtube.com/watch?v=$videoId"))
+        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+    try {
+        context.startActivity(app)
+    } catch (e: Exception) {
+        try {
+            context.startActivity(web)
+        } catch (e2: Exception) {
+            android.widget.Toast.makeText(context, "No app available to open this video", android.widget.Toast.LENGTH_LONG).show()
+        }
+    }
 }
