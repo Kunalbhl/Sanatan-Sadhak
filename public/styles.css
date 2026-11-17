@@ -373,7 +373,7 @@ footer .bottom { margin-top: 32px; padding-top: 18px; border-top: 1px solid var(
 }
 
 /* Photo hero (owner's artwork) */
-.scene-card { aspect-ratio: 2372 / 1132 !important; background: #f6c27a; }
+.scene-card { aspect-ratio: 1672 / 941 !important; background: #f6c27a; }
 .scene-img, .scene-img img, .scene-grade, .scene-fx { position: absolute; inset: 0; width: 100%; height: 100%; }
 .scene-img img { object-fit: cover; transition: filter 1.2s ease; }
 .scene-grade { pointer-events: none; transition: background 1.2s ease; }
@@ -386,3 +386,5 @@ footer .bottom { margin-top: 32px; padding-top: 18px; border-top: 1px solid var(
 .hero-grid { grid-template-columns: .9fr 1.1fr; }
 @media (max-width: 1000px) { .hero-grid { grid-template-columns: 1fr; } }
 @media (max-width: 760px) { .scene-card { aspect-ratio: 4 / 3.3 !important; } .scene-img img { object-position: 100% 50%; } .scene-over { right: 38%; left: 14px !important; } .so-title { font-size: 1.15rem; } .so-chant { font-size: .62rem; } .so-date { font-size: .7rem; } .so-chip { font-size: .62rem; padding: 5px 9px; } }
+.scene-fg img { pointer-events: none; }
+@media (max-width: 760px) { .scene-fg img { object-position: 100% 50%; } }
