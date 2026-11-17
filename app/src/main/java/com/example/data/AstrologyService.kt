@@ -174,24 +174,15 @@ object AstrologyService {
             val moonriseStr = "Determined by Lunar Horizon"
             val moonsetStr = "Determined by Lunar Horizon"
 
-            // 4. Ecliptic Longitude Approximations (Lahiri Sidereal Zodiac)
-            val epoch = java.util.Calendar.getInstance().apply {
-                set(2020, 0, 1, 0, 0, 0)
-                set(java.util.Calendar.MILLISECOND, 0)
-            }
-            val msDiff = calendar.timeInMillis - epoch.timeInMillis
-            val daysDiff = (msDiff / (1000.0 * 60 * 60 * 24)).toInt()
+            // 4. Sun & Moon positions at local sunrise (Udaya Tithi convention), Lahiri sidereal zodiac
+            val sunriseUtHours = sunriseMinutes / 60.0 - timezone
+            val jdSunrise = VedicEphemeris.julianDay(year, month, day, sunriseUtHours)
+            val limbs = VedicEphemeris.limbs(jdSunrise)
+            val sunLongitude = limbs.sunSidereal
+            val moonLongitude = limbs.moonSidereal
 
-            // Sun mean longitude: 0° Aries around March 21 (day ~80)
-            val sunLongitude = ((dayOfYear - 80) * 0.98565 + 360) % 360
-            var lunarAge = (daysDiff + 5.5) % 29.530589
-            if (lunarAge < 0) lunarAge += 29.530589
-
-            // Moon longitude = Sun longitude + (lunarAge * 12.1907 degrees/day)
-            val moonLongitude = (sunLongitude + lunarAge * 12.19074) % 360
-
-            // Tithi = (Moon Longitude - Sun Longitude) / 12°
-            val tithiNum = (lunarAge / 29.530589 * 30).toInt() + 1
+            // Tithi = (Moon − Sun) / 12°
+            val tithiNum = limbs.tithiNumber
             val isShukla = tithiNum <= 15
             val localTithiNum = if (isShukla) tithiNum else tithiNum - 15
 
@@ -204,31 +195,28 @@ object AstrologyService {
             val pakshaVal = if (isShukla) "Shukla Paksha" else "Krishna Paksha"
             val tithiVal = "$tithiName · $pakshaVal"
 
-            // Tithi End Time calculation (Approximate)
-            val tithiRemFraction = 1.0 - ((lunarAge / 29.530589 * 30) % 1.0)
-            val tithiEndMin = (sunriseMinutes + (tithiRemFraction * 24 * 60).toInt()) % 1440
+            // Tithi end time, from the current relative motion of the Moon and Sun
+            val tithiEndMin = ((sunriseMinutes + limbs.hoursToTithiEnd * 60).toInt()) % 1440
             val tithiEndTimeStr = "${formatMin(tithiEndMin)} (Approx)"
 
             // Nakshatras (27) derived from Moon Sidereal Longitude (13°20' = 13.3333° each)
             val nakshatras = listOf("Ashwini", "Bharani", "Krittika", "Rohini", "Mrigashira", "Ardra", "Punarvasu", "Pushya", "Ashlesha", "Magha", "Purva Phalguni", "Uttara Phalguni", "Hasta", "Chitra", "Swati", "Vishakha", "Anuradha", "Jyeshtha", "Mula", "Purva Ashadha", "Uttara Ashadha", "Shravana", "Dhanishta", "Shatabhisha", "Purva Bhadrapada", "Uttara Bhadrapada", "Revati")
             val nakLords = listOf("Ketu", "Venus", "Sun", "Moon", "Mars", "Rahu", "Jupiter", "Saturn", "Mercury", "Ketu", "Venus", "Sun", "Moon", "Mars", "Rahu", "Jupiter", "Saturn", "Mercury", "Ketu", "Venus", "Sun", "Moon", "Mars", "Rahu", "Jupiter", "Saturn", "Mercury")
-            val nakNumDouble = (moonLongitude / 13.3333333) % 27
-            val nakIndex = nakNumDouble.toInt().coerceIn(0, 26)
+            val nakIndex = limbs.nakshatraIndex
             val nakshatraVal = nakshatras[nakIndex]
             val nakLordVal = nakLords[nakIndex]
-            val nakPadaVal = (((nakNumDouble % 1.0) * 4).toInt() + 1).toString()
+            val nakPadaVal = limbs.nakshatraPada.toString()
 
             // Yoga (27) = (Sun Longitude + Moon Longitude) / 13°20'
             val yogas = listOf("Vishkambha", "Priti", "Ayushman", "Saubhagya", "Sobhana", "Atiganda", "Sukarma", "Dhriti", "Shula", "Ganda", "Vriddhi", "Dhruva", "Vyaghat", "Harshana", "Vajra", "Siddhi", "Vyatipat", "Variyan", "Parigha", "Shiva", "Siddha", "Sadhya", "Shubha", "Shukla", "Brahma", "Indra", "Vaidhriti")
-            val yogaDouble = ((sunLongitude + moonLongitude) % 360) / 13.3333333
-            val yogaIndex = yogaDouble.toInt().coerceIn(0, 26)
+            val yogaIndex = limbs.yogaIndex
             val yogaVal = yogas[yogaIndex]
 
             // Karana (60 halves of 30 Tithis in a month)
             // Karana 1 = Kimstughna (Fixed)
             // Karanas 2..57 = 7 Movable Karanas repeated 8 times (Bava, Balava, Kaulava, Taitila, Gara, Vanija, Vishti)
             // Karana 58 = Shakuni (Fixed), 59 = Chatushpada (Fixed), 60 = Naga (Fixed)
-            val halfTithi = ((tithiNum - 1) * 2) + 1
+            val halfTithi = limbs.karanaNumber
             val karanaVal = when (halfTithi) {
                 1 -> "Kimstughna (Fixed)"
                 in 2..57 -> {
@@ -253,14 +241,16 @@ object AstrologyService {
             // Hindu Months & Ritu & Ayana
             val monthsHi = listOf("Chaitra", "Vaisakha", "Jyaistha", "Ashadha", "Shravana", "Bhadrapada", "Ashwin", "Kartik", "Margashirsha", "Pausha", "Magha", "Phalguna")
             val ritus = listOf("Vasanta (Spring)", "Grishma (Summer)", "Varsha (Monsoon)", "Sharad (Autumn)", "Hemant (Pre-winter)", "Shishir (Winter)")
-            var monthIndex = ((daysDiff / 29.530589).toInt() + 9) % 12
-            if (monthIndex < 0) monthIndex += 12
+            // Amanta month from the Sun's rashi at the last new moon; Purnimanta runs one month ahead in Krishna paksha
+            val amantaIndex = limbs.amantaMonthIndex
+            val monthIndex = if (isShukla) amantaIndex else (amantaIndex + 1) % 12
             val hinduMonthVal = "${monthsHi[monthIndex]} (Purnimanta)"
-            val rituVal = ritus[monthIndex / 2]
-            val ayanaVal = if (dayOfYear in 172..355) "Dakshinayana" else "Uttarayana"
+            val rituVal = ritus[amantaIndex / 2]
+            // Uttarayana while the sidereal Sun runs from Makara (270°) to the end of Mithuna (90°)
+            val ayanaVal = if (sunLongitude >= 270.0 || sunLongitude < 90.0) "Uttarayana" else "Dakshinayana"
 
-            // Vikram Samvat (Chaitradi convention)
-            val samvatVal = "${year + 57} Vikram Samvat (Chaitradi)"
+            // Vikram Samvat (Chaitradi): the new year starts at Chaitra Shukla Pratipada
+            val samvatVal = "${if (month >= 4 || amantaIndex <= 1) year + 57 else year + 56} Vikram Samvat (Chaitradi)"
 
             // Choghadiya Summary
             val choghadiyaList = when (dayOfWeek) {
@@ -321,7 +311,7 @@ object AstrologyService {
                 sourceType = "CALCULATED",
                 accuracyStatus = "APPROXIMATE",
                 calculationMethod = "${EngineClassification.LOCAL_ENGINE_CLASSIFICATION} (Lahiri Sidereal Zodiac)",
-                conventionNote = "Lahiri Ayanamsha (~23.85° Approx) • Purnimanta • Chaitradi Samvat",
+                conventionNote = "Lahiri Ayanamsha (${String.format("%.2f", VedicEphemeris.lahiriAyanamsa(jdSunrise))}°) • Sidereal • Purnimanta • Chaitradi Samvat",
                 festivalType = if (localTithiNum == 11) "REQUIRES_VERIFICATION" else "RULE_DERIVED_OBSERVANCE"
             )
             return PanchangResult(detailedPanchang, null, null, null, null, 200)
