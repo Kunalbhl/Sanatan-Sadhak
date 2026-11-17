@@ -17,10 +17,10 @@ service cloud.firestore {
 
     // Users collection
     match /users/{userId} {
-      // Anyone can read user public profiles, only owners and admins can write
-      allow read: if true;
-      // Users can update their own non-role fields. Admins can update anything.
-      allow create: if isOwner(userId) || isAdmin();
+      // Profiles hold email/mobile/city: only the owner and admins can read them.
+      allow read: if isOwner(userId) || isAdmin();
+      // Users create their own profile but can never give themselves a role; admins can.
+      allow create: if (isOwner(userId) && (!('role' in request.resource.data) || request.resource.data.role == 'Regular')) || isAdmin();
       allow update: if (isOwner(userId) && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])) || isAdmin();
       allow delete: if isAdmin();
     }

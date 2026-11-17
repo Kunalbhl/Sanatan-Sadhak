@@ -110,7 +110,7 @@ class FirebaseService(private val context: Context) {
             val userData = hashMapOf(
                 "email" to user.email,
                 "fullName" to user.fullName,
-                "role" to user.role,
+                // Roles are granted by an admin in Firebase, never self-assigned from the app
                 "avatar" to user.avatar,
                 "mobileNumber" to user.mobileNumber,
                 "city" to user.city,
@@ -121,7 +121,7 @@ class FirebaseService(private val context: Context) {
             val uid = auth?.currentUser?.uid ?: user.email.replace(".", "_")
             firestore!!.collection("users")
                 .document(uid)
-                .set(userData)
+                .set(userData, com.google.firebase.firestore.SetOptions.merge())
                 .await()
             true
         } catch (e: Exception) {
