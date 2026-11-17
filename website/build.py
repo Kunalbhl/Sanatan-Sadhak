@@ -11,7 +11,7 @@ import json
 import pathlib
 import re
 
-from motifs import render as motif
+from motifs import MOTIFS
 
 ROOT = pathlib.Path(__file__).resolve().parent
 PUBLIC = ROOT.parent / "public"
@@ -87,7 +87,9 @@ def jsonld(path, title, desc, url):
 def head(path, title, desc, scripts):
     url = SITE + ("/" if path == "index.html" else "/" + path.replace(".html", ""))
     robots = '<meta name="robots" content="noindex">' if path == "404.html" else ""
-    js = [f'<script defer src="/js/i18n.js?v={h("js/i18n.js")}"></script>',
+    js = [f'<script defer src="/js/divine-data.js?v={h("js/divine-data.js")}"></script>',
+          f'<script defer src="/js/divine.js?v={h("js/divine.js")}"></script>',
+          f'<script defer src="/js/i18n.js?v={h("js/i18n.js")}"></script>',
           f'<script defer src="/js/site.js?v={h("js/site.js")}"></script>']
     for s in scripts:
         if s == "forms":
@@ -135,7 +137,6 @@ def header(active):
     return f"""<body>
 <a class="skip" href="#main">Skip to content</a>
 <div class="bg-global" aria-hidden="true">
-  <svg class="om" viewBox="0 0 200 200"><circle cx="100" cy="100" r="96" fill="none" stroke="#f28c00" stroke-width="1.5"/><circle cx="100" cy="100" r="82" fill="none" stroke="#f5b301" stroke-width="1.2" stroke-dasharray="3 7"/><text x="100" y="140" text-anchor="middle" font-size="120" font-family="Noto Sans Devanagari, sans-serif" fill="none" stroke="#e65100" stroke-width="1.6">ॐ</text></svg>
 </div>
 <header class="nav">
   <div class="wrap">
@@ -200,10 +201,13 @@ FOOTER = """</main>
 
 def expand(body):
     body = body.replace("{{UPDATED}}", UPDATED)
-    return re.sub(r"\{\{motif:(\w+)(?: (\w+))?\}\}", lambda m: motif(m.group(1), m.group(2) or "right"), body)
+    # Section motifs are now one random floating field (js/divine.js); strip the old placeholders
+    return re.sub(r"[ \t]*\{\{motif:(\w+)(?: (\w+))?\}\}\n?", "", body)
 
 
 def build():
+    (PUBLIC / "js" / "divine-data.js").write_text(
+        "window.SadhakMotifs=" + json.dumps({k: re.sub(r"\s+", " ", v) for k, v in MOTIFS.items()}, ensure_ascii=False) + ";", encoding="utf-8")
     for out, src, title, desc, nav, scripts in PAGES:
         body = expand((ROOT / "pages" / src).read_text(encoding="utf-8"))
         html = head(out, title, desc, scripts) + "\n" + header(nav) + "\n" + body + "\n" + FOOTER

@@ -25,7 +25,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; overflow-x: clip; }
 section, .page-hero, .feature, footer { overflow-x: clip; }
-body { font-family: var(--font); background: var(--ivory); color: var(--text); line-height: 1.65; -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+body { font-family: var(--font); background: var(--ivory); color: var(--text); line-height: 1.65; -webkit-font-smoothing: antialiased; }
 html[lang="hi"] body { font-family: var(--deva); }
 img { max-width: 100%; display: block; }
 a { color: var(--saffron-2); text-decoration: none; transition: color .2s; }
@@ -131,8 +131,8 @@ section { padding: 84px 0; position: relative; }
 /* ---------- Line-art motifs behind sections ---------- */
 .motif { position: absolute; z-index: -1; pointer-events: none; color: var(--saffron); opacity: .16; }
 .motif svg { width: 100%; height: 100%; overflow: visible; }
-.motif .draw { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-.motif .gold { stroke: var(--gold); }
+.motif .draw, .dv .draw { fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.motif .gold, .dv .gold { stroke: var(--gold); }
 .motif.right { right: -60px; top: 40px; width: 420px; height: 420px; }
 .motif.left { left: -80px; top: 60px; width: 380px; height: 380px; }
 .m-rotate { transform-box: fill-box; transform-origin: center; animation: spin 90s linear infinite; }
@@ -340,3 +340,14 @@ footer .bottom { margin-top: 32px; padding-top: 18px; border-top: 1px solid var(
   *, *::before, *::after { animation: none !important; transition: none !important; }
   .reveal { opacity: 1; transform: none; }
 }
+
+/* ---------- Living divine background (js/divine.js) ---------- */
+.dv { position: absolute; left: 0; top: 0; will-change: transform, opacity; transition: color 2.5s ease; pointer-events: none; }
+.dv svg { width: 100%; height: 100%; overflow: visible; display: block; }
+.dv .gold { stroke: currentColor; opacity: .7; }
+.dv-text { font-family: var(--deva); font-weight: 700; white-space: nowrap; }
+.to-top { position: fixed; right: 20px; bottom: 22px; z-index: 90; width: 48px; height: 48px; border-radius: 50%; border: 0; cursor: pointer;
+  color: #fff; font-size: 1.3rem; font-weight: 800; background: linear-gradient(135deg, var(--saffron), var(--saffron-2)); box-shadow: 0 10px 24px rgba(230, 81, 0, .35);
+  opacity: 0; transform: translateY(16px); pointer-events: none; transition: opacity .3s, transform .3s; }
+.to-top.show { opacity: 1; transform: none; pointer-events: auto; }
+.to-top:hover { transform: translateY(-3px); }

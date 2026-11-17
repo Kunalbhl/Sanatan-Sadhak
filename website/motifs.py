@@ -134,3 +134,50 @@ def render(name, pos="right", style=""):
     svg = MOTIFS[name]
     st = f' style="{style}"' if style else ""
     return f'<div class="motif {pos}" aria-hidden="true"{st}>{svg}</div>'
+
+
+# ---- Extra symbols for the floating background field ----
+import math as _m
+
+
+def _spokes(n, r):
+    return "".join(f'<path class="draw" d="M100,100 L{100 + r * _m.cos(i * 2 * _m.pi / n):.1f},{100 + r * _m.sin(i * 2 * _m.pi / n):.1f}"/>' for i in range(n))
+
+
+def _teeth(n, r1, r2):
+    out = []
+    for i in range(n):
+        a, b, c = (i * 2 * _m.pi / n), ((i + .5) * 2 * _m.pi / n), ((i + 1) * 2 * _m.pi / n)
+        out.append(f'<path class="draw gold" d="M{100 + r1 * _m.cos(a):.1f},{100 + r1 * _m.sin(a):.1f} L{100 + r2 * _m.cos(b):.1f},{100 + r2 * _m.sin(b):.1f} L{100 + r1 * _m.cos(c):.1f},{100 + r1 * _m.sin(c):.1f}"/>')
+    return "".join(out)
+
+
+MOTIFS.update({
+    "swastika": '''<svg viewBox="0 0 200 200"><g class="draw" stroke-width="6">
+      <path d="M100,40 L100,160 M40,100 L160,100"/><path d="M100,40 L150,40 M160,100 L160,150 M100,160 L50,160 M40,100 L40,50"/></g>
+      <circle class="draw gold" cx="70" cy="70" r="6"/><circle class="draw gold" cx="130" cy="70" r="6"/><circle class="draw gold" cx="70" cy="130" r="6"/><circle class="draw gold" cx="130" cy="130" r="6"/></svg>''',
+    "shankh": '''<svg viewBox="0 0 200 200">
+      <path class="draw" d="M60,150 C30,120 40,60 90,44 C130,32 168,56 164,92 C160,124 128,140 104,132 C84,126 80,104 96,96 C110,90 122,100 116,112"/>
+      <path class="draw gold" d="M60,150 L40,176 M60,150 L76,170 M90,44 C96,30 110,26 120,30"/>
+      <path class="draw" d="M70,80 C90,70 120,72 140,84 M64,104 C90,96 120,100 150,110"/></svg>''',
+    "chakra": f'''<svg viewBox="0 0 200 200"><g class="m-rotate">
+      <circle class="draw" cx="100" cy="100" r="70"/><circle class="draw gold" cx="100" cy="100" r="18"/>{_spokes(12, 70)}{_teeth(18, 70, 86)}</g></svg>''',
+    "ram": '''<svg viewBox="0 0 200 200">
+      <path class="draw" d="M60,20 C130,50 130,150 60,180"/><path class="draw gold" d="M60,20 L60,180"/>
+      <path class="draw" d="M30,100 L176,100"/><path class="draw gold" d="M176,100 L160,90 M176,100 L160,110"/><path class="draw" d="M30,100 L22,92 M30,100 L22,108 M38,100 L30,92 M38,100 L30,108"/></svg>''',
+    "kalash": '''<svg viewBox="0 0 200 200">
+      <path class="draw" d="M70,80 C40,100 44,160 100,170 C156,160 160,100 130,80 Z"/><path class="draw gold" d="M66,80 L134,80 M78,70 L122,70"/>
+      <path class="draw" d="M100,70 C80,50 70,40 60,46 M100,70 C120,50 130,40 140,46 M100,70 C96,48 100,36 100,28"/>
+      <circle class="draw gold" cx="100" cy="20" r="9"/><path class="draw" d="M70,118 Q100,132 130,118"/></svg>''',
+    "diya": '''<svg viewBox="0 0 200 200">
+      <path class="draw" d="M40,120 C60,160 140,160 160,120 Z"/><path class="draw gold" d="M150,124 L176,110"/>
+      <path class="draw gold m-float" d="M100,112 C84,90 96,70 100,50 C104,70 116,90 100,112 Z"/><path class="draw" d="M70,170 L130,170"/></svg>''',
+    "linga": '''<svg viewBox="0 0 200 200">
+      <path class="draw" d="M74,140 C74,90 80,62 100,62 C120,62 126,90 126,140"/>
+      <path class="draw gold" d="M84,98 L116,98 M82,106 L118,106 M84,114 L116,114"/><circle class="draw" cx="100" cy="106" r="3"/>
+      <path class="draw" d="M40,140 C40,160 160,160 160,140 Z"/><path class="draw" d="M160,148 L184,152 L176,160 L160,156"/></svg>''',
+    "damru": '''<svg viewBox="0 0 200 200">
+      <path class="draw" d="M70,60 L130,60 L104,100 L130,140 L70,140 L96,100 Z"/>
+      <path class="draw gold" d="M96,100 C70,104 60,120 66,132 M104,100 C130,96 140,80 134,68"/><circle class="draw gold" cx="66" cy="134" r="4"/><circle class="draw gold" cx="134" cy="66" r="4"/></svg>''',
+    "trishul": f'<svg viewBox="0 0 200 200">{TRISHUL}</svg>',
+})
