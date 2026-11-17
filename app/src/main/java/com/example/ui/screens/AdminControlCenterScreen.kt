@@ -4,6 +4,8 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -176,7 +178,7 @@ fun AdminControlCenterScreen(
         // --- MAIN CONTROL CENTER BODY ---
         Box(modifier = Modifier.weight(1f)) {
             when (activeTab) {
-                "Overview" -> AdminOverviewTab(adminViewModel, sadhakViewModel, isEng, videoViewModel)
+                "Overview" -> AdminOverviewTab(adminViewModel, sadhakViewModel, isEng, videoViewModel, onOpen = { activeTab = it })
                 "Content" -> AdminContentManagementTab(adminViewModel, isEng, adminEmail)
                 "Deities" -> AdminDeitiesTab(adminViewModel, isEng, adminEmail)
                 "Panchang" -> AdminPanchangTab(adminViewModel, isEng, adminEmail)
@@ -235,7 +237,8 @@ fun AdminOverviewTab(
     adminViewModel: AdminViewModel,
     sadhakViewModel: SadhakViewModel,
     isEng: Boolean,
-    videoViewModel: VideoViewModel
+    videoViewModel: VideoViewModel,
+    onOpen: (String) -> Unit = {}
 ) {
     val articles by adminViewModel.articles.collectAsState()
     val mantras by adminViewModel.mantras.collectAsState()
@@ -294,16 +297,16 @@ fun AdminOverviewTab(
         item {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    StatBox(if (isEng) "Total Articles" else "कुल लेख", articles.size.toString(), Icons.Default.Description, Modifier.weight(1f))
-                    StatBox(if (isEng) "Verified" else "सत्यापित", verifiedCount.toString(), Icons.Default.Verified, Modifier.weight(1f))
+                    StatBox(if (isEng) "Total Articles" else "कुल लेख", articles.size.toString(), Icons.Default.Description, Modifier.weight(1f), onClick = { onOpen("Content") })
+                    StatBox(if (isEng) "Verified" else "सत्यापित", verifiedCount.toString(), Icons.Default.Verified, Modifier.weight(1f), onClick = { onOpen("Content") })
                 }
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    StatBox(if (isEng) "Under Review" else "समीक्षाधीन", underReviewCount.toString(), Icons.Default.RateReview, Modifier.weight(1f))
-                    StatBox(if (isEng) "Unverified" else "असत्यापित", unverifiedCount.toString(), Icons.Default.Info, Modifier.weight(1f))
+                    StatBox(if (isEng) "Under Review" else "समीक्षाधीन", underReviewCount.toString(), Icons.Default.RateReview, Modifier.weight(1f), onClick = { onOpen("Content") })
+                    StatBox(if (isEng) "Unverified" else "असत्यापित", unverifiedCount.toString(), Icons.Default.Info, Modifier.weight(1f), onClick = { onOpen("Content") })
                 }
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    StatBox(if (isEng) "Missing Source" else "स्रोत गायब", missingSourceCount.toString(), Icons.Default.Warning, Modifier.weight(1f))
-                    StatBox(if (isEng) "Missing Ref" else "संदर्भ गायब", missingReferenceCount.toString(), Icons.Default.ReportProblem, Modifier.weight(1f))
+                    StatBox(if (isEng) "Missing Source" else "स्रोत गायब", missingSourceCount.toString(), Icons.Default.Warning, Modifier.weight(1f), onClick = { onOpen("Content") })
+                    StatBox(if (isEng) "Missing Ref" else "संदर्भ गायब", missingReferenceCount.toString(), Icons.Default.ReportProblem, Modifier.weight(1f), onClick = { onOpen("Content") })
                 }
             }
         }
@@ -321,19 +324,19 @@ fun AdminOverviewTab(
         item {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    StatBox(if (isEng) "Mantras" else "मंत्र", mantras.size.toString(), Icons.Default.SelfImprovement, Modifier.weight(1f))
-                    StatBox(if (isEng) "Pooja Vidhi" else "पूजा विधि", poojas.size.toString(), Icons.Default.LibraryBooks, Modifier.weight(1f))
+                    StatBox(if (isEng) "Mantras" else "मंत्र", mantras.size.toString(), Icons.Default.SelfImprovement, Modifier.weight(1f), onClick = { onOpen("Content") })
+                    StatBox(if (isEng) "Pooja Vidhi" else "पूजा विधि", poojas.size.toString(), Icons.Default.LibraryBooks, Modifier.weight(1f), onClick = { onOpen("Content") })
                 }
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    StatBox(if (isEng) "Festivals" else "त्यौहार व व्रत", festivals.size.toString(), Icons.Default.Event, Modifier.weight(1f))
-                    StatBox(if (isEng) "Bhakti Videos" else "भक्ति वीडियो", videos.size.toString(), Icons.Default.VideoLibrary, Modifier.weight(1f))
+                    StatBox(if (isEng) "Festivals" else "त्यौहार व व्रत", festivals.size.toString(), Icons.Default.Event, Modifier.weight(1f), onClick = { onOpen("Panchang") })
+                    StatBox(if (isEng) "Bhakti Videos" else "भक्ति वीडियो", videos.size.toString(), Icons.Default.VideoLibrary, Modifier.weight(1f), onClick = { onOpen("YouTube") })
                 }
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    StatBox(if (isEng) "Community Posts" else "समुदाय पोस्ट", posts.size.toString(), Icons.Default.Forum, Modifier.weight(1f))
-                    StatBox(if (isEng) "Notifications" else "सूचनाएं", notifications.size.toString(), Icons.Default.Notifications, Modifier.weight(1f))
+                    StatBox(if (isEng) "Community Posts" else "समुदाय पोस्ट", posts.size.toString(), Icons.Default.Forum, Modifier.weight(1f), onClick = { onOpen("Community") })
+                    StatBox(if (isEng) "Notifications" else "सूचनाएं", notifications.size.toString(), Icons.Default.Notifications, Modifier.weight(1f), onClick = { onOpen("Notifications") })
                 }
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    StatBox(if (isEng) "Total Users" else "कुल उपयोगकर्ता", users.size.toString(), Icons.Default.People, Modifier.weight(1f))
+                    StatBox(if (isEng) "Total Users" else "कुल उपयोगकर्ता", users.size.toString(), Icons.Default.People, Modifier.weight(1f), onClick = { onOpen("Users") })
                     Spacer(modifier = Modifier.weight(1f))
                 }
             }
@@ -342,8 +345,11 @@ fun AdminOverviewTab(
 }
 
 @Composable
-fun StatBox(title: String, count: String, icon: androidx.compose.ui.graphics.vector.ImageVector, modifier: Modifier = Modifier) {
-    SacredCard(backgroundColor = MaterialTheme.colorScheme.surface, modifier = modifier) {
+fun StatBox(title: String, count: String, icon: androidx.compose.ui.graphics.vector.ImageVector, modifier: Modifier = Modifier, onClick: (() -> Unit)? = null) {
+    SacredCard(
+        backgroundColor = MaterialTheme.colorScheme.surface,
+        modifier = if (onClick != null) modifier.clickable { onClick() } else modifier
+    ) {
         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
                 modifier = Modifier.size(36.dp).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape),
@@ -355,6 +361,10 @@ fun StatBox(title: String, count: String, icon: androidx.compose.ui.graphics.vec
             Column {
                 Text(text = count, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.primary)
                 Text(text = title, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            if (onClick != null) {
+                Spacer(modifier = Modifier.weight(1f))
+                Icon(Icons.Default.ChevronRight, contentDescription = "Open", tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f), modifier = Modifier.size(18.dp))
             }
         }
     }
@@ -560,25 +570,29 @@ fun AdminDeitiesTab(adminViewModel: AdminViewModel, isEng: Boolean, adminEmail: 
     var editingDeity by remember { mutableStateOf<DeityItem?>(null) }
 
     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = if (isEng) "Centralized Deity Taxonomy" else "देवता वर्गीकरण व कर-तत्व",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.secondary
-            )
-            Button(onClick = { editingDeity = null; showDialog = true }, shape = RoundedCornerShape(12.dp)) {
-                Icon(Icons.Default.Add, contentDescription = "Add")
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(if (isEng) "Add Deity" else "देवता जोड़ें", fontSize = 12.sp)
-            }
-        }
-
         LazyColumn(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = if (isEng) "Centralized Deity Taxonomy" else "देवता वर्गीकरण व कर-तत्व",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    Button(onClick = { editingDeity = null; showDialog = true }, shape = RoundedCornerShape(12.dp)) {
+                        Icon(Icons.Default.Add, contentDescription = "Add")
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(if (isEng) "Add Deity" else "देवता जोड़ें", fontSize = 12.sp)
+                    }
+                }
+
+                }
+            }
             items(deities) { deity ->
                 SacredCard(backgroundColor = MaterialTheme.colorScheme.surface) {
                     Row(
@@ -716,81 +730,8 @@ fun AdminYoutubeTab(adminViewModel: AdminViewModel, videoViewModel: VideoViewMod
     val curatedVideosCount = videos.count { it.isCustom }
 
     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = if (isEng) "YouTube Content Platform" else "यूट्यूब व मीडिया प्रशासन",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.secondary
-            )
-            Button(
-                onClick = { editingVideo = null; showAddDialog = true },
-                shape = RoundedCornerShape(12.dp),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = "Add Video")
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(if (isEng) "Curate Video" else "वीडियो जोड़ें", fontSize = 12.sp)
-            }
-        }
-
         // Channel Sync Card
-        SacredCard(backgroundColor = MaterialTheme.colorScheme.surface) {
-            Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Column {
-                        Text(if (isEng) "Official Channel: @SanatanSadhakk" else "आधिकारिक चैनल: @SanatanSadhak", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                        Text("Total: ${videos.size} (Channel: $channelVideosCount • Curated: $curatedVideosCount)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    Button(
-                        onClick = {
-                            videoViewModel.syncYoutubeVideos { count ->
-                                resultMsg = if (count > 0) "Synchronized $count new videos!" else "Channel content is up to date."
-                            }
-                        },
-                        enabled = !isSyncing,
-                        shape = RoundedCornerShape(10.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
-                    ) {
-                        if (isSyncing) CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White)
-                        else {
-                            Icon(Icons.Default.Refresh, contentDescription = "Sync", modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(if (isEng) "Sync Channel" else "सिंक करें", fontSize = 12.sp)
-                        }
-                    }
-                }
-                resultMsg?.let { Text(it, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 11.sp) }
-            }
-        }
-
-        AdminYoutubeChannelsCard(videoViewModel, isEng, adminEmail)
-
         // Search & Category Filter
-        OutlinedTextField(
-            value = searchKeyword,
-            onValueChange = { searchKeyword = it },
-            placeholder = { Text(if (isEng) "Search videos by title or ID..." else "शीर्षक या आईडी से खोजें...") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp)
-        )
-
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            val filterOptions = listOf("All", "Channel", "Curated", "Hidden") + YoutubeUrlParser.SUPPORTED_CATEGORIES.take(6)
-            items(filterOptions) { cat ->
-                FilterChip(
-                    selected = filterCategory == cat,
-                    onClick = { filterCategory = cat },
-                    label = { Text(cat, fontSize = 11.sp) }
-                )
-            }
-        }
-
         val filteredVideos = videos.filter { v ->
             val matchSearch = searchKeyword.isBlank() || v.title.contains(searchKeyword, true) || v.videoId.contains(searchKeyword, true)
             val matchCat = when (filterCategory) {
@@ -808,6 +749,83 @@ fun AdminYoutubeTab(adminViewModel: AdminViewModel, videoViewModel: VideoViewMod
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (isEng) "YouTube Content Platform" else "यूट्यूब व मीडिया प्रशासन",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    Button(
+                        onClick = { editingVideo = null; showAddDialog = true },
+                        shape = RoundedCornerShape(12.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = "Add Video")
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(if (isEng) "Curate Video" else "वीडियो जोड़ें", fontSize = 12.sp)
+                    }
+                }
+
+                SacredCard(backgroundColor = MaterialTheme.colorScheme.surface) {
+                    Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Column {
+                                Text(if (isEng) "Official Channel: @SanatanSadhakk" else "आधिकारिक चैनल: @SanatanSadhak", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                Text("Total: ${videos.size} (Channel: $channelVideosCount • Curated: $curatedVideosCount)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Button(
+                                onClick = {
+                                    videoViewModel.syncYoutubeVideos { count ->
+                                        resultMsg = if (count > 0) "Synchronized $count new videos!" else "Channel content is up to date."
+                                    }
+                                },
+                                enabled = !isSyncing,
+                                shape = RoundedCornerShape(10.dp),
+                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                            ) {
+                                if (isSyncing) CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White)
+                                else {
+                                    Icon(Icons.Default.Refresh, contentDescription = "Sync", modifier = Modifier.size(16.dp))
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(if (isEng) "Sync Channel" else "सिंक करें", fontSize = 12.sp)
+                                }
+                            }
+                        }
+                        resultMsg?.let { Text(it, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 11.sp) }
+                    }
+                }
+
+                AdminYoutubeChannelsCard(videoViewModel, isEng, adminEmail)
+
+                OutlinedTextField(
+                    value = searchKeyword,
+                    onValueChange = { searchKeyword = it },
+                    placeholder = { Text(if (isEng) "Search videos by title or ID..." else "शीर्षक या आईडी से खोजें...") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    val filterOptions = listOf("All", "Channel", "Curated", "Hidden") + YoutubeUrlParser.SUPPORTED_CATEGORIES.take(6)
+                    items(filterOptions) { cat ->
+                        FilterChip(
+                            selected = filterCategory == cat,
+                            onClick = { filterCategory = cat },
+                            label = { Text(cat, fontSize = 11.sp) }
+                        )
+                    }
+                }
+
+                }
+            }
             items(filteredVideos) { vid ->
                 SacredCard(backgroundColor = MaterialTheme.colorScheme.surface) {
                     Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -1159,40 +1177,44 @@ fun AdminNotificationsTab(adminViewModel: AdminViewModel, isEng: Boolean, adminE
     var category by remember { mutableStateOf("Daily Panchang") }
 
     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(
-            text = if (isEng) "Broadcasting & Scheduled Notifications" else "सूचना प्रसारण",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.secondary
-        )
-
-        SacredCard(backgroundColor = MaterialTheme.colorScheme.surface) {
-            Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Notification Title") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = message, onValueChange = { message = it }, label = { Text("Notification Message") }, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = category, onValueChange = { category = it }, label = { Text("Category (e.g. Daily Panchang, Festival)") }, modifier = Modifier.fillMaxWidth())
-
-                Button(
-                    onClick = {
-                        val record = AdminNotificationRecord(title = title, message = message, category = category)
-                        adminViewModel.broadcastNotification(record, adminEmail)
-                        title = ""
-                        message = ""
-                    },
-                    enabled = title.isNotBlank() && message.isNotBlank(),
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Text(if (isEng) "Broadcast Notification" else "सूचना प्रसारित करें")
-                }
-            }
-        }
-
         LazyColumn(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    text = if (isEng) "Broadcasting & Scheduled Notifications" else "सूचना प्रसारण",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+
+                SacredCard(backgroundColor = MaterialTheme.colorScheme.surface) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        OutlinedTextField(value = title, onValueChange = { title = it }, label = { Text("Notification Title") }, modifier = Modifier.fillMaxWidth())
+                        OutlinedTextField(value = message, onValueChange = { message = it }, label = { Text("Notification Message") }, modifier = Modifier.fillMaxWidth())
+                        OutlinedTextField(value = category, onValueChange = { category = it }, label = { Text("Category (e.g. Daily Panchang, Festival)") }, modifier = Modifier.fillMaxWidth())
+
+                        Button(
+                            onClick = {
+                                val record = AdminNotificationRecord(title = title, message = message, category = category)
+                                adminViewModel.broadcastNotification(record, adminEmail)
+                                title = ""
+                                message = ""
+                            },
+                            enabled = title.isNotBlank() && message.isNotBlank(),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(if (isEng) "Broadcast Notification" else "सूचना प्रसारित करें")
+                        }
+                    }
+                }
+
+                }
+            }
             items(notifications) { notif ->
                 SacredCard(backgroundColor = MaterialTheme.colorScheme.surface) {
                     Column(modifier = Modifier.padding(12.dp)) {
@@ -1214,18 +1236,22 @@ fun AdminCommunityTab(adminViewModel: AdminViewModel, isEng: Boolean, adminEmail
     val posts by adminViewModel.posts.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text(
-            text = if (isEng) "Community Post Moderation" else "समुदाय पोस्ट संचालन",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.secondary
-        )
-
         LazyColumn(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    text = if (isEng) "Community Post Moderation" else "समुदाय पोस्ट संचालन",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+
+                }
+            }
             items(posts) { post ->
                 SacredCard(backgroundColor = MaterialTheme.colorScheme.surface) {
                     Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -1267,18 +1293,22 @@ fun AdminUsersTab(adminViewModel: AdminViewModel, isEng: Boolean, adminEmail: St
     val users by adminViewModel.users.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text(
-            text = if (isEng) "Registered Sadhak Accounts & Roles" else "साधक खाते व भूमिकाएं",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.secondary
-        )
-
         LazyColumn(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    text = if (isEng) "Registered Sadhak Accounts & Roles" else "साधक खाते व भूमिकाएं",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+
+                }
+            }
             items(users) { user ->
                 SacredCard(backgroundColor = MaterialTheme.colorScheme.surface) {
                     Row(
@@ -1321,7 +1351,7 @@ fun AdminSettingsTab(adminViewModel: AdminViewModel, isEng: Boolean, adminEmail:
     var aiName by remember { mutableStateOf(settings.aiAssistantName) }
     var aboutInfo by remember { mutableStateOf(settings.aboutInfo) }
 
-    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(bottom = 80.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             text = if (isEng) "Global System Configuration" else "वैश्विक प्रणाली विन्यास",
             style = MaterialTheme.typography.titleMedium,
@@ -1358,18 +1388,22 @@ fun AdminAuditLogTab(adminViewModel: AdminViewModel, isEng: Boolean) {
     val logs by adminViewModel.auditLogs.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Text(
-            text = if (isEng) "Append-Only Admin Audit Trail" else "प्रशासक अंकेक्षण लॉग",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.secondary
-        )
-
         LazyColumn(
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.spacedBy(8.dp),
             contentPadding = PaddingValues(bottom = 80.dp)
         ) {
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text(
+                    text = if (isEng) "Append-Only Admin Audit Trail" else "प्रशासक अंकेक्षण लॉग",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+
+                }
+            }
             items(logs) { log ->
                 SacredCard(backgroundColor = MaterialTheme.colorScheme.surface) {
                     Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
