@@ -1,0 +1,26 @@
+name: Save Firebase Android config
+
+# Fetches app/google-services.json from the Firebase project and commits it, so every
+# build (including Google AI Studio) connects to Firebase. The file holds public client
+# identifiers only; access is protected by firestore.rules.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  save:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/420062423164/locations/global/workloadIdentityPools/github/providers/github
+          service_account: github-deployer@sanatan-sadhak.iam.gserviceaccount.com
+      - run: npx --yes firebase-tools@13 apps:sdkconfig ANDROID 1:420062423164:android:fb0a9ed9a147af117dc1f9 --project sanatan-sadhak -o app/google-services.json
+      - run: |
+          git config user.name "github-actions" && git config user.email "actions@github.com"
+          git add -f app/google-services.json
+          git diff --cached --quiet || { git commit -m "Add Firebase Android config (google-services.json)"; git push; }
