@@ -99,7 +99,7 @@ data class FestivalItem(
 
 data class YoutubeChannelConfig(
     val channelId: String = "UCzHzPEdLJEvTSHn_ev3JYBA",
-    val channelUrl: String = "https://www.youtube.com/@SanatanSadhak",
+    val channelUrl: String = "https://www.youtube.com/@SanatanSadhakk",
     val fetchEnabled: Boolean = true,
     val lastSyncTimestamp: Long = System.currentTimeMillis(),
     val syncStatus: String = "SUCCESS"

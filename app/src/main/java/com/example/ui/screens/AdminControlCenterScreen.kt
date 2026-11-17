@@ -43,9 +43,10 @@ fun AdminControlCenterScreen(
     val isEng by sadhakViewModel.isEnglish.collectAsState()
     val adminEmail by sadhakViewModel.userEmail.collectAsState()
     val userRole by sadhakViewModel.userRole.collectAsState()
+    val isAdmin by sadhakViewModel.isAdmin.collectAsState()
     val pendingConfirmation by adminViewModel.pendingConfirmation.collectAsState()
 
-    if (userRole != "Admin") {
+    if (!isAdmin) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -742,7 +743,7 @@ fun AdminYoutubeTab(adminViewModel: AdminViewModel, videoViewModel: VideoViewMod
             Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     Column {
-                        Text(if (isEng) "Official Channel: @SanatanSadhak" else "आधिकारिक चैनल: @SanatanSadhak", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                        Text(if (isEng) "Official Channel: @SanatanSadhakk" else "आधिकारिक चैनल: @SanatanSadhak", fontWeight = FontWeight.Bold, fontSize = 13.sp)
                         Text("Total: ${videos.size} (Channel: $channelVideosCount • Curated: $curatedVideosCount)", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     Button(

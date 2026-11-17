@@ -185,7 +185,7 @@ class YoutubeChannelStore private constructor(private val context: Context) {
         private const val KEY = "channels_json"
         private const val HIDDEN_KEY = "hidden_video_ids"
         private const val HIDDEN_COLLECTION = "hidden_videos"
-        val DEFAULT = YoutubeChannel("UCzHzPEdLJEvTSHn_ev3JYBA", "Sanatan Sadhak", "https://www.youtube.com/@SanatanSadhak", addedAt = 0L)
+        val DEFAULT = YoutubeChannel("UCzHzPEdLJEvTSHn_ev3JYBA", "Sanatan Sadhak", "https://www.youtube.com/@SanatanSadhakk", addedAt = 0L)
 
         @Volatile private var instance: YoutubeChannelStore? = null
         fun get(context: Context): YoutubeChannelStore =

@@ -169,7 +169,7 @@ class KnowledgeViewModel(application: Application) : AndroidViewModel(applicatio
                 title = title,
                 summary = summary,
                 content = content,
-                relatedVideos = "zHzPEdLJEvT",
+                relatedVideos = "",
                 language = lang
             )
             repository.addArticle(newArticle)

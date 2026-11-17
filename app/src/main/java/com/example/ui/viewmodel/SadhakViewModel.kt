@@ -1296,7 +1296,7 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
                 title = title,
                 summary = summary,
                 content = content,
-                relatedVideos = "zHzPEdLJEvT",
+                relatedVideos = "",
                 language = lang
             )
             knowledgeRepository.addArticle(newArticle)
@@ -1428,9 +1428,9 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
                     val defaultSuper = com.example.data.User(
                         email = emailClean,
                         fullName = if (emailClean.contains("kunal")) "Kunal Pareek" else "Ashish Pareek",
-                        mobileNumber = "9999999999",
-                        city = "Ajmer",
-                        state = "Rajasthan",
+                        mobileNumber = "",
+                        city = "",
+                        state = "",
                         password = pass,
                         avatar = 4,
                         role = "SuperUser"

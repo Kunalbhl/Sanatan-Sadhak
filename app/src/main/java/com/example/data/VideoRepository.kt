@@ -33,10 +33,9 @@ class VideoRepository(private val context: Context) {
 
     suspend fun ensureSeedVideos() = withContext(Dispatchers.IO) {
         try {
-            val local = videoDao.getAllVideos().first()
-            if (local.isEmpty()) {
-                videoDao.insertVideos(SpiritualData.defaultVideos)
-            }
+            // Old builds shipped placeholder videos whose IDs pointed at unrelated YouTube videos.
+            // Remove them; the library now only holds videos fetched from admin-approved channels.
+            videoDao.deleteByVideoIds(SpiritualData.defaultVideos.map { it.videoId })
         } catch (e: Exception) {
             Log.e(tag, "Error ensuring seed videos", e)
         }
@@ -52,9 +51,7 @@ class VideoRepository(private val context: Context) {
     val syncErrorMessage: StateFlow<String?> = _syncErrorMessage.asStateFlow()
 
     // Room Database access flows
-    fun getVideos(): Flow<List<BhaktiVideo>> = videoDao.getAllVideos().map { list ->
-        if (list.isEmpty()) SpiritualData.defaultVideos else list
-    }
+    fun getVideos(): Flow<List<BhaktiVideo>> = videoDao.getAllVideos()
 
     suspend fun addVideo(video: BhaktiVideo) = withContext(Dispatchers.IO) {
         videoDao.insertVideo(video)

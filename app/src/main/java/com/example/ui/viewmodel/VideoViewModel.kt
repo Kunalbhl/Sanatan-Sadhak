@@ -214,7 +214,8 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
                 val lastSyncDate = if (lastSync == 0L) "" else sdf.format(java.util.Date(lastSync))
                 val todayDate = sdf.format(java.util.Date(now))
                 
-                if (lastSync == 0L || lastSyncDate != todayDate) {
+                val empty = repository.getVideos().first().isEmpty()
+                if (empty || now - lastSync > 3 * 60 * 60 * 1000L || lastSyncDate != todayDate) {
                     val apiKey = com.example.BuildConfig.YOUTUBE_API_KEY
                     val result = repository.syncAllVideos(apiKey = apiKey)
                     result.onSuccess { added ->

@@ -91,6 +91,9 @@ interface BhaktiVideoDao {
 
     @Query("DELETE FROM bhakti_videos WHERE isCustom = 0")
     suspend fun clearNonCustomVideos()
+
+    @Query("DELETE FROM bhakti_videos WHERE videoId IN (:videoIds)")
+    suspend fun deleteByVideoIds(videoIds: List<String>)
 }
 
 @Dao
