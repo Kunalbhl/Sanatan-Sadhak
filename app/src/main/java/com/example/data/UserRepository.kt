@@ -182,6 +182,15 @@ class UserRepository private constructor(private val appContext: Context) {
         if (user == null) {
             user = userDao.getUserByMobile(idClean)
         }
+        // Account that so far only existed on this phone: create its Firebase account now,
+        // so profile backup, Community and admin rights work in the cloud too.
+        if (!cloudOk && user != null && user.password == passwordText && idClean.contains("@") &&
+            firebaseService.isFirebaseAvailable.value && passwordText.length >= 6) {
+            if (firebaseService.signUpWithEmail(idClean, passwordText)) {
+                firebaseService.saveProfile(user, ProfileImageStore.toBase64(context, user.email))
+            }
+        }
+
         if (user != null && (user.password == passwordText || cloudOk)) {
             if (cloudOk && user.password != passwordText) userDao.insertUser(user.copy(password = passwordText))
             return user
