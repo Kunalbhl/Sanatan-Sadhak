@@ -526,9 +526,9 @@ fun VideoHubScreen(viewModel: SadhakViewModel, videoViewModel: com.example.ui.vi
                                         ),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    if (video.thumbnail.isNotEmpty() && !isLocked) {
+                                    if (video.videoId.isNotEmpty() && !isLocked) {
                                         coil.compose.AsyncImage(
-                                            model = video.thumbnail,
+                                            model = video.thumbnail.ifEmpty { "https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg" },
                                             contentDescription = video.title,
                                             modifier = Modifier.fillMaxSize(),
                                             contentScale = androidx.compose.ui.layout.ContentScale.Crop
