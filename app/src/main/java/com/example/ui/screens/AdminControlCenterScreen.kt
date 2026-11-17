@@ -766,6 +766,8 @@ fun AdminYoutubeTab(adminViewModel: AdminViewModel, videoViewModel: VideoViewMod
             }
         }
 
+        AdminYoutubeChannelsCard(videoViewModel, isEng, adminEmail)
+
         // Search & Category Filter
         OutlinedTextField(
             value = searchKeyword,
@@ -1374,5 +1376,67 @@ fun AdminAuditLogTab(adminViewModel: AdminViewModel, isEng: Boolean) {
                 }
             }
         }
+    }
+}
+
+
+/** Admin: manage the YouTube channels whose uploads feed the video library. */
+@Composable
+fun AdminYoutubeChannelsCard(videoViewModel: VideoViewModel, isEng: Boolean, adminEmail: String) {
+    val channels by videoViewModel.youtubeChannels.collectAsState()
+    var input by remember { mutableStateOf("") }
+    var busy by remember { mutableStateOf(false) }
+    var msg by remember { mutableStateOf<String?>(null) }
+    var confirmRemove by remember { mutableStateOf<com.example.data.YoutubeChannel?>(null) }
+    LaunchedEffect(Unit) { videoViewModel.refreshChannels() }
+
+    SacredCard(backgroundColor = MaterialTheme.colorScheme.surface) {
+        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(if (isEng) "Video library channels (${channels.size})" else "वीडियो चैनल (${channels.size})", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            Text(
+                if (isEng) "New uploads from every enabled channel appear in the Videos library automatically." else "सक्रिय चैनलों के नए वीडियो अपने-आप लाइब्रेरी में आते हैं।",
+                fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                OutlinedTextField(
+                    value = input, onValueChange = { input = it }, singleLine = true,
+                    placeholder = { Text(if (isEng) "Channel link or @handle" else "चैनल लिंक या @handle", fontSize = 12.sp) },
+                    modifier = Modifier.weight(1f), shape = RoundedCornerShape(12.dp)
+                )
+                Button(
+                    onClick = {
+                        busy = true; msg = null
+                        videoViewModel.addYoutubeChannel(input, adminEmail) { r -> msg = r; busy = false; if (r.startsWith("Added")) input = "" }
+                    },
+                    enabled = input.isNotBlank() && !busy,
+                    shape = RoundedCornerShape(10.dp)
+                ) {
+                    if (busy) CircularProgressIndicator(modifier = Modifier.size(16.dp), color = Color.White)
+                    else Text(if (isEng) "Add" else "जोड़ें", fontSize = 12.sp)
+                }
+            }
+            msg?.let { Text(it, color = MaterialTheme.colorScheme.primary, fontSize = 11.sp, fontWeight = FontWeight.Bold) }
+            channels.forEach { ch ->
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(ch.title, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, maxLines = 1)
+                        Text(ch.channelId, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                    }
+                    Switch(checked = ch.enabled, onCheckedChange = { videoViewModel.setYoutubeChannelEnabled(ch.channelId, it) })
+                    IconButton(onClick = { confirmRemove = ch }) {
+                        Icon(Icons.Default.Delete, contentDescription = "Remove channel", tint = MaterialTheme.colorScheme.error)
+                    }
+                }
+            }
+        }
+    }
+    confirmRemove?.let { ch ->
+        AlertDialog(
+            onDismissRequest = { confirmRemove = null },
+            title = { Text(if (isEng) "Remove ${ch.title}?" else "${ch.title} हटाएँ?") },
+            text = { Text(if (isEng) "Its videos already in the library stay; new uploads stop syncing." else "पुराने वीडियो रहेंगे; नए वीडियो नहीं आएँगे।") },
+            confirmButton = { TextButton(onClick = { videoViewModel.removeYoutubeChannel(ch.channelId); confirmRemove = null }) { Text(if (isEng) "Remove" else "हटाएँ") } },
+            dismissButton = { TextButton(onClick = { confirmRemove = null }) { Text(if (isEng) "Cancel" else "रद्द करें") } }
+        )
     }
 }

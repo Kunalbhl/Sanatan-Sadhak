@@ -11,6 +11,21 @@ import com.example.data.VideoRepository
 class VideoViewModel(application: Application) : AndroidViewModel(application) {
 
     private val repository = VideoRepository(application)
+    private val channelStore = com.example.data.YoutubeChannelStore.get(application)
+    val youtubeChannels: StateFlow<List<com.example.data.YoutubeChannel>> = channelStore.channels
+
+    fun refreshChannels() { viewModelScope.launch { channelStore.refresh() } }
+
+    fun addYoutubeChannel(input: String, adminEmail: String, onResult: (String) -> Unit) {
+        viewModelScope.launch {
+            channelStore.addChannel(input, adminEmail)
+                .onSuccess { ch -> onResult("Added ${ch.title}. Fetching its videos…"); syncYoutubeVideos { n -> onResult("Added ${ch.title} • $n new videos") } }
+                .onFailure { onResult(it.message ?: "Couldn't add channel") }
+        }
+    }
+
+    fun setYoutubeChannelEnabled(id: String, enabled: Boolean) { viewModelScope.launch { channelStore.setEnabled(id, enabled) } }
+    fun removeYoutubeChannel(id: String) { viewModelScope.launch { channelStore.remove(id) } }
 
     init {
         autoSyncYoutubeVideosIfNeeded {}

@@ -248,6 +248,17 @@ fun DivineEnvironmentBanner(
 
                 Spacer(modifier = Modifier.height(2.dp))
 
+                Text(
+                    text = "✦ ॥ JAI SHREE RAM ॥ ✦",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFFFD58A),
+                        fontSize = 10.sp,
+                        letterSpacing = 1.2.sp
+                    ),
+                    maxLines = 1
+                )
+
                 // 3. Secondary Devotee Greeting (Strictly "Welcome Devotee" / "Welcome [Name]")
                 Text(
                     text = greetingTargetText,
@@ -282,34 +293,7 @@ fun DivineEnvironmentBanner(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                IconButton(
-                    onClick = onNotificationClick,
-                    modifier = Modifier
-                        .size(38.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFFFFF8EE).copy(alpha = 0.85f))
-                        .border(1.dp, Color(0xFFD4A23A).copy(alpha = 0.4f), CircleShape)
-                        .testTag("home_notifications_button")
-                ) {
-                    BadgedBox(
-                        badge = {
-                            if (hasNotifications) {
-                                Badge(
-                                    containerColor = Color(0xFF7A1720),
-                                    contentColor = Color.White
-                                )
-                            }
-                        }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = "Notifications",
-                            tint = Color(0xFF7A1720),
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-
+                // Notifications live in the top app header only (no bell on the banner).
                 if (showProfileControl) {
                     IconButton(
                         onClick = onProfileClick,

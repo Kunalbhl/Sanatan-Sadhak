@@ -136,8 +136,15 @@ class VideoRepository(private val context: Context) {
                     totalNewVideos += newFirestoreVideos.size
                 }
 
-                // Step 2: Fetch official channel feed via YoutubeFetcher
-                val fetchedFromChannel = YoutubeFetcher.fetchVideosFromChannel(apiKey, channelId)
+                // Step 2: Fetch every admin-approved channel (Firestore `youtube_channels`)
+                val store = YoutubeChannelStore.get(context)
+                store.refresh()
+                val channelIds = store.enabledChannels().map { it.channelId }.ifEmpty { listOf(channelId) }
+                val fetchedFromChannel = channelIds.flatMap { id ->
+                    try { YoutubeFetcher.fetchVideosFromChannel(apiKey, id) } catch (e: Exception) {
+                        Log.w(tag, "Channel $id failed: ${e.message}"); emptyList()
+                    }
+                }.distinctBy { it.videoId }
                 if (fetchedFromChannel.isNotEmpty()) {
                     val updatedExistingIds = videoDao.getAllVideos().first().map { it.videoId }.toSet()
                     val newChannelVideos = fetchedFromChannel.filter { it.videoId.isNotBlank() && it.videoId !in updatedExistingIds }
