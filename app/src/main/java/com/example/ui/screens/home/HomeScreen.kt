@@ -556,7 +556,7 @@ private fun HomePanchangSection(
                 borderColor = SadhakThemeColors.sacredPrimary.copy(alpha = 0.35f)
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    if (!festival.isNullOrBlank()) {
+                    if (!festival.isNullOrBlank() && festival.trim() !in setOf("-", "–", "—", "None", "कोई नहीं")) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
@@ -1138,12 +1138,6 @@ private fun HomeExploreSection(
                     desc = if (isEng) "Tithi, vrat & festivals" else "तिथि, व्रत एवं पर्व",
                     icon = Icons.Default.CalendarMonth,
                     route = "Calendar"
-                ),
-                ExploreCategoryItem(
-                    title = if (isEng) "AI Mitra" else "एआई मित्र",
-                    desc = if (isEng) "Ask any dharma question" else "धर्म संबंधी कोई भी प्रश्न",
-                    icon = Icons.Default.AutoAwesome,
-                    route = "Chat"
                 ),
                 ExploreCategoryItem(
                     title = if (isEng) "Video Hub" else "वीडियो हब",
