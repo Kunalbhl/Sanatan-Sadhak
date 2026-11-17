@@ -19,3 +19,9 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Keep line numbers for crash reports; Room/Firebase/Coil/OkHttp ship consumer rules
+-keepattributes SourceFile,LineNumberTable,*Annotation*,Signature
+-keep class com.example.data.** { *; }
+-dontwarn okhttp3.**
+-dontwarn org.conscrypt.**
