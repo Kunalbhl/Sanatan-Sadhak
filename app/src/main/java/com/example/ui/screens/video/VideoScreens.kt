@@ -220,33 +220,6 @@ fun VideoHubScreen(viewModel: SadhakViewModel, videoViewModel: com.example.ui.vi
             .padding(16.dp)
             .testTag("video_hub_screen")
     ) {
-        SacredHeader(
-            title = if (isEng) "Sacred Video Hub" else "दर्शन तरंगिणी",
-            subtitle = if (isEng) "Watch divine Darshan and Puja from @SanatanSadhakk" else "चैनल @SanatanSadhakk के पवित्र आरती, दर्शन और भक्ति प्रसंग देखें",
-            showDiyas = true
-        )
-
-        // Search Bar for videos
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { videoViewModel.setSearchQuery(it) },
-            placeholder = { Text(if (isEng) "Search videos by title, category, or ID..." else "शीर्षक, श्रेणी या आईडी से खोजें...") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search", tint = MaterialTheme.colorScheme.primary) },
-            trailingIcon = {
-                if (searchQuery.isNotEmpty()) {
-                    IconButton(onClick = { videoViewModel.setSearchQuery("") }) {
-                        Icon(Icons.Default.Close, contentDescription = "Clear", tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-            },
-            singleLine = true,
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 4.dp)
-                .testTag("video_search_field")
-        )
-
         // Video Filtering and Sorting Options State
         var selectedVideoSort by remember { mutableStateOf("Newest") }
         val videoSorts = listOf("Newest", "A-Z")
@@ -269,109 +242,14 @@ fun VideoHubScreen(viewModel: SadhakViewModel, videoViewModel: com.example.ui.vi
             }
         }
 
-        // Row 1: Categories selector (horizontal scrollable LazyRow)
-        androidx.compose.foundation.lazy.LazyRow(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 2.dp)
-        ) {
-            items(categories) { category ->
-                val isSelected = selectedCat == category
-                val label = when (category) {
-                    "All" -> if (isEng) "All Videos" else "सभी वीडियो"
-                    "Favorites" -> if (isEng) "Favorites" else "पसंदीदा (Favorites)"
-                    "YouTube" -> if (isEng) "YouTube Content" else "यूट्यूब वीडियो"
-                    "Darshan" -> if (isEng) "Darshan" else "देव दर्शन (Darshan)"
-                    "Puja" -> if (isEng) "Puja & Aarti" else "पूजा व आरती (Puja)"
-                    else -> if (isEng) "Stories & Kathas" else "कथा प्रसंग (Stories)"
-                }
-                androidx.compose.material3.FilterChip(
-                    selected = isSelected,
-                    onClick = { videoViewModel.setVideoCategory(category) },
-                    label = { Text(label) },
-                    modifier = Modifier.animateContentSize().touchFeedback()
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        // Row 2: Additional Filters Row (Sort dropdown AssistChip)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            var expandedSort by remember { mutableStateOf(false) }
-            Box {
-                androidx.compose.material3.AssistChip(
-                    onClick = { expandedSort = true },
-                    label = { Text(if (isEng) "Sort: $sortLabel" else "क्रम: $sortLabel") },
-                    modifier = Modifier.touchFeedback()
-                )
-                DropdownMenu(
-                    expanded = expandedSort,
-                    onDismissRequest = { expandedSort = false }
-                ) {
-                    videoSorts.forEach { sort ->
-                        val labelVal = when (sort) {
-                            "Newest" -> if (isEng) "Newest" else "नवीनतम"
-                            else -> if (isEng) "A-Z" else "अ-ज्ञ"
-                        }
-                        DropdownMenuItem(
-                            text = { Text(labelVal) },
-                            onClick = {
-                                selectedVideoSort = sort
-                                expandedSort = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            if (isAnyVideoFilterActive) {
-                Text(
-                    text = if (isEng) "Clear all filters" else "साफ़ करें",
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                    modifier = Modifier
-                        .clickable {
-                            videoViewModel.setVideoCategory("All")
-                            videoViewModel.setSearchQuery("")
-                            selectedVideoSort = "Newest"
-                        }
-                        .touchFeedback()
-                        .padding(vertical = 4.dp, horizontal = 8.dp)
-                )
-            }
-        }
-
         Spacer(modifier = Modifier.height(8.dp))
 
         // Curated Playlist Section
         val curatedVideos by videoViewModel.curatedPlaylistVideos.collectAsState()
         val curatedTitle = videoViewModel.getCuratedPlaylistTitle(isEng)
 
-        // List of videos
-        if (filteredSortedVideos.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = when {
-                        videos.isEmpty() && isSyncingVideos -> if (isEng) "Fetching the latest videos from YouTube…" else "यूट्यूब से नवीनतम वीडियो लाए जा रहे हैं…"
-                        videos.isEmpty() -> if (isEng) "No videos yet. Pull down to refresh, or check your internet connection." else "अभी कोई वीडियो नहीं। रीफ़्रेश करें या इंटरनेट जाँचें।"
-                        else -> if (isEng) "No videos found in this category." else "इस श्रेणी में कोई वीडियो नहीं मिला।"
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray,
-                    textAlign = TextAlign.Center
-                )
-            }
-        } else {
+        // List of videos (header, filters and videos scroll together)
+        run {
             val videoListState = androidx.compose.foundation.lazy.rememberLazyListState()
             val showVideoScrollToTop by remember {
                 derivedStateOf { videoListState.firstVisibleItemIndex > 0 || videoListState.firstVisibleItemScrollOffset > 300 }
@@ -389,6 +267,126 @@ fun VideoHubScreen(viewModel: SadhakViewModel, videoViewModel: com.example.ui.vi
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
+                item {
+                    Column {
+                    SacredHeader(
+                        title = if (isEng) "Sacred Video Hub" else "दर्शन तरंगिणी",
+                        subtitle = if (isEng) "Watch divine Darshan and Puja from @SanatanSadhakk" else "चैनल @SanatanSadhakk के पवित्र आरती, दर्शन और भक्ति प्रसंग देखें",
+                        showDiyas = true
+                    )
+
+                    // Search Bar for videos
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { videoViewModel.setSearchQuery(it) },
+                        placeholder = { Text(if (isEng) "Search videos by title, category, or ID..." else "शीर्षक, श्रेणी या आईडी से खोजें...") },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search", tint = MaterialTheme.colorScheme.primary) },
+                        trailingIcon = {
+                            if (searchQuery.isNotEmpty()) {
+                                IconButton(onClick = { videoViewModel.setSearchQuery("") }) {
+                                    Icon(Icons.Default.Close, contentDescription = "Clear", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                        },
+                        singleLine = true,
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                            .testTag("video_search_field")
+                    )
+                    // Row 1: Categories selector (horizontal scrollable LazyRow)
+                    androidx.compose.foundation.lazy.LazyRow(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 2.dp)
+                    ) {
+                        items(categories) { category ->
+                            val isSelected = selectedCat == category
+                            val label = when (category) {
+                                "All" -> if (isEng) "All Videos" else "सभी वीडियो"
+                                "Favorites" -> if (isEng) "Favorites" else "पसंदीदा (Favorites)"
+                                "YouTube" -> if (isEng) "YouTube Content" else "यूट्यूब वीडियो"
+                                "Darshan" -> if (isEng) "Darshan" else "देव दर्शन (Darshan)"
+                                "Puja" -> if (isEng) "Puja & Aarti" else "पूजा व आरती (Puja)"
+                                else -> if (isEng) "Stories & Kathas" else "कथा प्रसंग (Stories)"
+                            }
+                            androidx.compose.material3.FilterChip(
+                                selected = isSelected,
+                                onClick = { videoViewModel.setVideoCategory(category) },
+                                label = { Text(label) },
+                                modifier = Modifier.animateContentSize().touchFeedback()
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Row 2: Additional Filters Row (Sort dropdown AssistChip)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        var expandedSort by remember { mutableStateOf(false) }
+                        Box {
+                            androidx.compose.material3.AssistChip(
+                                onClick = { expandedSort = true },
+                                label = { Text(if (isEng) "Sort: $sortLabel" else "क्रम: $sortLabel") },
+                                modifier = Modifier.touchFeedback()
+                            )
+                            DropdownMenu(
+                                expanded = expandedSort,
+                                onDismissRequest = { expandedSort = false }
+                            ) {
+                                videoSorts.forEach { sort ->
+                                    val labelVal = when (sort) {
+                                        "Newest" -> if (isEng) "Newest" else "नवीनतम"
+                                        else -> if (isEng) "A-Z" else "अ-ज्ञ"
+                                    }
+                                    DropdownMenuItem(
+                                        text = { Text(labelVal) },
+                                        onClick = {
+                                            selectedVideoSort = sort
+                                            expandedSort = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        if (isAnyVideoFilterActive) {
+                            Text(
+                                text = if (isEng) "Clear all filters" else "साफ़ करें",
+                                color = MaterialTheme.colorScheme.primary,
+                                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                modifier = Modifier
+                                    .clickable {
+                                        videoViewModel.setVideoCategory("All")
+                                        videoViewModel.setSearchQuery("")
+                                        selectedVideoSort = "Newest"
+                                    }
+                                    .touchFeedback()
+                                    .padding(vertical = 4.dp, horizontal = 8.dp)
+                            )
+                        }
+                    }
+                    }
+                }
+                if (filteredSortedVideos.isEmpty()) item {
+                    Box(Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) {
+                        Text(
+                            text = when {
+                                videos.isEmpty() && isSyncingVideos -> if (isEng) "Fetching the latest videos from YouTube…" else "यूट्यूब से नवीनतम वीडियो लाए जा रहे हैं…"
+                                videos.isEmpty() -> if (isEng) "No videos yet. Pull down to refresh, or check your internet connection." else "अभी कोई वीडियो नहीं। रीफ़्रेश करें या इंटरनेट जाँचें।"
+                                else -> if (isEng) "No videos found in this category." else "इस श्रेणी में कोई वीडियो नहीं मिला।"
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.Gray,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
                 item {
                 if (curatedVideos.isNotEmpty() && selectedCat == "All") {
                     SacredCard(

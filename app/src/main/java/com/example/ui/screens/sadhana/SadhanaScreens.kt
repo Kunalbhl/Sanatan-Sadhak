@@ -47,6 +47,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Send
@@ -693,14 +694,14 @@ fun BhaktiToolsScreen(viewModel: SadhakViewModel) {
             )
 
             // Sub Navigation Tabs: Bell, Counter, KarmaLog, Gratitude, TempleFinder
-            androidx.compose.foundation.layout.FlowRow(
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .horizontalScroll(rememberScrollState())
+                    .padding(vertical = 2.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                val tabs = listOf("Bell", "Counter", "KarmaLog", "Gratitude", "TempleFinder")
+                val tabs = listOf("Counter", "TempleFinder", "Bell", "KarmaLog", "Gratitude")
                 tabs.forEach { tab ->
                     val label = when (tab) {
                         "Bell" -> if (isEng) "Aarti Bell" else "आरती घंटी"

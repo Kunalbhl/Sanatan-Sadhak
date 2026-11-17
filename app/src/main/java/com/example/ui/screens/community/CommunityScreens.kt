@@ -264,12 +264,6 @@ fun CommunityScreen(
                     .padding(16.dp)
                     .testTag("community_screen")
             ) {
-                SacredHeader(
-                    title = if (isEng) "Sadhak Community" else "साधक संघ",
-                    subtitle = if (isEng) "Ask, answer and share: experiences, yatra help, hidden temples" else "पूछें, उत्तर दें, साझा करें: अनुभव, यात्रा सहायता, छिपे तीर्थ",
-                    showDiyas = true
-                )
-
                 // Category & Filtering options
                 var selectedCommunityCategory by remember { mutableStateOf("All") }
                 val communityCategories = listOf("All", "Bhakti Experiences", "Doubts & Discussions", "Yatra Questions", "Yatra Tips & Guides", "Hidden Spiritual Treasures", "Temple Stories", "Temple Info Correction", "Daily Karma Journal")
@@ -294,24 +288,6 @@ fun CommunityScreen(
                     else posts.filter { it.category == selectedCommunityCategory }
                 }
 
-                // Row 1: Category Row
-                androidx.compose.foundation.lazy.LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 4.dp, horizontal = 2.dp)
-                ) {
-                    items(communityCategories) { category ->
-                        val isSelected = selectedCommunityCategory == category
-                        androidx.compose.material3.FilterChip(
-                            selected = isSelected,
-                            onClick = { selectedCommunityCategory = category },
-                            label = { Text(getCommunityCategoryDisplayName(category)) },
-                            modifier = Modifier.animateContentSize().touchFeedback()
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(4.dp))
 
                 // Row 2: Additional Filters Row (Sort dropdown AssistChip)
                 val sorts = listOf("New", "Top", "Discussed")
@@ -323,73 +299,10 @@ fun CommunityScreen(
 
                 val isAnyFilterActive = selectedCommunityCategory != "All" || sortBy != "New"
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    var expandedSort by remember { mutableStateOf(false) }
-                    Box {
-                        androidx.compose.material3.AssistChip(
-                            onClick = { expandedSort = true },
-                            label = { Text(if (isEng) "Sort: $label" else "क्रम: $label") },
-                            modifier = Modifier.touchFeedback()
-                        )
-                        DropdownMenu(
-                            expanded = expandedSort,
-                            onDismissRequest = { expandedSort = false }
-                        ) {
-                            sorts.forEach { sort ->
-                                val itemLabel = when (sort) {
-                                    "New" -> if (isEng) "New" else "नवीनतम"
-                                    "Top" -> if (isEng) "Top Devotional" else "लोकप्रिय"
-                                    else -> if (isEng) "Most Discussed" else "चर्चा में"
-                                }
-                                DropdownMenuItem(
-                                    text = { Text(itemLabel) },
-                                    onClick = {
-                                        viewModel.setCommunitySort(sort)
-                                        expandedSort = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-
-                    if (isAnyFilterActive) {
-                        Text(
-                            text = if (isEng) "Clear all filters" else "साफ़ करें",
-                            color = MaterialTheme.colorScheme.primary,
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-                            modifier = Modifier
-                                .clickable {
-                                    selectedCommunityCategory = "All"
-                                    viewModel.setCommunitySort("New")
-                                }
-                                .touchFeedback()
-                                .padding(vertical = 4.dp, horizontal = 8.dp)
-                        )
-                    }
-                }
-
                 Spacer(modifier = Modifier.height(8.dp))
 
-                // Post listings
-                if (filteredPosts.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = if (isEng) "No posts here. Tap share to create one!" else "अभी तक कोई पोस्ट नहीं है। पहली पोस्ट साझा करें!",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Gray,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                } else {
+                // Post listings (header and filters scroll with the posts)
+                run {
                     val communityListState = androidx.compose.foundation.lazy.rememberLazyListState()
                     val showCommunityScrollToTop by remember {
                         derivedStateOf { communityListState.firstVisibleItemIndex > 0 || communityListState.firstVisibleItemScrollOffset > 300 }
@@ -407,6 +320,90 @@ fun CommunityScreen(
                             modifier = Modifier.fillMaxSize(),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
+                        item {
+                            Column {
+                            SacredHeader(
+                                title = if (isEng) "Sadhak Community" else "साधक संघ",
+                                subtitle = if (isEng) "Ask, answer and share: experiences, yatra help, hidden temples" else "पूछें, उत्तर दें, साझा करें: अनुभव, यात्रा सहायता, छिपे तीर्थ",
+                                showDiyas = true
+                            )
+                            // Row 1: Category Row
+                            androidx.compose.foundation.lazy.LazyRow(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 4.dp, horizontal = 2.dp)
+                            ) {
+                                items(communityCategories) { category ->
+                                    val isSelected = selectedCommunityCategory == category
+                                    androidx.compose.material3.FilterChip(
+                                        selected = isSelected,
+                                        onClick = { selectedCommunityCategory = category },
+                                        label = { Text(getCommunityCategoryDisplayName(category)) },
+                                        modifier = Modifier.animateContentSize().touchFeedback()
+                                    )
+                                }
+                            }
+                                Spacer(modifier = Modifier.height(4.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                var expandedSort by remember { mutableStateOf(false) }
+                                Box {
+                                    androidx.compose.material3.AssistChip(
+                                        onClick = { expandedSort = true },
+                                        label = { Text(if (isEng) "Sort: $label" else "क्रम: $label") },
+                                        modifier = Modifier.touchFeedback()
+                                    )
+                                    DropdownMenu(
+                                        expanded = expandedSort,
+                                        onDismissRequest = { expandedSort = false }
+                                    ) {
+                                        sorts.forEach { sort ->
+                                            val itemLabel = when (sort) {
+                                                "New" -> if (isEng) "New" else "नवीनतम"
+                                                "Top" -> if (isEng) "Top Devotional" else "लोकप्रिय"
+                                                else -> if (isEng) "Most Discussed" else "चर्चा में"
+                                            }
+                                            DropdownMenuItem(
+                                                text = { Text(itemLabel) },
+                                                onClick = {
+                                                    viewModel.setCommunitySort(sort)
+                                                    expandedSort = false
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+
+                                if (isAnyFilterActive) {
+                                    Text(
+                                        text = if (isEng) "Clear all filters" else "साफ़ करें",
+                                        color = MaterialTheme.colorScheme.primary,
+                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                                        modifier = Modifier
+                                            .clickable {
+                                                selectedCommunityCategory = "All"
+                                                viewModel.setCommunitySort("New")
+                                            }
+                                            .touchFeedback()
+                                            .padding(vertical = 4.dp, horizontal = 8.dp)
+                                    )
+                                }
+                            }
+                            }
+                        }
+                        if (filteredPosts.isEmpty()) item {
+                            Box(Modifier.fillMaxWidth().padding(vertical = 48.dp), contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = if (isEng) "No posts here. Tap share to create one!" else "अभी तक कोई पोस्ट नहीं है। पहली पोस्ट साझा करें!",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = Color.Gray,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
                         items(filteredPosts) { post ->
                             SacredCard(
                                 backgroundColor = MaterialTheme.colorScheme.surface,
