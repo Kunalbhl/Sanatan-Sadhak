@@ -400,3 +400,4 @@ footer .bottom { margin-top: 32px; padding-top: 18px; border-top: 1px solid var(
 .scene-over { text-shadow: 0 2px 10px rgba(30, 8, 0, .6), 0 0 2px rgba(30, 8, 0, .4); }
 .so-chip { flex-wrap: nowrap !important; max-width: 100%; }
 .so-chip [data-scene-names] { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.so-chip [data-scene-names] { min-width: 9em; } .so-chip { max-width: calc(100% + 30%); }
