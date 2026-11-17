@@ -266,13 +266,13 @@ fun CommunityScreen(
             ) {
                 SacredHeader(
                     title = if (isEng) "Sadhak Community" else "साधक संघ",
-                    subtitle = if (isEng) "Reddit-style sacred forum to share experiences and karma insights" else "अनुभवों और कर्म विचारों को साझा करने का पावन मंच",
+                    subtitle = if (isEng) "Ask, answer and share: experiences, yatra help, hidden temples" else "पूछें, उत्तर दें, साझा करें: अनुभव, यात्रा सहायता, छिपे तीर्थ",
                     showDiyas = true
                 )
 
                 // Category & Filtering options
                 var selectedCommunityCategory by remember { mutableStateOf("All") }
-                val communityCategories = listOf("All", "Bhakti Experiences", "Doubts & Discussions", "Daily Karma Journal", "Temple Stories")
+                val communityCategories = listOf("All", "Bhakti Experiences", "Doubts & Discussions", "Yatra Questions", "Yatra Tips & Guides", "Hidden Spiritual Treasures", "Temple Stories", "Temple Info Correction", "Daily Karma Journal")
                 val getCommunityCategoryDisplayName = { cat: String ->
                     if (isEng) cat
                     else when (cat) {
@@ -281,6 +281,10 @@ fun CommunityScreen(
                         "Doubts & Discussions" -> "जिज्ञासा एवं चर्चा"
                         "Daily Karma Journal" -> "दैनिक कर्म पत्रिका"
                         "Temple Stories" -> "मंदिर गाथा"
+                        "Yatra Questions" -> "यात्रा प्रश्न"
+                        "Yatra Tips & Guides" -> "यात्रा सुझाव व मार्गदर्शन"
+                        "Hidden Spiritual Treasures" -> "भारत के छिपे आध्यात्मिक रत्न"
+                        "Temple Info Correction" -> "मंदिर जानकारी सुधार"
                         else -> cat
                     }
                 }
@@ -735,7 +739,7 @@ fun CommunityScreen(
                                     color = MaterialTheme.colorScheme.secondary,
                                     fontSize = 13.sp
                                 )
-                                val cats = listOf("Bhakti Experiences", "Doubts & Discussions", "Daily Karma Journal", "Temple Stories")
+                                val cats = listOf("Bhakti Experiences", "Doubts & Discussions", "Yatra Questions", "Yatra Tips & Guides", "Hidden Spiritual Treasures", "Temple Stories", "Temple Info Correction", "Daily Karma Journal")
                                 Column {
                                     cats.forEach { cat ->
                                         val displayCat = getCommunityCategoryDisplayName(cat)

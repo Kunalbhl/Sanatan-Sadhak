@@ -102,8 +102,8 @@ object YoutubeFetcher {
                     if (response.isSuccessful) {
                         val body = response.body?.string()
                         if (body != null) {
-                            val parsed = parseFeedXml(body)
-                            Log.i("YoutubeFetcher", "RSS for $channelId: ${parsed.size} videos")
+                            val parsed = parseFeedXml(body).ifEmpty { parseFeedRegex(body) }
+                            Log.i("YoutubeFetcher", "RSS for $channelId: ${parsed.size} videos, ${body.length} bytes, entries=${Regex("<entry>").findAll(body).count()}, head=${body.take(120).replace("\n", " ")}")
                             return parsed
                         }
                     } else {
@@ -117,6 +117,26 @@ object YoutubeFetcher {
 
         return list
     }
+
+    /** Tolerant fallback parser for the channel Atom feed. */
+    private fun parseFeedRegex(xml: String): List<BhaktiVideo> =
+        Regex("<entry>(.*?)</entry>", RegexOption.DOT_MATCHES_ALL).findAll(xml).mapNotNull { m ->
+            val e = m.groupValues[1]
+            fun tag(t: String) = Regex("<$t[^>]*>(.*?)</$t>", RegexOption.DOT_MATCHES_ALL).find(e)?.groupValues?.get(1)
+                ?.replace("&amp;", "&")?.replace("&quot;", "\"")?.replace("&#39;", "'")?.replace("&lt;", "<")?.replace("&gt;", ">")?.trim()
+            val id = tag("yt:videoId") ?: return@mapNotNull null
+            val title = tag("title") ?: return@mapNotNull null
+            val desc = tag("media:description") ?: ""
+            BhaktiVideo(
+                title = title,
+                description = if (desc.length > 250) desc.take(250) + "..." else desc,
+                category = determineCategory(title, desc),
+                videoId = id,
+                isCustom = false,
+                thumbnail = "https://i.ytimg.com/vi/$id/hqdefault.jpg",
+                publishDate = tag("published") ?: ""
+            )
+        }.toList()
 
     private fun parseFeedXml(xmlContent: String): List<BhaktiVideo> {
         val videos = mutableListOf<BhaktiVideo>()
