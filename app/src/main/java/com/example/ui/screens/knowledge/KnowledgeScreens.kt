@@ -254,6 +254,11 @@ fun KnowledgeScreen(
         }
     }
 
+    // Fetch / refresh the Vedas, Upanishads, Puranas … library from Wikipedia (weekly, in background)
+    val libCtx = androidx.compose.ui.platform.LocalContext.current
+    val libScope = rememberCoroutineScope()
+    LaunchedEffect(Unit) { com.example.data.ScriptureLibrary.syncIfStale(libCtx) }
+
     val pendingArticle by viewModel.pendingArticleTitle.collectAsState()
     LaunchedEffect(pendingArticle, articles) {
         val t = pendingArticle ?: return@LaunchedEffect
@@ -292,7 +297,7 @@ fun KnowledgeScreen(
         val isRefreshing by viewModel.isRefreshing.collectAsState()
         androidx.compose.material3.pulltorefresh.PullToRefreshBox(
             isRefreshing = isRefreshing,
-            onRefresh = { viewModel.refreshGeneric() },
+            onRefresh = { viewModel.refreshGeneric(); libScope.launch { com.example.data.ScriptureLibrary.syncIfStale(libCtx, force = true) } },
             modifier = Modifier.fillMaxSize()
         ) {
             LazyColumn(
