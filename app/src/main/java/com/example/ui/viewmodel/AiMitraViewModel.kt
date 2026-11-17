@@ -51,7 +51,8 @@ class AiMitraViewModel(application: Application) : AndroidViewModel(application)
             
             val apiKey = com.example.BuildConfig.GEMINI_API_KEY
             val reply = if (apiKey.isEmpty() || apiKey == "MY_GEMINI_API_KEY" || apiKey == "null") {
-                getMockChatResponse(prompt, AppPreferences.isEnglish.value)
+                if (AppPreferences.isEnglish.value) "🙏 AI Mitra isn't connected in this version of the app, so I can't answer right now. Please update the app and try again."
+                else "🙏 इस संस्करण में एआई मित्र जुड़ा नहीं है, इसलिए अभी उत्तर नहीं दे सकता। कृपया ऐप अपडेट करके पुनः प्रयास करें।"
             } else {
                 com.example.data.GeminiService.generateResponse(chatMessages.value, prompt, AppPreferences.isEnglish.value)
             }

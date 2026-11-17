@@ -556,7 +556,7 @@ private fun HomePanchangSection(
                 borderColor = SadhakThemeColors.sacredPrimary.copy(alpha = 0.35f)
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
-                    if (!festival.isNullOrBlank()) {
+                    if (!festival.isNullOrBlank() && festival.trim() !in setOf("-", "–", "—", "None", "कोई नहीं")) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
@@ -846,6 +846,29 @@ private fun HomeQuickActionsSection(
                 )
             }
         }
+
+        // Community entry: always visible right under Quick Actions
+        Spacer(modifier = Modifier.height(10.dp))
+        Card(
+            onClick = { onNavigateScreen("Community") },
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)),
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
+            modifier = Modifier.fillMaxWidth().testTag("home_community_card")
+        ) {
+            Row(Modifier.padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Forum, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(if (isEng) "Satsang Community" else "सत्संग समुदाय", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    Text(
+                        if (isEng) "Ask questions, share yatra tips, experiences & hidden temples" else "प्रश्न पूछें, यात्रा सुझाव, अनुभव व छिपे तीर्थ साझा करें",
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            }
+        }
     }
 }
 
@@ -1115,12 +1138,6 @@ private fun HomeExploreSection(
                     desc = if (isEng) "Tithi, vrat & festivals" else "तिथि, व्रत एवं पर्व",
                     icon = Icons.Default.CalendarMonth,
                     route = "Calendar"
-                ),
-                ExploreCategoryItem(
-                    title = if (isEng) "AI Mitra" else "एआई मित्र",
-                    desc = if (isEng) "Ask any dharma question" else "धर्म संबंधी कोई भी प्रश्न",
-                    icon = Icons.Default.AutoAwesome,
-                    route = "Chat"
                 ),
                 ExploreCategoryItem(
                     title = if (isEng) "Video Hub" else "वीडियो हब",

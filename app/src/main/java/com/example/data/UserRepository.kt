@@ -8,7 +8,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class UserRepository private constructor(context: Context) {
+class UserRepository private constructor(private val appContext: Context) {
+    private val context: Context get() = appContext
 
     private val db = AppDatabase.getInstance(context)
     private val userDao = db.userDao()
@@ -64,8 +65,7 @@ class UserRepository private constructor(context: Context) {
                 if (prepopulatedSetting == null) {
                     articleDao.insertArticles(SpiritualData.defaultArticles)
                     
-                    videoDao.clearNonCustomVideos()
-                    videoDao.insertVideos(SpiritualData.defaultVideos)
+                    videoDao.deleteByVideoIds(SpiritualData.defaultVideos.map { it.videoId })
                     
                     val postsSetting = settingDao.getSetting("db_prepopulated")
                     if (postsSetting == null) {
@@ -157,15 +157,33 @@ class UserRepository private constructor(context: Context) {
         val idClean = identifier.lowercase().trim()
         
         // Try Firebase auth if available and identifier looks like an email
+        var cloudOk = false
         if (firebaseService.isFirebaseAvailable.value && idClean.contains("@")) {
-            firebaseService.signInWithEmail(idClean, passwordText)
+            cloudOk = firebaseService.signInWithEmail(idClean, passwordText)
         }
-        
+
+        // New phone / reinstall: Firebase knows the account but this device doesn't — restore it.
+        if (cloudOk && userDao.getUserByEmail(idClean) == null) {
+            val p = firebaseService.loadProfile(idClean)
+            userDao.insertUser(User(
+                email = idClean,
+                fullName = p?.get("fullName") as? String ?: idClean.substringBefore("@"),
+                mobileNumber = p?.get("mobileNumber") as? String ?: "",
+                city = p?.get("city") as? String ?: "",
+                state = p?.get("state") as? String ?: "",
+                avatar = (p?.get("avatar") as? Number)?.toInt() ?: 1,
+                password = passwordText,
+                role = p?.get("role") as? String ?: "Regular",
+                profileImageUri = ProfileImageStore.fromBase64(context, idClean, p?.get("photoBase64") as? String ?: "")
+            ))
+        }
+
         var user = userDao.getUserByEmail(idClean)
         if (user == null) {
             user = userDao.getUserByMobile(idClean)
         }
-        if (user != null && user.password == passwordText) {
+        if (user != null && (user.password == passwordText || cloudOk)) {
+            if (cloudOk && user.password != passwordText) userDao.insertUser(user.copy(password = passwordText))
             return user
         }
         return null
@@ -182,6 +200,10 @@ class UserRepository private constructor(context: Context) {
 
     suspend fun updateUserProfile(email: String, fullName: String, mobileNumber: String, city: String, state: String, avatar: Int, imageUri: String) {
         userDao.updateUserProfile(email.lowercase().trim(), fullName, mobileNumber, city, state, avatar, imageUri)
+        // Back up to the cloud so the profile (and photo) come back after reinstall / on a new phone
+        userDao.getUserByEmail(email.lowercase().trim())?.let { u ->
+            firebaseService.saveProfile(u, ProfileImageStore.toBase64(context, u.email))
+        }
         if (_userEmailState.value.lowercase().trim() == email.lowercase().trim()) {
             _userNameState.value = fullName
             _userMobileState.value = mobileNumber
@@ -197,9 +219,11 @@ class UserRepository private constructor(context: Context) {
         _userNameState.value = user.fullName
         _userRoleState.value = user.role
         _userAvatarState.value = user.avatar
-        _userMobileState.value = user.mobileNumber
-        _userCityState.value = user.city
-        _userStateProvinceState.value = user.state
+        // Older builds filled placeholders for the admin account; never show them as real data
+        val placeholder = user.mobileNumber == "9999999999"
+        _userMobileState.value = if (placeholder) "" else user.mobileNumber
+        _userCityState.value = if (placeholder && user.city == "Ajmer") "" else user.city
+        _userStateProvinceState.value = if (placeholder && user.state == "Rajasthan") "" else user.state
         _userProfileImageUriState.value = user.profileImageUri
     }
 

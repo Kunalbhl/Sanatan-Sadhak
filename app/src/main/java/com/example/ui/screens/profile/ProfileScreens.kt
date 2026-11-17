@@ -1632,11 +1632,14 @@ fun EditProfileScreen(viewModel: SadhakViewModel, onBack: () -> Unit) {
     var editAvatar by remember { mutableStateOf(userAvatar) }
     var editImageUri by remember { mutableStateOf(userProfileImageUri) }
 
+    val photoCtx = androidx.compose.ui.platform.LocalContext.current
     val photoPickerLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia(),
         onResult = { uri ->
             if (uri != null) {
-                editImageUri = uri.toString()
+                // Copy into app storage so the photo survives restarts (gallery links expire)
+                val saved = com.example.data.ProfileImageStore.importPicked(photoCtx, uri, viewModel.userEmail.value)
+                editImageUri = saved.ifEmpty { uri.toString() }
             }
         }
     )

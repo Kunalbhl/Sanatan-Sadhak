@@ -171,8 +171,9 @@ object AstrologyService {
             // 3. Moonrise / Moonset handling for local calculation
             // Note: Accurate Moonrise/Moonset requires precise topocentric ephemeris.
             // As per astronomical standards, offline simplified models do not report exact moonrise times.
-            val moonriseStr = "Determined by Lunar Horizon"
-            val moonsetStr = "Determined by Lunar Horizon"
+            val (moonRiseMin, moonSetMin) = VedicEphemeris.moonRiseSet(year, month, day, latitude, longitude, timezone)
+            val moonriseStr = moonRiseMin?.let { formatMin(it) } ?: "—"
+            val moonsetStr = moonSetMin?.let { formatMin(it) } ?: "—"
 
             // 4. Sun & Moon positions at local sunrise (Udaya Tithi convention), Lahiri sidereal zodiac
             val sunriseUtHours = sunriseMinutes / 60.0 - timezone

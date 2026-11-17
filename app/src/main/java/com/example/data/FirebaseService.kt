@@ -129,6 +129,43 @@ class FirebaseService(private val context: Context) {
             false
         }
     }
+    /** Save/merge profile fields (incl. a small base64 photo) so they survive reinstall and new devices. */
+    suspend fun saveProfile(user: User, photoBase64: String): Boolean {
+        if (!_isFirebaseAvailable.value || firestore == null) return false
+        return try {
+            val data = hashMapOf<String, Any>(
+                "email" to user.email.lowercase().trim(),
+                "fullName" to user.fullName,
+                "avatar" to user.avatar,
+                "mobileNumber" to user.mobileNumber,
+                "city" to user.city,
+                "state" to user.state,
+                "updatedAt" to System.currentTimeMillis()
+            )
+            if (photoBase64.isNotEmpty()) data["photoBase64"] = photoBase64
+            val uid = auth?.currentUser?.uid ?: user.email.replace(".", "_")
+            firestore!!.collection("users").document(uid)
+                .set(data, com.google.firebase.firestore.SetOptions.merge()).await()
+            true
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to save profile: ${e.message}"); false
+        }
+    }
+
+    /** Signed-in user's cloud profile (null if none / offline). */
+    suspend fun loadProfile(email: String): Map<String, Any>? {
+        if (!_isFirebaseAvailable.value || firestore == null) return null
+        return try {
+            val uid = auth?.currentUser?.uid
+            val doc = if (uid != null) firestore!!.collection("users").document(uid).get().await() else null
+            if (doc != null && doc.exists()) doc.data
+            else firestore!!.collection("users").whereEqualTo("email", email.lowercase().trim()).limit(1)
+                .get().await().documents.firstOrNull()?.data
+        } catch (e: Exception) {
+            Log.e(tag, "Failed to load profile: ${e.message}"); null
+        }
+    }
+
     suspend fun savePostToFirestore(post: CommunityPost): Boolean {
         if (!_isFirebaseAvailable.value || firestore == null) return false
         return try {

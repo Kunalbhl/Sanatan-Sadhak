@@ -212,6 +212,7 @@ fun VideoHubScreen(viewModel: SadhakViewModel, videoViewModel: com.example.ui.vi
     var activeVideoTitle by remember { mutableStateOf("") }
 
     val categories = listOf("All", "Favorites", "YouTube", "Darshan", "Puja", "Stories")
+    val isSyncingVideos by videoViewModel.isSyncingVideos.collectAsState()
 
     Column(
         modifier = Modifier
@@ -351,94 +352,6 @@ fun VideoHubScreen(viewModel: SadhakViewModel, videoViewModel: com.example.ui.vi
         val curatedVideos by videoViewModel.curatedPlaylistVideos.collectAsState()
         val curatedTitle = videoViewModel.getCuratedPlaylistTitle(isEng)
 
-        if (curatedVideos.isNotEmpty() && selectedCat == "All") {
-            SacredCard(
-                backgroundColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f),
-                borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
-                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(text = "✨", fontSize = 16.sp)
-                        Text(
-                            text = curatedTitle,
-                            style = MaterialTheme.typography.titleSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    androidx.compose.foundation.lazy.LazyRow(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        items(curatedVideos) { video ->
-                            Card(
-                                modifier = Modifier
-                                    .width(200.dp)
-                                    .clickable {
-                                        activeVideoUrl = video.videoId
-                                        activeVideoTitle = video.title
-                                    },
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surface
-                                )
-                            ) {
-                                Column {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(90.dp)
-                                            .background(
-                                                Brush.linearGradient(
-                                                    colors = listOf(
-                                                        MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                                        MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)
-                                                    )
-                                                )
-                                            ),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(text = "🕉", fontSize = 36.sp, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
-                                        Icon(
-                                            imageVector = Icons.Default.PlayArrow,
-                                            contentDescription = "Play",
-                                            tint = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.size(32.dp)
-                                        )
-                                    }
-                                    Column(modifier = Modifier.padding(8.dp)) {
-                                        Text(
-                                            text = video.title,
-                                            maxLines = 2,
-                                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                                            style = MaterialTheme.typography.bodyMedium.copy(
-                                                fontWeight = FontWeight.Bold,
-                                                lineHeight = 16.sp
-                                            ),
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                        Spacer(modifier = Modifier.height(2.dp))
-                                        Text(
-                                            text = video.category,
-                                            style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.secondary
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
         // List of videos
         if (filteredSortedVideos.isEmpty()) {
             Box(
@@ -448,7 +361,11 @@ fun VideoHubScreen(viewModel: SadhakViewModel, videoViewModel: com.example.ui.vi
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = if (isEng) "No videos found in this category." else "इस श्रेणी में कोई वीडियो नहीं मिला।",
+                    text = when {
+                        videos.isEmpty() && isSyncingVideos -> if (isEng) "Fetching the latest videos from YouTube…" else "यूट्यूब से नवीनतम वीडियो लाए जा रहे हैं…"
+                        videos.isEmpty() -> if (isEng) "No videos yet. Pull down to refresh, or check your internet connection." else "अभी कोई वीडियो नहीं। रीफ़्रेश करें या इंटरनेट जाँचें।"
+                        else -> if (isEng) "No videos found in this category." else "इस श्रेणी में कोई वीडियो नहीं मिला।"
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.Gray,
                     textAlign = TextAlign.Center
@@ -464,7 +381,7 @@ fun VideoHubScreen(viewModel: SadhakViewModel, videoViewModel: com.example.ui.vi
             val isRefreshing by viewModel.isRefreshing.collectAsState()
             androidx.compose.material3.pulltorefresh.PullToRefreshBox(
                 isRefreshing = isRefreshing,
-                onRefresh = { viewModel.refreshGeneric() },
+                onRefresh = { viewModel.refreshGeneric(); videoViewModel.syncYoutubeVideos() },
                 modifier = Modifier.weight(1f)
             ) {
                 LazyColumn(
@@ -472,6 +389,87 @@ fun VideoHubScreen(viewModel: SadhakViewModel, videoViewModel: com.example.ui.vi
                     modifier = Modifier.fillMaxSize(),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
+                item {
+                if (curatedVideos.isNotEmpty() && selectedCat == "All") {
+                    SacredCard(
+                        backgroundColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.15f),
+                        borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(text = "✨", fontSize = 16.sp)
+                                Text(
+                                    text = curatedTitle,
+                                    style = MaterialTheme.typography.titleSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                    
+                            androidx.compose.foundation.lazy.LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                items(curatedVideos) { video ->
+                                    Card(
+                                        modifier = Modifier
+                                            .width(200.dp)
+                                            .clickable {
+                                                activeVideoUrl = video.videoId
+                                                activeVideoTitle = video.title
+                                            },
+                                        colors = CardDefaults.cardColors(
+                                            containerColor = MaterialTheme.colorScheme.surface
+                                        )
+                                    ) {
+                                        Column {
+                                            Box(modifier = Modifier.fillMaxWidth().height(110.dp), contentAlignment = Alignment.Center) {
+                                                coil.compose.AsyncImage(
+                                                    model = video.thumbnail.ifEmpty { "https://i.ytimg.com/vi/${video.videoId}/hqdefault.jpg" },
+                                                    contentDescription = video.title,
+                                                    contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                                                    modifier = Modifier.fillMaxSize()
+                                                )
+                                                Icon(
+                                                    imageVector = Icons.Default.PlayArrow,
+                                                    contentDescription = "Play",
+                                                    tint = Color.White,
+                                                    modifier = Modifier.size(36.dp).background(Color.Black.copy(alpha = 0.45f), androidx.compose.foundation.shape.CircleShape).padding(4.dp)
+                                                )
+                                            }
+                                            Column(modifier = Modifier.padding(8.dp)) {
+                                                Text(
+                                                    text = video.title,
+                                                    maxLines = 2,
+                                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                                        fontWeight = FontWeight.Bold,
+                                                        lineHeight = 16.sp
+                                                    ),
+                                                    color = MaterialTheme.colorScheme.onSurface
+                                                )
+                                                Spacer(modifier = Modifier.height(2.dp))
+                                                Text(
+                                                    text = video.category,
+                                                    style = MaterialTheme.typography.labelSmall,
+                                                    color = MaterialTheme.colorScheme.secondary
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                }
                 itemsIndexed(filteredSortedVideos) { index, video ->
                     val isLocked = userRole == "Guest" && index >= 2
                     SacredCard(

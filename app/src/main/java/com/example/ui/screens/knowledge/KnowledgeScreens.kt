@@ -308,7 +308,11 @@ fun KnowledgeScreen(
                 item {
                     // Search Bar with Recent Searches
                     var expanded by remember { mutableStateOf(false) }
-                    val recentSearches = listOf("Hanuman Chalisa", "Gita Chapter 2") // Mock
+                    val searchPrefs = androidx.compose.ui.platform.LocalContext.current.getSharedPreferences("knowledge_search", android.content.Context.MODE_PRIVATE)
+                    val recentSearches = remember(searchQuery) {
+                        if (searchQuery.isBlank()) searchPrefs.getString("recent", "")!!.split("\n").filter { it.isNotBlank() }
+                        else { val r = (listOf(searchQuery.trim()) + searchPrefs.getString("recent", "")!!.split("\n")).filter { it.isNotBlank() }.distinct().take(5); if (searchQuery.trim().length >= 3) searchPrefs.edit().putString("recent", r.joinToString("\n")).apply(); r.drop(1) }
+                    }
                     val popularSearches = listOf("Karma meaning", "Shiv mantras", "Ekadashi vrat rules")
 
                     ExposedDropdownMenuBox(
@@ -344,7 +348,7 @@ fun KnowledgeScreen(
                                 expanded = expanded,
                                 onDismissRequest = { expanded = false }
                             ) {
-                                Text(if (isEng) "Recent Searches" else "हाल की खोजें", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(8.dp))
+                                if (recentSearches.isNotEmpty()) Text(if (isEng) "Recent Searches" else "हाल की खोजें", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(8.dp))
                                 recentSearches.forEach { search ->
                                     DropdownMenuItem(
                                         text = { Text(search) },
@@ -781,6 +785,7 @@ fun ArticleDetailScreen(
     var aiQuestion by remember { mutableStateOf("") }
     var aiAnswer by remember { mutableStateOf("") }
     var isAskingAi by remember { mutableStateOf(false) }
+    val articleAiScope = rememberCoroutineScope()
 
     val readingProgress by remember {
         derivedStateOf {
@@ -1264,14 +1269,18 @@ fun ArticleDetailScreen(
                                 onClick = {
                                     if (aiQuestion.isNotBlank()) {
                                         isAskingAi = true
-                                        // Contextual response simulation/generation grounded in article
                                         val q = aiQuestion.trim()
-                                        aiAnswer = if (isEnglish) {
-                                            "Hari Om! Regarding '${article.title}', $q\n\nSpiritual Guidance: In Sanatan Dharma, this principle teaches us detachment from outcomes while remaining dedicated to noble action (Karma Yoga). Practice inner awareness during daily duties."
-                                        } else {
-                                            "हरि ओम! '${article.title}' के संदर्भ में आपके प्रश्न ($q) का उत्तर:\n\nआध्यात्मिक मार्गदर्शन: सनातन धर्म के अनुसार, यह सिद्धांत हमें निष्काम कर्म (परिणामों से परे होकर कर्तव्य पालन) की प्रेरणा देता है।"
+                                        articleAiScope.launch {
+                                            val key = com.example.BuildConfig.GEMINI_API_KEY
+                                            aiAnswer = if (key.isBlank() || key == "MY_GEMINI_API_KEY") {
+                                                if (isEnglish) "AI Mitra isn't connected in this build yet. Please try again after the app update." else "इस संस्करण में एआई मित्र अभी जुड़ा नहीं है।"
+                                            } else com.example.data.GeminiService.generateResponse(
+                                                emptyList(),
+                                                "Answer this question about the article \"${article.title}\". Article text:\n${article.content.take(6000)}\n\nQuestion: $q",
+                                                isEnglish
+                                            )
+                                            isAskingAi = false
                                         }
-                                        isAskingAi = false
                                     }
                                 },
                                 enabled = aiQuestion.isNotBlank() && !isAskingAi,

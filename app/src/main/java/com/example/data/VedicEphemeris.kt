@@ -80,6 +80,61 @@ object VedicEphemeris {
         return Pair(sun, norm(lon))
     }
 
+    /**
+     * Moon's geocentric altitude (degrees) at [jd] for an observer at lat/lon (east +).
+     * Uses the same Schlyter lunar theory incl. ecliptic latitude, then RA/Dec → hour angle.
+     */
+    fun moonAltitude(jd: Double, latDeg: Double, lonDeg: Double): Double {
+        val d = jd - 2451543.5
+        val n = norm(125.1228 - 0.0529538083 * d)
+        val i = 5.1454
+        val w = norm(318.0634 + 0.1643573223 * d)
+        val e = 0.054900
+        val mm = norm(115.3654 + 13.0649929509 * d)
+        var ecc = mm + deg(e) * sin(rad(mm)) * (1 + e * cos(rad(mm)))
+        repeat(8) { ecc -= (ecc - deg(e) * sin(rad(ecc)) - mm) / (1 - e * cos(rad(ecc))) }
+        val xv = cos(rad(ecc)) - e
+        val yv = sqrt(1 - e * e) * sin(rad(ecc))
+        val v = deg(atan2(yv, xv))
+        val r = hypot(xv, yv)
+        val xh = r * (cos(rad(n)) * cos(rad(v + w)) - sin(rad(n)) * sin(rad(v + w)) * cos(rad(i)))
+        val yh = r * (sin(rad(n)) * cos(rad(v + w)) + cos(rad(n)) * sin(rad(v + w)) * cos(rad(i)))
+        val zh = r * sin(rad(v + w)) * sin(rad(i))
+        val ms = norm(356.0470 + 0.9856002585 * d)
+        val lm = norm(mm + w + n)
+        val dd = norm(lm - norm(ms + 282.9404 + 4.70935e-5 * d))
+        val ff = norm(lm - n)
+        val lat = deg(atan2(zh, hypot(xh, yh))) - 0.173 * sin(rad(ff - 2 * dd)) - 0.055 * sin(rad(mm - ff - 2 * dd)) -
+            0.046 * sin(rad(mm + ff - 2 * dd)) + 0.033 * sin(rad(ff + 2 * dd)) + 0.017 * sin(rad(2 * mm + ff))
+        val lon = tropicalSunMoon(jd).second
+        val obl = rad(23.4393 - 3.563e-7 * d)
+        val ra = atan2(sin(rad(lon)) * cos(obl) - kotlin.math.tan(rad(lat)) * sin(obl), cos(rad(lon)))
+        val dec = kotlin.math.asin(sin(rad(lat)) * cos(obl) + cos(rad(lat)) * sin(obl) * sin(rad(lon)))
+        val gmst = norm(280.46061837 + 360.98564736629 * (jd - 2451545.0))
+        val ha = rad(norm(gmst + lonDeg) ) - ra
+        val phi = rad(latDeg)
+        return deg(kotlin.math.asin(sin(phi) * sin(dec) + cos(phi) * cos(dec) * cos(ha)))
+    }
+
+    /**
+     * Moonrise and moonset in local minutes after midnight (null if the event does not happen that day).
+     * Scans the local day in 5-minute steps and interpolates the crossing of +0.125° (parallax − refraction − semidiameter).
+     */
+    fun moonRiseSet(year: Int, month: Int, day: Int, latDeg: Double, lonDeg: Double, tz: Double): Pair<Int?, Int?> {
+        val h0 = 0.125
+        val jd0 = julianDay(year, month, day, -tz)
+        var rise: Int? = null; var set: Int? = null
+        var prev = moonAltitude(jd0, latDeg, lonDeg) - h0
+        var m = 5
+        while (m <= 1440) {
+            val cur = moonAltitude(jd0 + m / 1440.0, latDeg, lonDeg) - h0
+            if (prev < 0 && cur >= 0 && rise == null) rise = (m - 5 + 5 * (-prev / (cur - prev))).toInt()
+            if (prev >= 0 && cur < 0 && set == null) set = (m - 5 + 5 * (prev / (prev - cur))).toInt()
+            prev = cur; m += 5
+        }
+        return Pair(rise, set)
+    }
+
     data class Limbs(
         val sunSidereal: Double,
         val moonSidereal: Double,
