@@ -28,9 +28,9 @@ object GeminiService {
         if (apiKey.isEmpty() || apiKey == "MY_GEMINI_API_KEY") {
             Log.e(TAG, "API Key is missing or default placeholder")
             if (isEnglish) {
-                return@withContext "Pranam! I am 'Sadhak Mitra', your spiritual guide. Today's sacred wisdom: 'Set your heart on your work, but never on its reward. Work selflessly for the divine, and you shall find true, everlasting happiness (Nishkama Karma).'"
+                return@withContext "Pranam! I am 'Sadhak Mitra', your spiritual guide. Live AI guidance is not available right now. Until then, let me share this sacred wisdom: 'Set your heart on your work, but never on its reward. Work selflessly for the divine, and you shall find true, everlasting happiness (Nishkama Karma).'"
             } else {
-                return@withContext "प्रणाम! मैं 'साधक मित्र' हूं, आपका आध्यात्मिक मार्गदर्शक। आज का पावन विचार: 'अपने कर्म पर ध्यान लगाओ, उसके फल पर नहीं। ईश्वर के लिए निस्वार्थ भाव से कार्य करो, और तुम्हें सच्ची, शाश्वत प्रसन्नता प्राप्त होगी (निष्काम कर्म)।'"
+                return@withContext "प्रणाम! मैं 'साधक मित्र' हूं, आपका आध्यात्मिक मार्गदर्शक। लाइव AI मार्गदर्शन अभी उपलब्ध नहीं है। तब तक, मैं आपके साथ यह पवित्र ज्ञान साझा करता हूँ: 'अपने कर्म पर ध्यान लगाओ, उसके फल पर नहीं। ईश्वर के लिए निस्वार्थ भाव से कार्य करो, और तुम्हें सच्ची, शाश्वत प्रसन्नता प्राप्त होगी (निष्काम कर्म)।'"
             }
         }
 
@@ -210,9 +210,10 @@ object GeminiService {
 
             val requestBody = root.toString().toRequestBody("application/json".toMediaType())
             val request = Request.Builder().url(url).post(requestBody).build()
-            val response = client.newCall(request).execute()
-            if (!response.isSuccessful) return@withContext null
-            val responseBody = response.body?.string() ?: return@withContext null
+            // use{} closes the response so connections are not leaked
+            val responseBody = client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) null else response.body?.string()
+            } ?: return@withContext null
             val jsonResponse = JSONObject(responseBody)
             val candidates = jsonResponse.optJSONArray("candidates") ?: return@withContext null
             if (candidates.length() > 0) {

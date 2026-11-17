@@ -73,7 +73,7 @@ class AiMitraViewModel(application: Application) : AndroidViewModel(application)
         if (isEnglish) {
             return when {
                 p.contains("panchang") -> {
-                    "Today's Panchang highlights an auspicious Tithi and Nakshatra, creating a favorable energy for starting new spiritual practices. The planetary alignments suggest dedicating time to meditation and inner reflection.\n\nTry this today: Light a diya during Sandhya time and chant the Gayatri Mantra.\n[CHIP:View Daily Panchang:Home]\n[FOLLOWUP:How do I start a daily puja?]\n[FOLLOWUP:Tell me about Mahadev]"
+                    "Today's Panchang highlights an auspicious Tithi and Nakshatra, creating a favorable energy for starting new spiritual practices. The planetary alignments suggest dedicating time to meditation and inner reflection.\n\nTry this today: Light a diya during Sandhya time and chant the Gayatri Mantra.\n[CHIP:View Daily Panchang:Calendar]\n[FOLLOWUP:How do I start a daily puja?]\n[FOLLOWUP:Tell me about Mahadev]"
                 }
                 p.contains("karma") -> {
                     "Karma is the universal principle of cause and effect, where your actions, thoughts, and intentions shape your spiritual journey. It is not a system of punishment, but a path of learning and balancing. Nishkama Karma, performing your duties without attachment to the results, is considered the highest form of action.\n\nTry this today: Perform one act of kindness without expecting anything in return.\n[CHIP:Explore Karma & Dharma:Knowledge]\n[FOLLOWUP:Explain Dharma simply]\n[FOLLOWUP:What is Nishkama Karma?]"
@@ -97,7 +97,7 @@ class AiMitraViewModel(application: Application) : AndroidViewModel(application)
         } else {
             return when {
                 p.contains("panchang") || p.contains("पंचांग") -> {
-                    "आज का पंचांग एक शुभ तिथि और नक्षत्र को उजागर करता है, जो नई आध्यात्मिक प्रथाओं को शुरू करने के लिए एक अनुकूल ऊर्जा पैदा करता है। ग्रहों की स्थिति ध्यान और आंतरिक चिंतन के लिए समय समर्पित करने का सुझाव देती है।\n\nआज ही इसे आजमाएं: संध्या के समय एक दीया जलाएं और गायत्री मंत्र का जाप करें।\n[CHIP:दैनिक पंचांग देखें:Home]\n[FOLLOWUP:दैनिक पूजा कैसे शुरू करें?]\n[FOLLOWUP:मुझे महादेव के बारे में बताएं]"
+                    "आज का पंचांग एक शुभ तिथि और नक्षत्र को उजागर करता है, जो नई आध्यात्मिक प्रथाओं को शुरू करने के लिए एक अनुकूल ऊर्जा पैदा करता है। ग्रहों की स्थिति ध्यान और आंतरिक चिंतन के लिए समय समर्पित करने का सुझाव देती है।\n\nआज ही इसे आजमाएं: संध्या के समय एक दीया जलाएं और गायत्री मंत्र का जाप करें।\n[CHIP:दैनिक पंचांग देखें:Calendar]\n[FOLLOWUP:दैनिक पूजा कैसे शुरू करें?]\n[FOLLOWUP:मुझे महादेव के बारे में बताएं]"
                 }
                 p.contains("karma") || p.contains("कर्म") -> {
                     "कर्म कारण और प्रभाव का सार्वभौमिक सिद्धांत है, जहां आपके कार्य, विचार और इरादे आपकी आध्यात्मिक यात्रा को आकार देते हैं। यह सजा की प्रणाली नहीं है, बल्कि सीखने और संतुलन का मार्ग है। निष्काम कर्म, बिना किसी फल की आसक्ति के अपने कर्तव्यों का पालन करना, कर्म का सर्वोच्च रूप माना जाता है।\n\nआज ही इसे आजमाएं: बिना किसी बदले की उम्मीद के किसी के लिए दयालुता का कार्य करें।\n[CHIP:कर्म और धर्म जानें:Knowledge]\n[FOLLOWUP:धर्म को सरलता से समझाएं]\n[FOLLOWUP:निष्काम कर्म क्या है?]"

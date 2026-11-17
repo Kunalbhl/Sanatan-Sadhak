@@ -306,7 +306,11 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "sanatan_sadhak_db"
                 )
-                .fallbackToDestructiveMigration()
+                // No migrations are defined yet. Without this, any schema version bump
+                // crashes the app on launch for existing users. Cached data is rebuilt
+                // from Firebase/defaults. Add real Migrations before a public release
+                // to keep journals and karma logs across upgrades.
+                .fallbackToDestructiveMigration(dropAllTables = true)
                 .build()
                 INSTANCE = instance
                 instance
