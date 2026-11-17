@@ -1254,15 +1254,30 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
 
     // --- CREATE ACTIONS ---
 
-    fun createPost(title: String, content: String, category: String) {
+    /** Open a Knowledge article from elsewhere (e.g. a Community post that was written under it). */
+    private val _pendingArticleTitle = MutableStateFlow<String?>(null)
+    val pendingArticleTitle: StateFlow<String?> = _pendingArticleTitle
+    fun openArticle(title: String) { _pendingArticleTitle.value = title; setScreen("Knowledge") }
+    fun clearPendingArticle() { _pendingArticleTitle.value = null }
+
+    fun createPost(
+        title: String, content: String, category: String,
+        sourceType: String = "", sourceId: String = "", sourceTitle: String = ""
+    ) {
         viewModelScope.launch {
-            val authorName = if (userRole.value == "Guest") "Guest Sadhak" else userName.value
+            val isGuest = userRole.value == "Guest"
+            val authorName = if (isGuest) "Guest Sadhak" else userName.value
             val newPost = CommunityPost(
                 category = category,
                 author = authorName,
                 title = title,
                 content = content,
-                createdAt = System.currentTimeMillis()
+                createdAt = System.currentTimeMillis(),
+                sourceType = sourceType,
+                sourceId = sourceId,
+                sourceTitle = sourceTitle,
+                authorEmail = if (isGuest) "" else userEmail.value,
+                authorCity = if (isGuest) "" else userCity.value
             )
             communityRepository.addPost(newPost)
             statsPostsCount.value += 1

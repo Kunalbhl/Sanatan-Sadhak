@@ -860,7 +860,7 @@ private fun HomeQuickActionsSection(
                 Icon(Icons.Default.Forum, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(if (isEng) "Satsang Community" else "सत्संग समुदाय", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    Text(if (isEng) "Sanatan Community" else "सनातन समुदाय", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                     Text(
                         if (isEng) "Ask questions, share yatra tips, experiences & hidden temples" else "प्रश्न पूछें, यात्रा सुझाव, अनुभव व छिपे तीर्थ साझा करें",
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -1122,7 +1122,7 @@ private fun HomeExploreSection(
                     route = "Bhakti"
                 ),
                 ExploreCategoryItem(
-                    title = if (isEng) "Community" else "सत्संग समुदाय",
+                    title = if (isEng) "Sanatan Community" else "सनातन समुदाय",
                     desc = if (isEng) "Ask, share & discuss with devotees" else "भक्तों से पूछें, साझा करें",
                     icon = Icons.Default.Forum,
                     route = "Community"

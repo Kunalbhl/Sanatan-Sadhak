@@ -46,6 +46,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Add
@@ -266,7 +268,7 @@ fun CommunityScreen(
             ) {
                 // Category & Filtering options
                 var selectedCommunityCategory by remember { mutableStateOf("All") }
-                val communityCategories = listOf("All", "Bhakti Experiences", "Doubts & Discussions", "Yatra Questions", "Yatra Tips & Guides", "Hidden Spiritual Treasures", "Temple Stories", "Temple Info Correction", "Daily Karma Journal")
+                val communityCategories = listOf("All", "Satsang", "Knowledge Discussion", "Bhakti Experiences", "Doubts & Discussions", "Yatra Questions", "Yatra Tips & Guides", "Hidden Spiritual Treasures", "Temple Stories", "Temple Info Correction", "Daily Karma Journal")
                 val getCommunityCategoryDisplayName = { cat: String ->
                     if (isEng) cat
                     else when (cat) {
@@ -279,6 +281,8 @@ fun CommunityScreen(
                         "Yatra Tips & Guides" -> "यात्रा सुझाव व मार्गदर्शन"
                         "Hidden Spiritual Treasures" -> "भारत के छिपे आध्यात्मिक रत्न"
                         "Temple Info Correction" -> "मंदिर जानकारी सुधार"
+                        "Satsang" -> "सत्संग"
+                        "Knowledge Discussion" -> "ज्ञान चर्चा"
                         else -> cat
                     }
                 }
@@ -323,7 +327,7 @@ fun CommunityScreen(
                         item {
                             Column {
                             SacredHeader(
-                                title = if (isEng) "Sadhak Community" else "साधक संघ",
+                                title = if (isEng) "Sanatan Community" else "सनातन समुदाय",
                                 subtitle = if (isEng) "Ask, answer and share: experiences, yatra help, hidden temples" else "पूछें, उत्तर दें, साझा करें: अनुभव, यात्रा सहायता, छिपे तीर्थ",
                                 showDiyas = true
                             )
@@ -492,6 +496,20 @@ fun CommunityScreen(
                                     Spacer(modifier = Modifier.height(8.dp))
 
                                     // Title
+                                    if (post.sourceType.isNotBlank()) {
+                                        androidx.compose.material3.AssistChip(
+                                            onClick = { if (post.sourceType == "article") viewModel.openArticle(post.sourceId) },
+                                            label = { Text((if (isEng) "Written in: " else "यहाँ लिखा: ") + post.sourceTitle, fontSize = 11.sp, maxLines = 1) },
+                                            leadingIcon = { Icon(Icons.Default.MenuBook, contentDescription = null, modifier = Modifier.size(14.dp)) },
+                                            modifier = Modifier.padding(vertical = 2.dp)
+                                        )
+                                    }
+                                    if (post.authorCity.isNotBlank() || post.authorEmail.isNotBlank()) {
+                                        Text(
+                                            text = listOfNotNull(if (post.authorEmail.isNotBlank()) (if (isEng) "✓ Signed-in member" else "✓ पंजीकृत सदस्य") else null, post.authorCity.ifBlank { null }).joinToString(" · "),
+                                            style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
                                     Text(
                                         text = post.title,
                                         style = MaterialTheme.typography.titleMedium.copy(
@@ -736,7 +754,7 @@ fun CommunityScreen(
                                     color = MaterialTheme.colorScheme.secondary,
                                     fontSize = 13.sp
                                 )
-                                val cats = listOf("Bhakti Experiences", "Doubts & Discussions", "Yatra Questions", "Yatra Tips & Guides", "Hidden Spiritual Treasures", "Temple Stories", "Temple Info Correction", "Daily Karma Journal")
+                                val cats = listOf("Satsang", "Bhakti Experiences", "Doubts & Discussions", "Yatra Questions", "Yatra Tips & Guides", "Hidden Spiritual Treasures", "Temple Stories", "Temple Info Correction", "Daily Karma Journal")
                                 Column {
                                     cats.forEach { cat ->
                                         val displayCat = getCommunityCategoryDisplayName(cat)
@@ -1091,3 +1109,89 @@ fun CommentThreadScreen(
 
 
 // --- SACRED AARTI BELL CHIME ENGINE & WIDGET ---
+
+/**
+ * Discussion attached to any place in the app (an article, a temple, …).
+ * Messages are normal posts of the one Sanatan Community, tagged with where they were written,
+ * so they appear both here and in the Community feed (with a link back to this place).
+ */
+@Composable
+fun SourceDiscussion(viewModel: SadhakViewModel, sourceType: String, sourceId: String, sourceTitle: String) {
+    val isEng by viewModel.isEnglish.collectAsState()
+    val posts by viewModel.posts.collectAsState()
+    val userRole by viewModel.userRole.collectAsState()
+    val here = remember(posts, sourceType, sourceId) { posts.filter { it.sourceType == sourceType && it.sourceId == sourceId } }
+    var draft by remember { mutableStateOf("") }
+    var kind by remember { mutableStateOf("Knowledge Discussion") }
+    val kinds = listOf("Knowledge Discussion", "Doubts & Discussions", "Correction / Improvement", "Satsang")
+
+    SacredCard(backgroundColor = MaterialTheme.colorScheme.surface) {
+        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Forum, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.width(8.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(if (isEng) "Discuss in Sanatan Community" else "सनातन समुदाय में चर्चा", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    Text(
+                        if (isEng) "Ask, suggest a correction, or add what you know. Also shown in the Community." else "प्रश्न पूछें, सुधार सुझाएँ या जानकारी जोड़ें। यह समुदाय में भी दिखेगा।",
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            if (userRole == "Guest") {
+                Text(
+                    if (isEng) "Sign in to join the discussion." else "चर्चा में भाग लेने के लिए साइन इन करें।",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.secondary
+                )
+            } else {
+                Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    kinds.forEach { k ->
+                        androidx.compose.material3.FilterChip(selected = kind == k, onClick = { kind = k }, label = { Text(k, fontSize = 11.sp) })
+                    }
+                }
+                OutlinedTextField(
+                    value = draft, onValueChange = { draft = it.take(2000) },
+                    placeholder = { Text(if (isEng) "Write your question or thought…" else "अपना प्रश्न या विचार लिखें…") },
+                    modifier = Modifier.fillMaxWidth(), minLines = 2, shape = RoundedCornerShape(12.dp)
+                )
+                Button(
+                    onClick = {
+                        val text = draft.trim()
+                        viewModel.createPost(
+                            title = text.lineSequence().first().take(80),
+                            content = text, category = kind,
+                            sourceType = sourceType, sourceId = sourceId, sourceTitle = sourceTitle
+                        )
+                        draft = ""
+                    },
+                    enabled = draft.trim().length >= 3,
+                    modifier = Modifier.align(Alignment.End)
+                ) { Text(if (isEng) "Post" else "पोस्ट करें") }
+            }
+            if (here.isEmpty()) {
+                Text(if (isEng) "No messages yet. Start the discussion." else "अभी कोई संदेश नहीं। चर्चा शुरू करें।", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+            }
+            here.forEach { p ->
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                PostAuthorLine(p, isEng)
+                Text(p.content, style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+    }
+}
+
+/** "@Name ✓ · City · Category · time" — the ✓ shows the sender is a signed-in member. */
+@Composable
+fun PostAuthorLine(post: CommunityPost, isEng: Boolean) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text("@${post.author}", style = MaterialTheme.typography.labelLarge.copy(color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold))
+        if (post.authorEmail.isNotBlank()) {
+            Spacer(Modifier.width(3.dp))
+            Icon(Icons.Default.Verified, contentDescription = if (isEng) "Signed-in member" else "सदस्य", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(13.dp))
+        }
+        val meta = listOfNotNull(post.authorCity.ifBlank { null }, post.category,
+            android.text.format.DateUtils.getRelativeTimeSpanString(post.createdAt).toString()).joinToString(" · ")
+        Spacer(Modifier.width(6.dp))
+        Text(meta, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+    }
+}

@@ -178,7 +178,12 @@ class FirebaseService(private val context: Context) {
                 "downvotes" to post.downvotes,
                 "commentsCount" to post.commentsCount,
                 "createdAt" to post.createdAt,
-                "isPinned" to post.isPinned
+                "isPinned" to post.isPinned,
+                "sourceType" to post.sourceType,
+                "sourceId" to post.sourceId,
+                "sourceTitle" to post.sourceTitle,
+                "authorVerified" to post.authorEmail.isNotBlank(),
+                "authorCity" to post.authorCity
             )
             firestore!!.collection("community_posts")
                 .document(post.id.toString())
@@ -223,7 +228,12 @@ class FirebaseService(private val context: Context) {
                         downvotes = doc.getLong("downvotes")?.toInt() ?: 0,
                         commentsCount = doc.getLong("commentsCount")?.toInt() ?: 0,
                         createdAt = doc.getLong("createdAt") ?: System.currentTimeMillis(),
-                        isPinned = doc.getBoolean("isPinned") ?: false
+                        isPinned = doc.getBoolean("isPinned") ?: false,
+                        sourceType = doc.getString("sourceType") ?: "",
+                        sourceId = doc.getString("sourceId") ?: "",
+                        sourceTitle = doc.getString("sourceTitle") ?: "",
+                        authorEmail = if (doc.getBoolean("authorVerified") == true) "verified" else "",
+                        authorCity = doc.getString("authorCity") ?: ""
                     )
                 } catch (e: Exception) {
                     null

@@ -98,7 +98,13 @@ data class CommunityPost(
     val downvotedByEmails: String = "",
     val commentsCount: Int = 0,
     val createdAt: Long = System.currentTimeMillis(),
-    val isPinned: Boolean = false
+    val isPinned: Boolean = false,
+    // Where in the app this was written (e.g. "article"), so the Community can link back to it
+    @androidx.room.ColumnInfo(defaultValue = "") val sourceType: String = "",
+    @androidx.room.ColumnInfo(defaultValue = "") val sourceId: String = "",
+    @androidx.room.ColumnInfo(defaultValue = "") val sourceTitle: String = "",
+    @androidx.room.ColumnInfo(defaultValue = "") val authorEmail: String = "",
+    @androidx.room.ColumnInfo(defaultValue = "") val authorCity: String = ""
 )
 
 @Entity(tableName = "post_comments")
