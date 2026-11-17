@@ -28,6 +28,31 @@ function setBusy(btn, busy, label) {
   btn.innerHTML = busy ? '<span class="spinner" aria-hidden="true"></span> Sending…' : label;
 }
 
+const LABELS = {
+  suggestions: 'Idea / feedback', contact_messages: 'Contact message',
+  early_access: 'Early access sign-up', deletion_requests: 'Account deletion request'
+};
+
+/** Also email a copy to support@chaloone.com (FormSubmit). Never blocks or fails the form. */
+function emailCopy(collectionName, data) {
+  const label = LABELS[collectionName] || collectionName;
+  const who = data.name || data.email || 'Someone';
+  const body = {
+    _subject: `[Sanatan Sadhak] ${label} from ${who}`,
+    _template: 'table',
+    _captcha: 'false',
+    form: label,
+    page: location.pathname,
+    ...Object.fromEntries(Object.entries(data).map(([k, v]) => [k, typeof v === 'object' ? JSON.stringify(v) : String(v)]))
+  };
+  if (data.email && /@/.test(data.email)) body._replyto = data.email;
+  fetch('https://formsubmit.co/ajax/support@chaloone.com', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify(body)
+  }).catch(() => {});
+}
+
 /**
  * Wire a form to a Firestore collection.
  * build(fd) returns the document fields (without createdAt) or throws an Error with a user message.
@@ -55,6 +80,7 @@ function wire(formId, collectionName, build, successMsg) {
         page: location.pathname,
         createdAt: serverTimestamp()
       });
+      emailCopy(collectionName, data);
       form.reset();
       setStatus(form, successMsg, 'ok');
       window.showToast && window.showToast(successMsg);
