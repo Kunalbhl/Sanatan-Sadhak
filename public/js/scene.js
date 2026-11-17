@@ -46,18 +46,24 @@
       <circle cx="1218" cy="790" r="40" fill="url(#lampG)"/><circle cx="1016" cy="785" r="34" fill="url(#lampG)"/><circle cx="1430" cy="785" r="34" fill="url(#lampG)"/><circle cx="700" cy="800" r="24" fill="url(#lampG)"/><circle cx="1500" cy="815" r="22" fill="url(#lampG)"/>
     </g>
     <path id="scFlag" fill="url(#flagG)" stroke="#b33a00" stroke-width=".6"/>
-    <g transform="translate(1092,598) scale(1.25)">
-      <path id="scTail" fill="none" stroke="#8d8d86" stroke-width="4.2" stroke-linecap="round"/>
-      <path d="M-4,28 C-10,10 -6,-6 6,-10 C18,-14 28,-4 28,12 C28,24 22,32 8,32 Z" fill="url(#fur)"/>
-      <path d="M2,30 C-6,30 -12,36 -8,40 L10,40 Z" fill="#b8b6ac"/><path d="M18,30 C26,30 32,36 28,40 L12,40 Z" fill="#b8b6ac"/>
-      <path d="M22,6 C30,12 30,22 26,30" stroke="#a9a79d" stroke-width="4.5" fill="none" stroke-linecap="round"/>
-      <g id="scHead">
-        <circle cx="12" cy="-16" r="11.5" fill="url(#fur)"/>
-        <ellipse cx="12" cy="-13" rx="7.2" ry="7.8" fill="#1d1a1a"/>
-        <circle cx="9.2" cy="-15" r="1.3" fill="#e9c46a"/><circle cx="14.8" cy="-15" r="1.3" fill="#e9c46a"/>
-        <circle cx="1.5" cy="-15" r="2.4" fill="#1d1a1a"/><circle cx="22.5" cy="-15" r="2.4" fill="#1d1a1a"/>
+    <!-- Rhesus macaque (Indian temple monkey): brown fur, red face; feet at (0,0), facing right -->
+    <g id="mk"><g id="mkBody">
+      <path id="mkTail" fill="none" stroke="#7a5532" stroke-width="4" stroke-linecap="round"/>
+      <path id="mkLegB" d="M-6,-14 C-12,-6 -10,-2 -4,0" stroke="#6e4b2c" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <ellipse cx="0" cy="-24" rx="15" ry="17" fill="#8b6542"/>
+      <ellipse cx="4" cy="-21" rx="8" ry="11" fill="#c9a074"/>
+      <path id="mkLegF" d="M6,-14 C12,-6 10,-2 4,0" stroke="#7d5838" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <g id="mkArm"><path d="M8,-32 C16,-26 18,-18 14,-12" stroke="#7d5838" stroke-width="5.5" fill="none" stroke-linecap="round"/></g>
+      <g id="mkHead">
+        <circle cx="6" cy="-46" r="12" fill="#8b6542"/>
+        <circle cx="-4" cy="-48" r="3.6" fill="#d77a6f"/>
+        <path d="M2,-53 C6,-58 14,-56 16,-50 C18,-44 15,-38 9,-37 C4,-36 0,-40 0,-45 Z" fill="#d9665c"/>
+        <ellipse cx="12" cy="-42" rx="4" ry="3" fill="#c9534a"/>
+        <circle cx="7" cy="-48" r="1.5" fill="#1a0d08"/><circle cx="13" cy="-48" r="1.5" fill="#1a0d08"/>
+        <path d="M9,-40 Q11.5,-38.5 14,-40" stroke="#6b1f18" stroke-width="1" fill="none"/>
+        <path d="M-4,-56 C2,-62 12,-60 16,-55" stroke="#a27a52" stroke-width="2.4" fill="none"/>
       </g>
-    </g>
+    </g></g>
     <g id="birdsG"></g>
     <g id="dustG"></g>
   </svg>`);
@@ -67,7 +73,7 @@
     <div class="so-title" data-scene-greet>Welcome Devotee</div>
     <div class="so-chant"><span>✦</span> ॥ JAI SHREE RAM ॥ <span>✦</span></div>
     <div class="so-date" data-scene-date></div>
-    <div class="so-chip"><span class="deva" data-scene-names>श्री राम • रामचंद्र • रघुनाथ • राघव</span><span class="so-sep"></span><span data-scene-next>⏱</span></div>
+    <div class="so-chip"><span data-scene-names>श्री राम • रामचंद्र • रघुनाथ • राघव</span><span class="so-sep"></span><span data-scene-next>⏱</span></div>
   </div>`);
   host.insertAdjacentHTML('afterend', `
   <div class="scene-bar" role="group" aria-label="Preview time of day">
@@ -162,9 +168,54 @@
   let ni = 0;
   setInterval(() => { ni = (ni + 1) % RN.length; const e = document.querySelector('[data-scene-names]'); e.style.opacity = 0; setTimeout(() => { e.textContent = RN[ni]; e.style.opacity = 1; }, 400); }, 4000);
 
-  const flag = $('scFlag'), tail = $('scTail'), head = $('scHead');
+  const flag = $('scFlag');
+  // ---- Playful macaque: hops between temple roofs, then scratches, waves, peeks or bounces ----
+  const mk = { el: $('mk'), body: $('mkBody'), tail: $('mkTail'), head: $('mkHead'), arm: $('mkArm'), legF: $('mkLegF'), legB: $('mkLegB') };
+  const SPOTS = [[1130, 650], [1210, 612], [1330, 660], [1478, 668], [1400, 600], [1560, 700], [1265, 560]];
+  const M = { at: 0, x: SPOTS[0][0], y: SPOTS[0][1], dir: 1, state: 'idle', act: 'sit', t0: 0, dur: 2.5, from: null, to: null, hop: 0 };
+  const ACTS = ['sit', 'scratch', 'wave', 'peek', 'bounce', 'scratch', 'wave'];
+  function nextMove(t) {
+    if (M.state === 'idle') {
+      // pick a neighbour roof (mostly close ones, sometimes a big leap)
+      const cands = SPOTS.map((p, i) => [i, Math.hypot(p[0] - M.x, p[1] - M.y)]).filter(([i]) => i !== M.at).sort((a, b) => a[1] - b[1]);
+      const pick = cands[Math.random() < .75 ? Math.floor(Math.random() * 2) : Math.floor(Math.random() * cands.length)][0];
+      M.from = [M.x, M.y]; M.to = SPOTS[pick]; M.at = pick;
+      const d = Math.hypot(M.to[0] - M.x, M.to[1] - M.y);
+      M.dir = M.to[0] >= M.x ? 1 : -1; M.state = 'hop'; M.t0 = t; M.dur = .55 + d / 420; M.hop = 60 + d * .35;
+    } else {
+      M.state = 'idle'; M.t0 = t; M.dur = 1.6 + Math.random() * 2.6; M.act = ACTS[Math.floor(Math.random() * ACTS.length)];
+      if (Math.random() < .35) M.dir *= -1; // turn around to look the other way
+    }
+  }
+  function monkey(t) {
+    const k = (t - M.t0) / M.dur;
+    if (k >= 1) nextMove(t);
+    const q = Math.min(1, Math.max(0, (t - M.t0) / M.dur));
+    let bodyY = 0, bodyR = 0, armR = 0, headR = 0, legs = 0;
+    if (M.state === 'hop') {
+      const e = q < .5 ? 2 * q * q : 1 - Math.pow(-2 * q + 2, 2) / 2;
+      M.x = M.from[0] + (M.to[0] - M.from[0]) * e;
+      M.y = M.from[1] + (M.to[1] - M.from[1]) * e - Math.sin(Math.PI * q) * M.hop;
+      bodyR = -18 + 36 * q; legs = Math.sin(Math.PI * q); armR = -60 * Math.sin(Math.PI * q);
+    } else {
+      if (M.act === 'sit') { bodyY = Math.sin(t * 3) * 1.2; headR = Math.sin(t * 1.4) * 10; }
+      if (M.act === 'scratch') { armR = -120 + Math.sin(t * 22) * 12; headR = -12; bodyR = -4; }
+      if (M.act === 'wave') { armR = -150 + Math.sin(t * 10) * 28; headR = 8 + Math.sin(t * 3) * 4; }
+      if (M.act === 'peek') { bodyR = 14 * Math.sin(Math.min(1, q * 3) * Math.PI / 2); headR = 16; }
+      if (M.act === 'bounce') { bodyY = -Math.abs(Math.sin(t * 8)) * 12; armR = -90; legs = Math.abs(Math.sin(t * 8)); }
+    }
+    mk.el.setAttribute('transform', `translate(${f(M.x)},${f(M.y + bodyY)}) scale(${M.dir * 2.1},2.1)`);
+    mk.body.setAttribute('transform', `rotate(${bodyR.toFixed(1)} 0 -20)`);
+    mk.head.setAttribute('transform', `rotate(${headR.toFixed(1)} 6 -36)`);
+    mk.arm.setAttribute('transform', `rotate(${armR.toFixed(1)} 8 -32)`);
+    const L = legs * 8;
+    mk.legF.setAttribute('d', `M6,-14 C${f(12 + L)},-6 ${f(10 + L)},${f(-2 + L * .2)} ${f(4 + L * 1.4)},0`);
+    mk.legB.setAttribute('d', `M-6,-14 C${f(-12 - L)},-6 ${f(-10 - L)},${f(-2 + L * .2)} ${f(-4 - L * 1.4)},0`);
+    const sw = Math.sin(t * (M.state === 'hop' ? 6 : 1.6)) * 10;
+    mk.tail.setAttribute('d', `M-12,-14 C-26,${f(-10 + sw * .3)} ${f(-36 + sw)},${f(-24 + sw * .4)} ${f(-32 + sw)},${f(-44 + sw * .2)} C${f(-30 + sw)},-54 ${f(-22 + sw * .6)},-56 ${f(-20 + sw * .5)},-50`);
+  }
   const starEls = [...document.querySelectorAll('#starsG .st')];
-  let visible = true, headR = 0;
+  let visible = true;
   if ('IntersectionObserver' in window) new IntersectionObserver((e) => { visible = e[0].isIntersecting; }).observe(host);
 
   function frame(ms) {
@@ -179,11 +230,7 @@
       }
       const ew = Math.sin(t * 4 - len / 45) * 18;
       flag.setAttribute('d', `${top} L${f(fx + len - 45)},${f(fy + 100 + ew)}${bot} L${f(fx)},${f(fy + hgt)} Z`);
-      const sw = Math.sin(t * 1.3) * 10;
-      tail.setAttribute('d', `M0,26 C-18,${f(34 + sw * .3)} ${f(-34 + sw)},${f(18 + sw * .4)} ${f(-30 + sw)},${f(-4 + sw * .2)} C${f(-28 + sw)},-16 ${f(-18 + sw * .6)},-18 ${f(-16 + sw * .5)},-10`);
-      const s45 = Math.sin(t * .45), look = s45 > .55 ? -16 : s45 < -.7 ? 10 : 0;
-      headR += (look - headR) * .05;
-      head.setAttribute('transform', `rotate(${headR.toFixed(2)} 12 -6)`);
+      monkey(t);
       for (const b of birds) {
         const p = (((t - b.start) / b.dur) % 1 + 1) % 1;
         b.el.setAttribute('d', birdPath(-120 + p * 1950 + b.dx, b.y - p * 60 + Math.sin(t * 1.2 + b.phase) * 3, b.scale, Math.sin(t * 9 + b.phase)));
