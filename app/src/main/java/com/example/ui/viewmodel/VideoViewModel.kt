@@ -25,6 +25,10 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun setYoutubeChannelEnabled(id: String, enabled: Boolean) { viewModelScope.launch { channelStore.setEnabled(id, enabled) } }
+    val hiddenVideoIds: StateFlow<Set<String>> = channelStore.hiddenVideoIds
+    fun setVideoHidden(videoId: String, hidden: Boolean, adminEmail: String) {
+        viewModelScope.launch { channelStore.setVideoHidden(videoId, hidden, adminEmail) }
+    }
     fun removeYoutubeChannel(id: String) { viewModelScope.launch { channelStore.remove(id) } }
 
     init {
@@ -79,9 +83,10 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
     val videos: StateFlow<List<BhaktiVideo>> = combine(
         repository.getVideos(),
         _selectedVideoCategory,
-        _searchQuery
-    ) { list, cat, query ->
-        filterVideos(list, cat, query)
+        _searchQuery,
+        com.example.data.YoutubeChannelStore.get(application).hiddenVideoIds
+    ) { list, cat, query, hidden ->
+        filterVideos(list.filterNot { it.videoId in hidden }, cat, query)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     fun computeCuratedPlaylist(allVideos: List<BhaktiVideo>, festival: String): List<BhaktiVideo> {
@@ -142,9 +147,10 @@ class VideoViewModel(application: Application) : AndroidViewModel(application) {
     // Curated dynamic playlist based on current day of the week or active festival
     val curatedPlaylistVideos: StateFlow<List<BhaktiVideo>> = combine(
         repository.getVideos(),
-        _currentFestival
-    ) { allVideos, festival ->
-        computeCuratedPlaylist(allVideos, festival)
+        _currentFestival,
+        com.example.data.YoutubeChannelStore.get(application).hiddenVideoIds
+    ) { allVideos, festival, hidden ->
+        computeCuratedPlaylist(allVideos.filterNot { it.videoId in hidden }, festival)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     fun getCuratedPlaylistTitle(isEng: Boolean): String {

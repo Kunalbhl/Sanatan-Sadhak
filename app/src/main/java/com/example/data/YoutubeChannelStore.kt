@@ -36,6 +36,31 @@ class YoutubeChannelStore private constructor(private val context: Context) {
     private val _channels = MutableStateFlow(loadLocal())
     val channels: StateFlow<List<YoutubeChannel>> = _channels.asStateFlow()
 
+    /** Video IDs an admin has hidden from users (Firestore `hidden_videos`, doc id = videoId). */
+    private val _hidden = MutableStateFlow(prefs.getStringSet(HIDDEN_KEY, emptySet())!!.toSet())
+    val hiddenVideoIds: StateFlow<Set<String>> = _hidden.asStateFlow()
+
+    suspend fun refreshHidden() = withContext(Dispatchers.IO) {
+        try {
+            val snap = db()?.collection(HIDDEN_COLLECTION)?.get()?.await() ?: return@withContext
+            saveHidden(snap.documents.map { it.id }.toSet())
+        } catch (e: Exception) { Log.w(TAG, "hidden refresh: ${e.message}") }
+    }
+
+    suspend fun setVideoHidden(videoId: String, hidden: Boolean, adminEmail: String) = withContext(Dispatchers.IO) {
+        saveHidden(if (hidden) _hidden.value + videoId else _hidden.value - videoId)
+        try {
+            val ref = db()?.collection(HIDDEN_COLLECTION)?.document(videoId)
+            if (hidden) ref?.set(mapOf("hiddenBy" to adminEmail, "hiddenAt" to System.currentTimeMillis()))?.await()
+            else ref?.delete()?.await()
+        } catch (e: Exception) { Log.w(TAG, "hide video: ${e.message}") }
+    }
+
+    private fun saveHidden(set: Set<String>) {
+        _hidden.value = set
+        prefs.edit().putStringSet(HIDDEN_KEY, set).apply()
+    }
+
     private val http = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS).readTimeout(15, TimeUnit.SECONDS).build()
 
     private fun db(): FirebaseFirestore? = try { FirebaseFirestore.getInstance() } catch (e: Exception) { null }
@@ -44,6 +69,7 @@ class YoutubeChannelStore private constructor(private val context: Context) {
 
     /** Pull the latest list from Firestore (falls back to the local copy). */
     suspend fun refresh(): List<YoutubeChannel> = withContext(Dispatchers.IO) {
+        refreshHidden()
         try {
             val snap = db()?.collection(COLLECTION)?.get()?.await()
             if (snap != null && !snap.isEmpty) {
@@ -157,6 +183,8 @@ class YoutubeChannelStore private constructor(private val context: Context) {
         private const val TAG = "YoutubeChannelStore"
         private const val COLLECTION = "youtube_channels"
         private const val KEY = "channels_json"
+        private const val HIDDEN_KEY = "hidden_video_ids"
+        private const val HIDDEN_COLLECTION = "hidden_videos"
         val DEFAULT = YoutubeChannel("UCzHzPEdLJEvTSHn_ev3JYBA", "Sanatan Sadhak", "https://www.youtube.com/@SanatanSadhak", addedAt = 0L)
 
         @Volatile private var instance: YoutubeChannelStore? = null

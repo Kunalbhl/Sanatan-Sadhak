@@ -703,6 +703,7 @@ fun AdminYoutubeTab(adminViewModel: AdminViewModel, videoViewModel: VideoViewMod
     val ytConfig by adminViewModel.youtubeConfig.collectAsState()
     val videos by adminViewModel.videos.collectAsState()
     val isSyncing by videoViewModel.isSyncingVideos.collectAsState()
+    val hiddenIds by videoViewModel.hiddenVideoIds.collectAsState()
     var resultMsg by remember { mutableStateOf<String?>(null) }
     var showAddDialog by remember { mutableStateOf(false) }
     var editingVideo by remember { mutableStateOf<BhaktiVideo?>(null) }
@@ -779,7 +780,7 @@ fun AdminYoutubeTab(adminViewModel: AdminViewModel, videoViewModel: VideoViewMod
         )
 
         LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            val filterOptions = listOf("All", "Channel", "Curated") + YoutubeUrlParser.SUPPORTED_CATEGORIES.take(6)
+            val filterOptions = listOf("All", "Channel", "Curated", "Hidden") + YoutubeUrlParser.SUPPORTED_CATEGORIES.take(6)
             items(filterOptions) { cat ->
                 FilterChip(
                     selected = filterCategory == cat,
@@ -795,6 +796,7 @@ fun AdminYoutubeTab(adminViewModel: AdminViewModel, videoViewModel: VideoViewMod
                 "All" -> true
                 "Channel" -> !v.isCustom
                 "Curated" -> v.isCustom
+                "Hidden" -> v.videoId in hiddenIds
                 else -> v.category.equals(filterCategory, ignoreCase = true)
             }
             matchSearch && matchCat
@@ -836,6 +838,12 @@ fun AdminYoutubeTab(adminViewModel: AdminViewModel, videoViewModel: VideoViewMod
                                 Icon(Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(if (isEng) "Edit" else "संपादित करें", fontSize = 11.sp)
+                            }
+                            val isHidden = vid.videoId in hiddenIds
+                            TextButton(onClick = { videoViewModel.setVideoHidden(vid.videoId, !isHidden, adminEmail) }) {
+                                Icon(if (isHidden) Icons.Default.Visibility else Icons.Default.VisibilityOff, contentDescription = if (isHidden) "Show" else "Hide", modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(if (isHidden) (if (isEng) "Show" else "दिखाएँ") else (if (isEng) "Hide" else "छिपाएँ"), fontSize = 11.sp)
                             }
                             TextButton(onClick = { adminViewModel.toggleVideoStatus(vid, adminEmail) }) {
                                 Icon(Icons.Default.Refresh, contentDescription = "Toggle", modifier = Modifier.size(16.dp))
