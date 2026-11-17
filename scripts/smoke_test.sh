@@ -23,7 +23,7 @@ for t in "Skip" "Continue as Guest" "Guest" "English" "Continue" "OK" "Allow"; d
 shot home
 scroll; shot home-2; scroll; shot home-3; scroll; shot home-4; scroll; shot home-5
 for s in Knowledge Sadhana Videos Profile Home; do echo "Tab $s"; tap "$s" && { shot "tab-$s"; scroll; shot "tab-$s-scrolled"; }; done
-for s in "Satsang Community" "Community" "Divine Updates" "Panchang Calendar" "AI Mitra" "Temples" "Mantra & Japa" "Dhyan"; do
+for s in "Satsang Community" "Japa Mala" "Templ" "Panchang Calendar" "Divine Updates" "Dhyan"; do
   echo "Open $s"; adb shell am force-stop $PKG; adb shell monkey -p $PKG -c android.intent.category.LAUNCHER 1 >/dev/null; sleep 8
   for i in 1 2 3 4 5 6 7 8 9 10; do tap "$s" && break; scroll; sleep 1; done && { shot "open-${s// /_}"; scroll; shot "open-${s// /_}-scrolled"; back; }
 done
