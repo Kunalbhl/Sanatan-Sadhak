@@ -697,6 +697,8 @@ fun YouTubeWebView(
                 webViewInstance = this
                 settings.apply {
                     javaScriptEnabled = true
+                    allowFileAccess = false
+                    allowContentAccess = false
                     mediaPlaybackRequiresUserGesture = false
                     domStorageEnabled = true
                     useWideViewPort = true

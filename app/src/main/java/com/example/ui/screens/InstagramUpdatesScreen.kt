@@ -405,6 +405,8 @@ fun InstagramWebView(
                 webViewInstance = this
                 settings.apply {
                     javaScriptEnabled = true
+                    allowFileAccess = false
+                    allowContentAccess = false
                     domStorageEnabled = true
                     loadWithOverviewMode = true
                     useWideViewPort = true
