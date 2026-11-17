@@ -32,7 +32,11 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           PANCHANG_API_KEY: ${{ secrets.PANCHANG_API_KEY }}
-        run: printf 'GEMINI_API_KEY=%s\nYOUTUBE_API_KEY=%s\nPANCHANG_API_KEY=%s\n' "$GEMINI_API_KEY" "$YOUTUBE_API_KEY" "$PANCHANG_API_KEY" > .env
+        run: |
+          : > .env
+          for k in GEMINI_API_KEY YOUTUBE_API_KEY PANCHANG_API_KEY; do
+            v="${!k}"; [ -n "$v" ] && echo "$k=$v" >> .env || echo "$k not set; using .env.example placeholder"
+          done
 
       - name: Google Cloud auth (for Firebase config)
         id: fb
