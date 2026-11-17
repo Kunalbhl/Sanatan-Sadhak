@@ -1,248 +1,299 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Privacy Policy & Data Safety — Sanatan Sadhak</title>
-    <style>
-        :root {
-            --primary: #E65100;
-            --primary-light: #FFF3E0;
-            --primary-dark: #BF360C;
-            --secondary: #F57C00;
-            --text-dark: #212121;
-            --text-muted: #666666;
-            --bg-light: #FAFAFA;
-            --white: #FFFFFF;
-            --border-color: #FFE0B2;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background-color: var(--bg-light);
-            color: var(--text-dark);
-            line-height: 1.6;
-            padding: 0;
-        }
-
-        header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: var(--white);
-            padding: 40px 20px;
-            text-align: center;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        header h1 {
-            font-size: 2.2rem;
-            margin-bottom: 10px;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-        }
-
-        header p {
-            font-size: 1.1rem;
-            opacity: 0.9;
-        }
-
-        .container {
-            max-width: 800px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-
-        .card {
-            background-color: var(--white);
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 4px 12px rgba(230, 81, 0, 0.05);
-            border: 1px solid var(--border-color);
-            margin-bottom: 30px;
-        }
-
-        .meta-date {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            margin-bottom: 25px;
-            display: inline-block;
-            background-color: var(--primary-light);
-            color: var(--primary-dark);
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-weight: 600;
-        }
-
-        h2 {
-            color: var(--primary);
-            font-size: 1.4rem;
-            margin-top: 30px;
-            margin-bottom: 15px;
-            border-bottom: 2px solid var(--primary-light);
-            padding-bottom: 8px;
-            font-weight: 700;
-        }
-
-        h2:first-of-type {
-            margin-top: 0;
-        }
-
-        p {
-            margin-bottom: 15px;
-            color: #333333;
-        }
-
-        ul {
-            margin-bottom: 20px;
-            padding-left: 20px;
-        }
-
-        li {
-            margin-bottom: 10px;
-            color: #333333;
-        }
-
-        .highlight-box {
-            background-color: var(--primary-light);
-            border-left: 4px solid var(--primary);
-            padding: 15px;
-            border-radius: 4px;
-            margin: 20px 0;
-        }
-
-        .highlight-box p {
-            margin-bottom: 0;
-            font-weight: 500;
-            color: var(--primary-dark);
-        }
-
-        footer {
-            text-align: center;
-            padding: 30px 20px;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            border-top: 1px solid var(--border-color);
-            margin-top: 60px;
-        }
-
-        a {
-            color: var(--primary);
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        a:hover {
-            text-decoration: underline;
-            color: var(--primary-dark);
-        }
-
-        @media (max-width: 600px) {
-            header h1 {
-                font-size: 1.8rem;
-            }
-            .card {
-                padding: 20px;
-            }
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sanatan Sadhak · Daily Sadhana, Japa, Live Panchang & AI Mitra</title>
+  <meta name="description" content="Sanatan Sadhak is a free Android companion for daily sadhana: japa counter, mantras, live Panchang with Lahiri ayanamsa, temples, Vedic library and the Mitra guide.">
+  
+  <link rel="canonical" href="https://sanatan-sadhak.chaloone.com/">
+  <meta name="theme-color" content="#fff8ec">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Sanatan Sadhak">
+  <meta property="og:title" content="Sanatan Sadhak · Daily Sadhana, Japa, Live Panchang & AI Mitra">
+  <meta property="og:description" content="Sanatan Sadhak is a free Android companion for daily sadhana: japa counter, mantras, live Panchang with Lahiri ayanamsa, temples, Vedic library and the Mitra guide.">
+  <meta property="og:url" content="https://sanatan-sadhak.chaloone.com/">
+  <meta property="og:image" content="https://sanatan-sadhak.chaloone.com/img/og.png">
+  <meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+  <meta property="og:locale" content="en_IN"><meta property="og:locale:alternate" content="hi_IN">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" type="image/png" sizes="32x32" href="/img/icon-32.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="/img/icon-48.png">
+  <link rel="apple-touch-icon" href="/img/icon-192.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/styles.css?v=c6f18181">
+  <script defer src="/js/divine-data.js?v=fbcca8ad"></script>
+  <script defer src="/js/divine.js?v=76f1c33e"></script>
+  <script defer src="/js/i18n.js?v=13ebcada"></script>
+  <script defer src="/js/site.js?v=41fe1961"></script>
+  <script defer src="/js/astro.js?v=c70ba52d"></script>
+  <script defer src="/js/scene.js?v=1e6317a6"></script>
+  <script defer src="/js/panchang-ui.js?v=5704d120"></script>
+  <script defer src="/js/updates.js?v=0f195ef0"></script>
+  <script type="module" src="/js/forms.js?v=8d1304e4"></script>
+  <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "name": "Sanatan Sadhak · Daily Sadhana, Japa, Live Panchang & AI Mitra", "description": "Sanatan Sadhak is a free Android companion for daily sadhana: japa counter, mantras, live Panchang with Lahiri ayanamsa, temples, Vedic library and the Mitra guide.", "url": "https://sanatan-sadhak.chaloone.com/", "isPartOf": {"@type": "WebSite", "name": "Sanatan Sadhak", "url": "https://sanatan-sadhak.chaloone.com/"}}</script>
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "MobileApplication", "name": "Sanatan Sadhak", "operatingSystem": "Android", "applicationCategory": "LifestyleApplication", "description": "Sanatan Sadhak is a free Android companion for daily sadhana: japa counter, mantras, live Panchang with Lahiri ayanamsa, temples, Vedic library and the Mitra guide.", "url": "https://sanatan-sadhak.chaloone.com/", "image": "https://sanatan-sadhak.chaloone.com/img/icon-512.png", "inLanguage": ["en", "hi"], "offers": {"@type": "Offer", "price": "0", "priceCurrency": "INR"}, "publisher": {"@type": "Organization", "name": "K. Tech Services", "url": "https://k-tech.chaloone.com", "email": "support@chaloone.com", "founder": {"@type": "Person", "name": "Kunal Pareek"}}, "screenshot": ["https://sanatan-sadhak.chaloone.com/img/screens/home.webp", "https://sanatan-sadhak.chaloone.com/img/screens/japa.webp", "https://sanatan-sadhak.chaloone.com/img/screens/sadhana.webp", "https://sanatan-sadhak.chaloone.com/img/screens/temples.webp", "https://sanatan-sadhak.chaloone.com/img/screens/knowledge.webp"]}</script>
 </head>
 <body>
-
-    <header>
-        <h1>Sanatan Sadhak</h1>
-        <p>Daily Panchang, Sadhana, Meditation & Scriptural Library</p>
-    </header>
-
-    <div class="container">
-        <div class="card">
-            <span class="meta-date">Effective Date: August 12, 2026</span>
-            
-            <p><strong>Sanatan Sadhak - Daily Panchang</strong> is a private, offline-first spiritual companion application designed for Sanatan Dharma practitioners. We respect your privacy and are committed to maintaining transparent data practices. This policy details how we handle user information.</p>
-
-            <div class="highlight-box">
-                <p>Core Philosophy: We operate primarily on an offline-first model. Your core spiritual habits, journals, and counts are your private sacred domain.</p>
-            </div>
-
-            <h2>1. Location Data & Offline Calculations</h2>
-            <p>To deliver high-precision daily Vedic Panchang coordinates (including local Tithi, Nakshatra, Sunrise, Sunset, and Rahu Kalam timings), the app may request permission to access your device's fine or coarse location coordinates:</p>
-            <ul>
-                <li><strong>Local Calculations:</strong> All location data is processed strictly locally on-device. No location coordinate payloads are ever transmitted to our cloud endpoints, stored on servers, or tracked over time.</li>
-                <li><strong>Privacy Safeguard:</strong> Location permissions are completely optional. If denied, the app gracefully falls back to calculated or preset parameters without interrupting overall system functionality.</li>
-            </ul>
-
-            <h2>2. User Accounts & Identity Sync</h2>
-            <p>When you create an authentication profile or log in to the "Sadhak Mandir":</p>
-            <ul>
-                <li><strong>Data Collected:</strong> We process your Name and Email address via <strong>Firebase Authentication</strong> and store profile preferences securely in <strong>Cloud Firestore</strong>.</li>
-                <li><strong>Purpose:</strong> This profile allows you to sync your community posts, comments, moderation requests, and administrative access safely across devices.</li>
-                <li><strong>Data Isolation:</strong> User profiles are strictly isolated. No database records are ever rented, sold, or shared with third-party marketing companies.</li>
-            </ul>
-
-            <h2>3. Local Storage & Offline Room Database</h2>
-            <p>All core sadhana, progress logs, and personal habits remain securely on your device:</p>
-            <ul>
-                <li><strong>Offline Records:</strong> Daily Japa counts, Japa Mala history, spiritual journaling logs, custom target milestones, and favorite mantras are stored strictly in the local SQLite <strong>Room Database</strong>.</li>
-                <li><strong>Zero Cloud Tracking:</strong> These items are never sent to external servers unless you specifically opt to post in the public community forum.</li>
-            </ul>
-
-            <h2>4. Sadhak AI Mitra & Gemini Processing</h2>
-            <p>The "Sadhak AI Mitra" assistant provides secure, context-aware interactive spiritual guidance:</p>
-            <ul>
-                <li><strong>Secure REST Delivery:</strong> Prompt questions are routed safely through secure, encrypted endpoints using official Google Gemini APIs.</li>
-                <li><strong>Privacy Isolation:</strong> No personal details, names, or email accounts are attached to the API prompts.</li>
-                <li><strong>Scriptural Safeguards:</strong> AI Mitra acts under strict boundaries that separate authentic scriptural source text from AI-generated traditional interpretation, avoiding the fabrication of Sanskrit verses.</li>
-            </ul>
-
-            <h2>5. Devotional Videos & YouTube API</h2>
-            <p>The "Bhakti Video Hub" retrieves curated classical devotional music, audio, and high-quality chanting videos:</p>
-            <ul>
-                <li><strong>Retrieved Data:</strong> Content is loaded via the official YouTube Data API and RSS feeds of designated, authentic channels.</li>
-                <li><strong>Zero tracking:</strong> Our integration does not track your private viewing history or build behavioral advertisement profiles. All cache data resides inside the local database.</li>
-            </ul>
-
-            <h2>6. User-Generated Content (UGC) & Moderation</h2>
-            <p>The community feed allows devotees to connect, share wisdom, and view spiritual announcements:</p>
-            <ul>
-                <li><strong>Posting Guidelines:</strong> Users can create custom posts and submit supportive comments. Community guidelines are displayed and easily accessible within the post creation screen.</li>
-                <li><strong>Reporting & Safety:</strong> Any user can immediately flag or report inappropriate posts. Reported content reaches the moderated admin workspace immediately for swift review.</li>
-                <li><strong>Admin Enforcement:</strong> Administrators hold authoritative server-side rights to instantly review, block, or delete offending UGC posts. Non-admin users are strictly prevented from executing moderation writes.</li>
-            </ul>
-
-            <h2>7. Security, Encryption & Network Protocol</h2>
-            <p>To keep your authentication and community communications protected:</p>
-            <ul>
-                <li>All network communications are strictly enforced over encrypted <strong>HTTPS / TLS 1.3</strong> channels.</li>
-                <li>The application disables cleartext HTTP traffic to prevent any potential interception or tampering on public Wi-Fi networks.</li>
-            </ul>
-
-            <h2>8. Complete Account Deletion Right</h2>
-            <p>In accordance with Google Play Store policies, we support full self-service account deletion:</p>
-            <ul>
-                <li><strong>How to Delete:</strong> Navigate to your <strong>Profile -> Settings</strong> screen and click the <strong>Delete Devotee Account</strong> button.</li>
-                <li><strong>Deletion Scope:</strong> Upon confirmation, our system instantly triggers:
-                    <ul>
-                        <li>Deletion of your Firebase Authentication record.</li>
-                        <li>Deletion of your public/private Cloud Firestore profile document and metadata.</li>
-                        <li>Complete local purge of offline databases, preferences, and session caches.</li>
-                    </ul>
-                </li>
-                <li><strong>Content Preservation:</strong> For community continuity, public spiritual commentary or shared community posts are anonymous-disassociated rather than leaving empty gaps, unless explicitly removed.</li>
-            </ul>
-
-            <h2>9. Contact & Support</h2>
-            <p>If you have any questions regarding this Privacy Policy, your rights, or data safety, please reach out to our team at:</p>
-            <p>📧 Email: <a href="mailto:kunalpareekusa@gmail.com">kunalpareekusa@gmail.com</a></p>
-        </div>
+<a class="skip" href="#main">Skip to content</a>
+<div class="bg-global" aria-hidden="true">
+  <svg class="om" viewBox="0 0 240 240"><defs><path id="ringOm" d="M120,120 m-104,0 a104,104 0 1,1 208,0 a104,104 0 1,1 -208,0"/></defs>
+    <circle cx="120" cy="120" r="116" fill="none" stroke="#f28c00" stroke-width="1.5"/><circle cx="120" cy="120" r="92" fill="none" stroke="#f5b301" stroke-width="1.2" stroke-dasharray="3 7"/>
+    <text font-size="13" font-family="Noto Sans Devanagari, sans-serif" fill="#e65100" letter-spacing="2"><textPath href="#ringOm">ॐ नमः शिवाय • ॐ नमो भगवते वासुदेवाय • जय श्री राम • हर हर महादेव •</textPath></text>
+    <text x="120" y="165" text-anchor="middle" font-size="130" font-family="Noto Sans Devanagari, sans-serif" fill="none" stroke="#e65100" stroke-width="1.6">ॐ</text></svg>
+  <svg class="sw" viewBox="0 0 240 240"><defs><path id="ringSw" d="M120,120 m-104,0 a104,104 0 1,1 208,0 a104,104 0 1,1 -208,0"/></defs>
+    <circle cx="120" cy="120" r="116" fill="none" stroke="#7a1c1c" stroke-width="1.5"/><circle cx="120" cy="120" r="92" fill="none" stroke="#f5b301" stroke-width="1.2" stroke-dasharray="3 7"/>
+    <text font-size="13" font-family="Noto Sans Devanagari, sans-serif" fill="#7a1c1c" letter-spacing="2"><textPath href="#ringSw">स्वस्ति न इन्द्रो वृद्धश्रवाः • स्वस्ति नः पूषा विश्ववेदाः • शुभ लाभ • मंगलम् •</textPath></text>
+    <g fill="none" stroke="#a8281e" stroke-width="7" stroke-linecap="square"><path d="M120,62 V178 M62,120 H178 M120,62 H166 M178,120 V166 M120,178 H74 M62,120 V74"/></g>
+    <g fill="#f5b301"><circle cx="92" cy="92" r="6"/><circle cx="148" cy="92" r="6"/><circle cx="92" cy="148" r="6"/><circle cx="148" cy="148" r="6"/></g></svg>
+</div>
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="/"><span class="logo"><img src="/img/icon-48.png" alt="" width="42" height="42"><span class="flame"></span></span><span>Sanatan Sadhak<small>सनातन · साधना · संस्कृति</small></span></a>
+    <button class="menu-btn" aria-label="Open menu" aria-expanded="false" aria-controls="nav-links">☰</button>
+    <ul class="nav-links" id="nav-links">
+      <li><a href="/" aria-current="page" data-i18n="nav.home">Home</a></li><li><a href="/features" data-i18n="nav.features">Features</a></li><li><a href="/guides" data-i18n="nav.guides">Guides</a></li><li><a href="/panchang" data-i18n="nav.panchang">Panchang</a></li><li><a href="/updates" data-i18n="nav.updates">What's new</a></li><li><a href="/ideas" data-i18n="nav.ideas">Ideas</a></li><li><a href="/contact" data-i18n="nav.contact">Contact</a></li>
+      <li><span class="lang" role="group" aria-label="Language"><button type="button" data-lang="en" aria-pressed="true">EN</button><button type="button" data-lang="hi" aria-pressed="false">हिं</button></span></li>
+    </ul>
+  </div>
+</header>
+<main id="main">
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="reveal">
+      <span class="eyebrow" data-i18n="hero.eyebrow">Android · Free · Early access</span>
+      <h1><span data-i18n="hero.t1">Your daily</span> <span class="grad" data-i18n="hero.t2">sadhana</span><span data-i18n="hero.t3">, gently kept.</span></h1>
+      <p class="lead" data-i18n="hero.lead">Japa, mantras, live Panchang, temple darshan, scriptures and a kind AI guide, all in one calm app made for devotees.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="#early-access" data-i18n="cta.early">Get early access</a>
+        <a class="btn btn-ghost" href="/features" data-i18n="cta.explore">Explore every feature</a>
+      </div>
+      <p class="mantra-line">॥ ॐ नमः शिवाय · जय श्री राम ॥<span data-i18n="hero.small">No ads · English & Hindi · works offline</span></p>
     </div>
+    <div class="reveal">
+      <div class="scene-card" data-scene></div>
+    </div>
+  </div>
+</section>
 
-    <footer>
-        <p>&copy; 2026 Sanatan Sadhak. All Rights Reserved.</p>
-    </footer>
+<section id="today" style="padding-top:20px">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow" data-i18n="pc.eyebrow">Live · Lahiri ayanamsa</span>
+      <h2 data-i18n="pc.title">Today's Panchang</h2>
+      <p data-i18n="pc.sub">Calculated in your browser with the same engine as the app: sidereal Sun and Moon, tithi at sunrise.</p>
+    </div>
+    <div class="panchang reveal" data-panchang></div>
+  </div>
+</section>
 
+<section id="tour">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow" data-i18n="tour.eyebrow">Take the tour</span>
+      <h2 data-i18n="tour.title">See the app in action</h2>
+      <p data-i18n="tour.sub">Real screens from Sanatan Sadhak. Pick a feature to see how it works.</p>
+    </div>
+    <div class="tour reveal">
+      <div class="tour-tabs" role="tablist" aria-label="App features">
+        <button role="tab" aria-selected="true" aria-controls="tp-home" id="tt-home">🏠 <span data-i18n="tour.home">Home & daily sadhana</span></button>
+        <button role="tab" aria-selected="false" aria-controls="tp-japa" id="tt-japa">📿 <span data-i18n="tour.japa">Japa counter</span></button>
+        <button role="tab" aria-selected="false" aria-controls="tp-sadhana" id="tt-sadhana">🎶 <span data-i18n="tour.sadhana">Mantras & prayers</span></button>
+        <button role="tab" aria-selected="false" aria-controls="tp-temples" id="tt-temples">🛕 <span data-i18n="tour.temples">Temple finder</span></button>
+        <button role="tab" aria-selected="false" aria-controls="tp-knowledge" id="tt-knowledge">📜 <span data-i18n="tour.knowledge">Knowledge hub</span></button>
+        <button role="tab" aria-selected="false" aria-controls="tp-profile" id="tt-profile">👤 <span data-i18n="tour.profile">Profile & sign-in</span></button>
+      </div>
+      <div>
+        <div class="tour-panel" role="tabpanel" id="tp-home" aria-labelledby="tt-home">
+          <div class="phone"><img src="/img/screens/home.webp" alt="Sanatan Sadhak home screen with today's Panchang and quick actions" width="317" height="677"></div>
+          <div><span class="badge" data-i18n="tag.daily">Every day</span><h3 style="margin:8px 0" data-i18n="tour.home">Home & daily sadhana</h3>
+            <ol><li data-i18n="tour.home.1">Open the app to a greeting, today's date and the deity of the day.</li><li data-i18n="tour.home.2">See today's Panchang: tithi, nakshatra, sunrise, sunset and Rahu Kaal.</li><li data-i18n="tour.home.3">Use Quick Actions to jump into Japa Mala, Dhyan, My Mantras, Aarti or Chants.</li><li data-i18n="tour.home.4">Scroll down for the daily shloka with meaning and listen-aloud.</li></ol></div>
+        </div>
+        <div class="tour-panel" role="tabpanel" id="tp-japa" aria-labelledby="tt-japa" hidden>
+          <div class="phone"><img src="/img/screens/japa.webp" alt="Japa counter screen with mantra selector" width="317" height="677" loading="lazy"></div>
+          <div><span class="badge" data-i18n="tag.core">Core tool</span><h3 style="margin:8px 0" data-i18n="tour.japa">Japa counter</h3>
+            <ol><li data-i18n="tour.japa.1">Go to Bhakti Tools, then Mantra Counter.</li><li data-i18n="tour.japa.2">Choose your mantra. Its Sanskrit text is shown while you chant.</li><li data-i18n="tour.japa.3">Tap the big circle for each chant. You'll feel a vibration at every 108.</li><li data-i18n="tour.japa.4">Your mala count and day streak are saved automatically.</li></ol></div>
+        </div>
+        <div class="tour-panel" role="tabpanel" id="tp-sadhana" aria-labelledby="tt-sadhana" hidden>
+          <div class="phone"><img src="/img/screens/sadhana.webp" alt="Bhakti Sadhana screen with prayers list" width="317" height="677" loading="lazy"></div>
+          <div><span class="badge" data-i18n="tag.listen">Listen & chant</span><h3 style="margin:8px 0" data-i18n="tour.sadhana">Mantras & prayers</h3>
+            <ol><li data-i18n="tour.sadhana.1">Open Sadhana and pick Prayers, My Mantras or Dhyana Sadhana.</li><li data-i18n="tour.sadhana.2">Search for any aarti, chalisa or stotram.</li><li data-i18n="tour.sadhana.3">Open a chant to read lyrics and meaning and play the audio.</li><li data-i18n="tour.sadhana.4">Add your own prayer with "Add Personal Prayer".</li></ol></div>
+        </div>
+        <div class="tour-panel" role="tabpanel" id="tp-temples" aria-labelledby="tt-temples" hidden>
+          <div class="phone"><img src="/img/screens/temples.webp" alt="Temple finder with sacred mandir directory" width="317" height="677" loading="lazy"></div>
+          <div><span class="badge" data-i18n="tag.darshan">Darshan</span><h3 style="margin:8px 0" data-i18n="tour.temples">Temple finder</h3>
+            <ol><li data-i18n="tour.temples.1">Open Bhakti Tools, then Temple Finder.</li><li data-i18n="tour.temples.2">Pick a holy city (Varanasi, Vrindavan, Ayodhya, Haridwar) or use your location.</li><li data-i18n="tour.temples.3">Filter by deity and read each temple's story and distance.</li><li data-i18n="tour.temples.4">Tap Directions to open maps, or Share to send it to family.</li></ol></div>
+        </div>
+        <div class="tour-panel" role="tabpanel" id="tp-knowledge" aria-labelledby="tt-knowledge" hidden>
+          <div class="phone"><img src="/img/screens/knowledge.webp" alt="Knowledge hub with deity filters and articles" width="317" height="677" loading="lazy"></div>
+          <div><span class="badge" data-i18n="tag.learn">Learn</span><h3 style="margin:8px 0" data-i18n="tour.knowledge">Knowledge hub</h3>
+            <ol><li data-i18n="tour.knowledge.1">Open Knowledge from the bottom bar.</li><li data-i18n="tour.knowledge.2">Filter by category (Vedas, Upanishads, Itihasa) or by deity.</li><li data-i18n="tour.knowledge.3">Sort by difficulty, format or newest. Every article shows its source.</li><li data-i18n="tour.knowledge.4">Bookmark articles and pick up where you left off.</li></ol></div>
+        </div>
+        <div class="tour-panel" role="tabpanel" id="tp-profile" aria-labelledby="tt-profile" hidden>
+          <div class="phone"><img src="/img/screens/profile.webp" alt="Profile sign-in screen" width="317" height="677" loading="lazy"></div>
+          <div><span class="badge" data-i18n="tag.you">You</span><h3 style="margin:8px 0" data-i18n="tour.profile">Profile & sign-in</h3>
+            <ol><li data-i18n="tour.profile.1">Use the app as a guest, or sign in with Google or email.</li><li data-i18n="tour.profile.2">Signing in syncs your streaks and unlocks Community and Mitra.</li><li data-i18n="tour.profile.3">Change language, theme and notifications in Profile.</li><li data-i18n="tour.profile.4">Delete your account any time. It's in Profile, or at <a href="/delete-account">/delete-account</a>.</li></ol></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow" data-i18n="feat.eyebrow">Everything in one place</span>
+      <h2 data-i18n="feat.title">17 features for your practice</h2>
+      <p data-i18n="feat.sub">Each one has a full walkthrough on the Features page.</p>
+    </div>
+    <div class="grid">
+      <a class="card reveal" href="/features#japa"><div class="ic">📿</div><h3 data-i18n="f.japa">Japa & mala counter</h3><p data-i18n="f.japa.d">Count chants, finish malas, keep your streak.</p></a>
+      <a class="card reveal" href="/features#mantras"><div class="ic">🎶</div><h3 data-i18n="f.mantras">Mantras & chant player</h3><p data-i18n="f.mantras.d">Library, My Mantras, background chant and audio queue.</p></a>
+      <a class="card reveal" href="/features#panchang"><div class="ic">🗓️</div><h3 data-i18n="f.panchang">Panchang & calendar</h3><p data-i18n="f.panchang.d">Muhurat, Choghadiya, festivals, Ekadashi and vrats.</p></a>
+      <a class="card reveal" href="/features#aarti"><div class="ic">🔔</div><h3 data-i18n="f.aarti">Aarti bell</h3><p data-i18n="f.aarti.d">Ring a temple bell during your aarti and keep a log.</p></a>
+      <a class="card reveal" href="/features#dhyana"><div class="ic">🧘</div><h3 data-i18n="f.dhyana">Dhyana meditation</h3><p data-i18n="f.dhyana.d">A timer with Om, flute or bells, and daily goals.</p></a>
+      <a class="card reveal" href="/features#sankalpa"><div class="ic">🙏</div><h3 data-i18n="f.sankalpa">Sankalpa & Anushthan</h3><p data-i18n="f.sankalpa.d">Set a vow, follow the Gayatri Anushthan, track the days.</p></a>
+      <a class="card reveal" href="/features#karma"><div class="ic">🌱</div><h3 data-i18n="f.karma">Karma, gratitude & journal</h3><p data-i18n="f.karma.d">Log good deeds, gratitude and reflections.</p></a>
+      <a class="card reveal" href="/features#pooja"><div class="ic">🪔</div><h3 data-i18n="f.pooja">Pooja vidhi & prayers</h3><p data-i18n="f.pooja.d">Step-by-step puja, samagri lists and prayer lyrics.</p></a>
+      <a class="card reveal" href="/features#temples"><div class="ic">🛕</div><h3 data-i18n="f.temples">Temple finder</h3><p data-i18n="f.temples.d">Jyotirlingas, dhams and city temples with directions.</p></a>
+      <a class="card reveal" href="/features#knowledge"><div class="ic">📜</div><h3 data-i18n="f.knowledge">Knowledge hub</h3><p data-i18n="f.knowledge.d">Vedas, Upanishads, Itihasa and deities, with sources.</p></a>
+      <a class="card reveal" href="/features#mitra"><div class="ic">✨</div><h3 data-i18n="f.mitra">AI Mitra</h3><p data-i18n="f.mitra.d">Ask about granths, rituals or karma. Gentle, short answers.</p></a>
+      <a class="card reveal" href="/features#community"><div class="ic">👥</div><h3 data-i18n="f.community">Community</h3><p data-i18n="f.community.d">Share reflections and join satsang respectfully.</p></a>
+      <a class="card reveal" href="/features#videos"><div class="ic">▶️</div><h3 data-i18n="f.videos">Videos</h3><p data-i18n="f.videos.d">Darshan, aarti and katha from curated channels.</p></a>
+      <a class="card reveal" href="/features#updates"><div class="ic">📣</div><h3 data-i18n="f.updates">Divine updates</h3><p data-i18n="f.updates.d">Festival posts and announcements in one feed.</p></a>
+      <a class="card reveal" href="/features#home"><div class="ic">🏠</div><h3 data-i18n="f.home">Home & daily sadhana</h3><p data-i18n="f.home.d">Greeting, Panchang, quick actions and today's shloka.</p></a>
+      <a class="card reveal" href="/features#profile"><div class="ic">🌗</div><h3 data-i18n="f.profile">Profile, language & themes</h3><p data-i18n="f.profile.d">English or Hindi, light or dark, your stats.</p></a>
+      <a class="card reveal" href="/features#guest"><div class="ic">🕊️</div><h3 data-i18n="f.guest">Guest mode</h3><p data-i18n="f.guest.d">Use most tools without an account.</p></a>
+    </div>
+  </div>
+</section>
+
+<section id="jyotirlinga">
+  <div class="wrap grid two" style="align-items:center">
+    <div class="shloka reveal">
+      <span class="eyebrow" data-i18n="sh.eyebrow">Shloka of the day</span>
+      <p class="sk" data-shloka-sk>ॐ त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम् ।<br>उर्वारुकमिव बन्धनान्मृत्योर्मुक्षीय माऽमृतात् ॥</p>
+      <p class="tr" data-shloka-tr>We worship the three-eyed One, fragrant, who nourishes all. Like the ripe cucumber from its stem, may He free us from death and not from immortality. (Rigveda 7.59.12)</p>
+      <button class="btn btn-ghost btn-sm" style="margin-top:16px" type="button" data-shloka-next data-i18n="sh.next">Next shloka →</button>
+    </div>
+    <div class="reveal">
+      <span class="eyebrow" data-i18n="jy.eyebrow">Darshan, wherever you are</span>
+      <h2 data-i18n="jy.title">From Mahakaal to Kashi Vishwanath</h2>
+      <p class="lead" data-i18n="jy.lead">Temple Finder covers the 12 Jyotirlingas, the Char Dham and beloved city mandirs. Each has its story, timings and directions, and darshan videos sit in the Video Hub.</p>
+      <div class="cta" style="margin-top:20px"><a class="btn btn-primary" href="/features#temples" data-i18n="jy.cta">How Temple Finder works</a></div>
+    </div>
+  </div>
+</section>
+
+<section id="news">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow" data-i18n="news.eyebrow">What's new</span>
+      <h2 data-i18n="news.title">Fresh from the latest update</h2>
+    </div>
+    <div class="grid" data-latest-updates></div>
+    <p style="text-align:center;margin-top:22px"><a class="btn btn-ghost" href="/updates" data-i18n="news.all">All updates</a></p>
+  </div>
+</section>
+
+<section id="early-access">
+  <div class="wrap">
+    <div class="panel reveal">
+      <div class="section-head" style="margin-bottom:24px">
+        <span class="eyebrow" data-i18n="ea.eyebrow">Be among the first</span>
+        <h2 data-i18n="ea.title">Join early access</h2>
+        <p data-i18n="ea.sub">Sanatan Sadhak is in testing on Android. Leave your email and we'll invite you to the Play Store test and tell you when it launches.</p>
+      </div>
+      <form id="early-access-form" class="form" novalidate style="max-width:660px;margin:0 auto">
+        <div class="row">
+          <label><span data-i18n="form.name">Name</span><input name="name" autocomplete="name" maxlength="100"></label>
+          <label><span data-i18n="form.email">Email *</span><input name="email" type="email" autocomplete="email" required maxlength="200" placeholder="you@example.com"></label>
+        </div>
+        <div class="row">
+          <label><span data-i18n="form.city">City</span><input name="city" autocomplete="address-level2" maxlength="100"></label>
+          <label><span data-i18n="form.interest">Most interested in</span>
+            <select name="interest">
+              <option value="japa">Japa & mantras</option><option value="panchang">Panchang & festivals</option>
+              <option value="mitra">AI Mitra</option><option value="library">Knowledge hub</option>
+              <option value="temples">Temples & darshan</option><option value="community">Community</option>
+            </select>
+          </label>
+        </div>
+        <label class="hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>
+        <label class="check"><input type="checkbox" name="consent" required> <span data-i18n="form.consent">I agree to be emailed about early access and launch.</span></label>
+        <button class="btn btn-primary" type="submit" data-i18n="cta.early">Get early access</button>
+        <p class="status" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<section id="faq" class="faq">
+  <div class="wrap" style="max-width:820px">
+    <div class="section-head reveal"><h2 data-i18n="faq.title">Questions</h2></div>
+    <details class="reveal"><summary data-i18n="faq.q1">Is Sanatan Sadhak free?</summary><p data-i18n="faq.a1">Yes. It's free and has no ads.</p></details>
+    <details class="reveal"><summary data-i18n="faq.q2">Do I need an account?</summary><p data-i18n="faq.a2">No. As a guest you can use japa, Panchang, meditation, the library and audio. Sign in to sync and to use Community and Mitra.</p></details>
+    <details class="reveal"><summary data-i18n="faq.q3">How accurate is the Panchang?</summary><p data-i18n="faq.a3">It calculates real Sun and Moon positions (to within about 2 arcminutes) in the sidereal zodiac with Lahiri ayanamsa. Tithi is taken at local sunrise. For major ceremonies, confirm with your purohit.</p></details>
+    <details class="reveal"><summary data-i18n="faq.q4">Which languages are supported?</summary><p data-i18n="faq.a4">English and Hindi, with Sanskrit text for mantras and shlokas.</p></details>
+    <details class="reveal"><summary data-i18n="faq.q5">Is iOS coming?</summary><p data-i18n="faq.a5">We're starting with Android. Join early access and we'll tell you about other platforms.</p></details>
+    <details class="reveal"><summary data-i18n="faq.q6">How is my data handled?</summary><p data-i18n="faq.a6">We collect only what the app needs and never sell it. See the <a href="/privacy">privacy policy</a>, or <a href="/delete-account">delete your account</a> at any time.</p></details>
+  </div>
+</section>
+
+<section style="padding-top:20px">
+  <div class="wrap">
+    <div class="band reveal">
+      <div><h2 data-i18n="band.title">Have an idea for the app?</h2><p data-i18n="band.sub">Suggest a feature, report a bug, or tell us what would help your sadhana.</p></div>
+      <div class="cta" style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn btn-ghost" href="/ideas" data-i18n="band.cta">Share an idea</a></div>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer>
+  <div class="wrap">
+    <div class="cols">
+      <div>
+        <a class="brand" href="/"><span class="logo"><img src="/img/icon-48.png" alt="" width="42" height="42" loading="lazy"><span class="flame"></span></span><span>Sanatan Sadhak<small>सनातन · साधना · संस्कृति</small></span></a>
+        <p style="margin-top:12px;max-width:340px" data-i18n="foot.about">A calm companion for daily sadhana, made with devotion in Rajasthan, India by K. Tech Services.</p>
+      </div>
+      <div>
+        <h4 data-i18n="foot.app">App</h4>
+        <ul>
+          <li><a href="/features" data-i18n="nav.features">Features</a></li>
+          <li><a href="/guides" data-i18n="nav.guides">Guides</a></li>
+          <li><a href="/panchang" data-i18n="nav.panchang">Panchang</a></li>
+          <li><a href="/updates" data-i18n="nav.updates">What's new</a></li>
+          <li><a href="/#early-access" data-i18n="foot.early">Early access</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 data-i18n="foot.help">Help & legal</h4>
+        <ul>
+          <li><a href="/ideas" data-i18n="nav.ideas">Ideas & feedback</a></li>
+          <li><a href="/contact" data-i18n="nav.contact">Contact</a></li>
+          <li><a href="/privacy" data-i18n="foot.privacy">Privacy policy</a></li>
+          <li><a href="/terms" data-i18n="foot.terms">Terms of use</a></li>
+          <li><a href="/delete-account" data-i18n="foot.delete">Delete account</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 data-i18n="foot.maker">Made by</h4>
+        <ul>
+          <li><a href="https://k-tech.chaloone.com" rel="noopener">K. Tech Services</a></li>
+          <li><a href="https://k-tech.chaloone.com/#contact" rel="noopener" data-i18n="foot.build">Build an app like this</a></li>
+          <li><a href="mailto:support@chaloone.com">support@chaloone.com</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="bottom">
+      <span>© <span data-year>2026</span> K. Tech Services by Kunal Pareek · Udyam-registered MSME, India</span>
+      <span class="deva">॥ सर्वे भवन्तु सुखिनः ॥</span>
+    </div>
+  </div>
+</footer>
 </body>
 </html>

@@ -1,0 +1,198 @@
+<section class="hero">
+  {{motif:om left}}
+  <div class="wrap hero-grid">
+    <div class="reveal">
+      <span class="eyebrow" data-i18n="hero.eyebrow">Android · Free · Early access</span>
+      <h1><span data-i18n="hero.t1">Your daily</span> <span class="grad" data-i18n="hero.t2">sadhana</span><span data-i18n="hero.t3">, gently kept.</span></h1>
+      <p class="lead" data-i18n="hero.lead">Japa, mantras, live Panchang, temple darshan, scriptures and a kind AI guide, all in one calm app made for devotees.</p>
+      <div class="cta">
+        <a class="btn btn-primary" href="#early-access" data-i18n="cta.early">Get early access</a>
+        <a class="btn btn-ghost" href="/features" data-i18n="cta.explore">Explore every feature</a>
+      </div>
+      <p class="mantra-line">॥ ॐ नमः शिवाय · जय श्री राम ॥<span data-i18n="hero.small">No ads · English & Hindi · works offline</span></p>
+    </div>
+    <div class="reveal">
+      <div class="scene-card" data-scene></div>
+    </div>
+  </div>
+</section>
+
+<section id="today" style="padding-top:20px">
+  {{motif:panchang right}}
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow" data-i18n="pc.eyebrow">Live · Lahiri ayanamsa</span>
+      <h2 data-i18n="pc.title">Today's Panchang</h2>
+      <p data-i18n="pc.sub">Calculated in your browser with the same engine as the app: sidereal Sun and Moon, tithi at sunrise.</p>
+    </div>
+    <div class="panchang reveal" data-panchang></div>
+  </div>
+</section>
+
+<section id="tour">
+  {{motif:mala left}}
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow" data-i18n="tour.eyebrow">Take the tour</span>
+      <h2 data-i18n="tour.title">See the app in action</h2>
+      <p data-i18n="tour.sub">Real screens from Sanatan Sadhak. Pick a feature to see how it works.</p>
+    </div>
+    <div class="tour reveal">
+      <div class="tour-tabs" role="tablist" aria-label="App features">
+        <button role="tab" aria-selected="true" aria-controls="tp-home" id="tt-home">🏠 <span data-i18n="tour.home">Home & daily sadhana</span></button>
+        <button role="tab" aria-selected="false" aria-controls="tp-japa" id="tt-japa">📿 <span data-i18n="tour.japa">Japa counter</span></button>
+        <button role="tab" aria-selected="false" aria-controls="tp-sadhana" id="tt-sadhana">🎶 <span data-i18n="tour.sadhana">Mantras & prayers</span></button>
+        <button role="tab" aria-selected="false" aria-controls="tp-temples" id="tt-temples">🛕 <span data-i18n="tour.temples">Temple finder</span></button>
+        <button role="tab" aria-selected="false" aria-controls="tp-knowledge" id="tt-knowledge">📜 <span data-i18n="tour.knowledge">Knowledge hub</span></button>
+        <button role="tab" aria-selected="false" aria-controls="tp-profile" id="tt-profile">👤 <span data-i18n="tour.profile">Profile & sign-in</span></button>
+      </div>
+      <div>
+        <div class="tour-panel" role="tabpanel" id="tp-home" aria-labelledby="tt-home">
+          <div class="phone"><img src="/img/screens/home.webp" alt="Sanatan Sadhak home screen with today's Panchang and quick actions" width="317" height="677"></div>
+          <div><span class="badge" data-i18n="tag.daily">Every day</span><h3 style="margin:8px 0" data-i18n="tour.home">Home & daily sadhana</h3>
+            <ol><li data-i18n="tour.home.1">Open the app to a greeting, today's date and the deity of the day.</li><li data-i18n="tour.home.2">See today's Panchang: tithi, nakshatra, sunrise, sunset and Rahu Kaal.</li><li data-i18n="tour.home.3">Use Quick Actions to jump into Japa Mala, Dhyan, My Mantras, Aarti or Chants.</li><li data-i18n="tour.home.4">Scroll down for the daily shloka with meaning and listen-aloud.</li></ol></div>
+        </div>
+        <div class="tour-panel" role="tabpanel" id="tp-japa" aria-labelledby="tt-japa" hidden>
+          <div class="phone"><img src="/img/screens/japa.webp" alt="Japa counter screen with mantra selector" width="317" height="677" loading="lazy"></div>
+          <div><span class="badge" data-i18n="tag.core">Core tool</span><h3 style="margin:8px 0" data-i18n="tour.japa">Japa counter</h3>
+            <ol><li data-i18n="tour.japa.1">Go to Bhakti Tools, then Mantra Counter.</li><li data-i18n="tour.japa.2">Choose your mantra. Its Sanskrit text is shown while you chant.</li><li data-i18n="tour.japa.3">Tap the big circle for each chant. You'll feel a vibration at every 108.</li><li data-i18n="tour.japa.4">Your mala count and day streak are saved automatically.</li></ol></div>
+        </div>
+        <div class="tour-panel" role="tabpanel" id="tp-sadhana" aria-labelledby="tt-sadhana" hidden>
+          <div class="phone"><img src="/img/screens/sadhana.webp" alt="Bhakti Sadhana screen with prayers list" width="317" height="677" loading="lazy"></div>
+          <div><span class="badge" data-i18n="tag.listen">Listen & chant</span><h3 style="margin:8px 0" data-i18n="tour.sadhana">Mantras & prayers</h3>
+            <ol><li data-i18n="tour.sadhana.1">Open Sadhana and pick Prayers, My Mantras or Dhyana Sadhana.</li><li data-i18n="tour.sadhana.2">Search for any aarti, chalisa or stotram.</li><li data-i18n="tour.sadhana.3">Open a chant to read lyrics and meaning and play the audio.</li><li data-i18n="tour.sadhana.4">Add your own prayer with "Add Personal Prayer".</li></ol></div>
+        </div>
+        <div class="tour-panel" role="tabpanel" id="tp-temples" aria-labelledby="tt-temples" hidden>
+          <div class="phone"><img src="/img/screens/temples.webp" alt="Temple finder with sacred mandir directory" width="317" height="677" loading="lazy"></div>
+          <div><span class="badge" data-i18n="tag.darshan">Darshan</span><h3 style="margin:8px 0" data-i18n="tour.temples">Temple finder</h3>
+            <ol><li data-i18n="tour.temples.1">Open Bhakti Tools, then Temple Finder.</li><li data-i18n="tour.temples.2">Pick a holy city (Varanasi, Vrindavan, Ayodhya, Haridwar) or use your location.</li><li data-i18n="tour.temples.3">Filter by deity and read each temple's story and distance.</li><li data-i18n="tour.temples.4">Tap Directions to open maps, or Share to send it to family.</li></ol></div>
+        </div>
+        <div class="tour-panel" role="tabpanel" id="tp-knowledge" aria-labelledby="tt-knowledge" hidden>
+          <div class="phone"><img src="/img/screens/knowledge.webp" alt="Knowledge hub with deity filters and articles" width="317" height="677" loading="lazy"></div>
+          <div><span class="badge" data-i18n="tag.learn">Learn</span><h3 style="margin:8px 0" data-i18n="tour.knowledge">Knowledge hub</h3>
+            <ol><li data-i18n="tour.knowledge.1">Open Knowledge from the bottom bar.</li><li data-i18n="tour.knowledge.2">Filter by category (Vedas, Upanishads, Itihasa) or by deity.</li><li data-i18n="tour.knowledge.3">Sort by difficulty, format or newest. Every article shows its source.</li><li data-i18n="tour.knowledge.4">Bookmark articles and pick up where you left off.</li></ol></div>
+        </div>
+        <div class="tour-panel" role="tabpanel" id="tp-profile" aria-labelledby="tt-profile" hidden>
+          <div class="phone"><img src="/img/screens/profile.webp" alt="Profile sign-in screen" width="317" height="677" loading="lazy"></div>
+          <div><span class="badge" data-i18n="tag.you">You</span><h3 style="margin:8px 0" data-i18n="tour.profile">Profile & sign-in</h3>
+            <ol><li data-i18n="tour.profile.1">Use the app as a guest, or sign in with Google or email.</li><li data-i18n="tour.profile.2">Signing in syncs your streaks and unlocks Community and Mitra.</li><li data-i18n="tour.profile.3">Change language, theme and notifications in Profile.</li><li data-i18n="tour.profile.4">Delete your account any time. It's in Profile, or at <a href="/delete-account">/delete-account</a>.</li></ol></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="features">
+  {{motif:shiva right}}
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow" data-i18n="feat.eyebrow">Everything in one place</span>
+      <h2 data-i18n="feat.title">17 features for your practice</h2>
+      <p data-i18n="feat.sub">Each one has a full walkthrough on the Features page.</p>
+    </div>
+    <div class="grid">
+      <a class="card reveal" href="/features#japa"><div class="ic">📿</div><h3 data-i18n="f.japa">Japa & mala counter</h3><p data-i18n="f.japa.d">Count chants, finish malas, keep your streak.</p></a>
+      <a class="card reveal" href="/features#mantras"><div class="ic">🎶</div><h3 data-i18n="f.mantras">Mantras & chant player</h3><p data-i18n="f.mantras.d">Library, My Mantras, background chant and audio queue.</p></a>
+      <a class="card reveal" href="/features#panchang"><div class="ic">🗓️</div><h3 data-i18n="f.panchang">Panchang & calendar</h3><p data-i18n="f.panchang.d">Muhurat, Choghadiya, festivals, Ekadashi and vrats.</p></a>
+      <a class="card reveal" href="/features#aarti"><div class="ic">🔔</div><h3 data-i18n="f.aarti">Aarti bell</h3><p data-i18n="f.aarti.d">Ring a temple bell during your aarti and keep a log.</p></a>
+      <a class="card reveal" href="/features#dhyana"><div class="ic">🧘</div><h3 data-i18n="f.dhyana">Dhyana meditation</h3><p data-i18n="f.dhyana.d">A timer with Om, flute or bells, and daily goals.</p></a>
+      <a class="card reveal" href="/features#sankalpa"><div class="ic">🙏</div><h3 data-i18n="f.sankalpa">Sankalpa & Anushthan</h3><p data-i18n="f.sankalpa.d">Set a vow, follow the Gayatri Anushthan, track the days.</p></a>
+      <a class="card reveal" href="/features#karma"><div class="ic">🌱</div><h3 data-i18n="f.karma">Karma, gratitude & journal</h3><p data-i18n="f.karma.d">Log good deeds, gratitude and reflections.</p></a>
+      <a class="card reveal" href="/features#pooja"><div class="ic">🪔</div><h3 data-i18n="f.pooja">Pooja vidhi & prayers</h3><p data-i18n="f.pooja.d">Step-by-step puja, samagri lists and prayer lyrics.</p></a>
+      <a class="card reveal" href="/features#temples"><div class="ic">🛕</div><h3 data-i18n="f.temples">Temple finder</h3><p data-i18n="f.temples.d">Jyotirlingas, dhams and city temples with directions.</p></a>
+      <a class="card reveal" href="/features#knowledge"><div class="ic">📜</div><h3 data-i18n="f.knowledge">Knowledge hub</h3><p data-i18n="f.knowledge.d">Vedas, Upanishads, Itihasa and deities, with sources.</p></a>
+      <a class="card reveal" href="/features#mitra"><div class="ic">✨</div><h3 data-i18n="f.mitra">AI Mitra</h3><p data-i18n="f.mitra.d">Ask about granths, rituals or karma. Gentle, short answers.</p></a>
+      <a class="card reveal" href="/features#community"><div class="ic">👥</div><h3 data-i18n="f.community">Community</h3><p data-i18n="f.community.d">Share reflections and join satsang respectfully.</p></a>
+      <a class="card reveal" href="/features#videos"><div class="ic">▶️</div><h3 data-i18n="f.videos">Videos</h3><p data-i18n="f.videos.d">Darshan, aarti and katha from curated channels.</p></a>
+      <a class="card reveal" href="/features#updates"><div class="ic">📣</div><h3 data-i18n="f.updates">Divine updates</h3><p data-i18n="f.updates.d">Festival posts and announcements in one feed.</p></a>
+      <a class="card reveal" href="/features#home"><div class="ic">🏠</div><h3 data-i18n="f.home">Home & daily sadhana</h3><p data-i18n="f.home.d">Greeting, Panchang, quick actions and today's shloka.</p></a>
+      <a class="card reveal" href="/features#profile"><div class="ic">🌗</div><h3 data-i18n="f.profile">Profile, language & themes</h3><p data-i18n="f.profile.d">English or Hindi, light or dark, your stats.</p></a>
+      <a class="card reveal" href="/features#guest"><div class="ic">🕊️</div><h3 data-i18n="f.guest">Guest mode</h3><p data-i18n="f.guest.d">Use most tools without an account.</p></a>
+    </div>
+  </div>
+</section>
+
+<section id="jyotirlinga">
+  {{motif:mahakaal left}}
+  {{motif:nandi right}}
+  <div class="wrap grid two" style="align-items:center">
+    <div class="shloka reveal">
+      <span class="eyebrow" data-i18n="sh.eyebrow">Shloka of the day</span>
+      <p class="sk" data-shloka-sk>ॐ त्र्यम्बकं यजामहे सुगन्धिं पुष्टिवर्धनम् ।<br>उर्वारुकमिव बन्धनान्मृत्योर्मुक्षीय माऽमृतात् ॥</p>
+      <p class="tr" data-shloka-tr>We worship the three-eyed One, fragrant, who nourishes all. Like the ripe cucumber from its stem, may He free us from death and not from immortality. (Rigveda 7.59.12)</p>
+      <button class="btn btn-ghost btn-sm" style="margin-top:16px" type="button" data-shloka-next data-i18n="sh.next">Next shloka →</button>
+    </div>
+    <div class="reveal">
+      <span class="eyebrow" data-i18n="jy.eyebrow">Darshan, wherever you are</span>
+      <h2 data-i18n="jy.title">From Mahakaal to Kashi Vishwanath</h2>
+      <p class="lead" data-i18n="jy.lead">Temple Finder covers the 12 Jyotirlingas, the Char Dham and beloved city mandirs. Each has its story, timings and directions, and darshan videos sit in the Video Hub.</p>
+      <div class="cta" style="margin-top:20px"><a class="btn btn-primary" href="/features#temples" data-i18n="jy.cta">How Temple Finder works</a></div>
+    </div>
+  </div>
+</section>
+
+<section id="news">
+  {{motif:scripture right}}
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow" data-i18n="news.eyebrow">What's new</span>
+      <h2 data-i18n="news.title">Fresh from the latest update</h2>
+    </div>
+    <div class="grid" data-latest-updates></div>
+    <p style="text-align:center;margin-top:22px"><a class="btn btn-ghost" href="/updates" data-i18n="news.all">All updates</a></p>
+  </div>
+</section>
+
+<section id="early-access">
+  {{motif:lotus left}}
+  <div class="wrap">
+    <div class="panel reveal">
+      <div class="section-head" style="margin-bottom:24px">
+        <span class="eyebrow" data-i18n="ea.eyebrow">Be among the first</span>
+        <h2 data-i18n="ea.title">Join early access</h2>
+        <p data-i18n="ea.sub">Sanatan Sadhak is in testing on Android. Leave your email and we'll invite you to the Play Store test and tell you when it launches.</p>
+      </div>
+      <form id="early-access-form" class="form" novalidate style="max-width:660px;margin:0 auto">
+        <div class="row">
+          <label><span data-i18n="form.name">Name</span><input name="name" autocomplete="name" maxlength="100"></label>
+          <label><span data-i18n="form.email">Email *</span><input name="email" type="email" autocomplete="email" required maxlength="200" placeholder="you@example.com"></label>
+        </div>
+        <div class="row">
+          <label><span data-i18n="form.city">City</span><input name="city" autocomplete="address-level2" maxlength="100"></label>
+          <label><span data-i18n="form.interest">Most interested in</span>
+            <select name="interest">
+              <option value="japa">Japa & mantras</option><option value="panchang">Panchang & festivals</option>
+              <option value="mitra">AI Mitra</option><option value="library">Knowledge hub</option>
+              <option value="temples">Temples & darshan</option><option value="community">Community</option>
+            </select>
+          </label>
+        </div>
+        <label class="hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>
+        <label class="check"><input type="checkbox" name="consent" required> <span data-i18n="form.consent">I agree to be emailed about early access and launch.</span></label>
+        <button class="btn btn-primary" type="submit" data-i18n="cta.early">Get early access</button>
+        <p class="status" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<section id="faq" class="faq">
+  <div class="wrap" style="max-width:820px">
+    <div class="section-head reveal"><h2 data-i18n="faq.title">Questions</h2></div>
+    <details class="reveal"><summary data-i18n="faq.q1">Is Sanatan Sadhak free?</summary><p data-i18n="faq.a1">Yes. It's free and has no ads.</p></details>
+    <details class="reveal"><summary data-i18n="faq.q2">Do I need an account?</summary><p data-i18n="faq.a2">No. As a guest you can use japa, Panchang, meditation, the library and audio. Sign in to sync and to use Community and Mitra.</p></details>
+    <details class="reveal"><summary data-i18n="faq.q3">How accurate is the Panchang?</summary><p data-i18n="faq.a3">It calculates real Sun and Moon positions (to within about 2 arcminutes) in the sidereal zodiac with Lahiri ayanamsa. Tithi is taken at local sunrise. For major ceremonies, confirm with your purohit.</p></details>
+    <details class="reveal"><summary data-i18n="faq.q4">Which languages are supported?</summary><p data-i18n="faq.a4">English and Hindi, with Sanskrit text for mantras and shlokas.</p></details>
+    <details class="reveal"><summary data-i18n="faq.q5">Is iOS coming?</summary><p data-i18n="faq.a5">We're starting with Android. Join early access and we'll tell you about other platforms.</p></details>
+    <details class="reveal"><summary data-i18n="faq.q6">How is my data handled?</summary><p data-i18n="faq.a6">We collect only what the app needs and never sell it. See the <a href="/privacy">privacy policy</a>, or <a href="/delete-account">delete your account</a> at any time.</p></details>
+  </div>
+</section>
+
+<section style="padding-top:20px">
+  <div class="wrap">
+    <div class="band reveal">
+      <div><h2 data-i18n="band.title">Have an idea for the app?</h2><p data-i18n="band.sub">Suggest a feature, report a bug, or tell us what would help your sadhana.</p></div>
+      <div class="cta" style="display:flex;gap:10px;flex-wrap:wrap"><a class="btn btn-ghost" href="/ideas" data-i18n="band.cta">Share an idea</a></div>
+    </div>
+  </div>
+</section>

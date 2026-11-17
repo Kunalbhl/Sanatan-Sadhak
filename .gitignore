@@ -21,3 +21,4 @@ debug.keystore
 *.log
 /tmp/
 scripts/scratch/
+website/__pycache__/

@@ -1,0 +1,40 @@
+<section class="page-hero">
+  {{motif:ganesha right}}
+  <div class="wrap"><span class="eyebrow">Your voice</span>
+    <h1 data-i18n="page.ideas">Ideas & feedback</h1>
+    <p class="lead" data-i18n="page.ideas.sub">Help us shape Sanatan Sadhak. Every message is read by the developer.</p></div>
+</section>
+<section style="padding-top:10px">
+  <div class="wrap grid two" style="align-items:start">
+    <div class="panel reveal">
+      <form id="suggestion-form" class="form" novalidate>
+        <fieldset style="border:0"><legend style="font-weight:700;color:var(--maroon);margin-bottom:8px" data-i18n="ideas.type">Type</legend>
+          <div class="seg">
+            <label><input type="radio" name="type" value="idea" checked><span class="chip">💡 <span data-i18n="ideas.idea">Idea</span></span></label>
+            <label><input type="radio" name="type" value="bug"><span class="chip">🐞 <span data-i18n="ideas.bug">Bug</span></span></label>
+            <label><input type="radio" name="type" value="feedback"><span class="chip">💬 <span data-i18n="ideas.feedback">Feedback</span></span></label>
+          </div>
+        </fieldset>
+        <label><span data-i18n="ideas.screen">Which screen?</span>
+          <select name="screen">
+            <option value="">— General —</option><option>Home</option><option>Japa counter</option><option>Mantras & chant player</option><option>Aarti bell</option><option>Dhyana</option><option>Sankalpa</option><option>Karma & gratitude</option><option>Pooja vidhi</option><option>Panchang & calendar</option><option>Knowledge hub</option><option>Temple finder</option><option>AI Mitra</option><option>Community</option><option>Videos</option><option>Divine updates</option><option>Profile & settings</option><option>Website</option>
+          </select>
+        </label>
+        <label><span data-i18n="ideas.msg">Your message *</span><textarea name="message" required maxlength="2000" placeholder="Describe your idea, or what went wrong and how to repeat it"></textarea></label>
+        <div class="row">
+          <label><span>Name (optional)</span><input name="name" autocomplete="name" maxlength="100"></label>
+          <label>Email (optional)<input name="email" type="email" autocomplete="email" maxlength="200" placeholder="If you'd like a reply"></label>
+        </div>
+        <label class="hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>
+        <label class="check"><input type="checkbox" name="consent"> <span data-i18n="ideas.consent">My idea may be shown on the public roadmap (without my name or email).</span></label>
+        <button class="btn btn-primary" type="submit" data-i18n="ideas.send">Send</button>
+        <p class="status" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+    <div class="reveal">
+      <h2 data-i18n="roadmap.title">What's coming</h2>
+      <p style="color:var(--muted);margin-bottom:16px">Ideas we're working on. See released changes on <a href="/updates">What's new</a>.</p>
+      <div data-roadmap style="display:grid;gap:8px"></div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,38 @@
+<article class="doc">
+  {{motif:om right}}
+  <div class="wrap">
+    <h1 data-i18n="page.contact">Contact & support</h1>
+    <p class="meta">We usually reply within 2 working days.</p>
+    <p>Questions, bug reports, content to report, or a feature you'd like to see? Write to us below, or email <a href="mailto:support@chaloone.com">support@chaloone.com</a>.</p>
+
+    <div class="panel" style="margin:22px 0">
+      <form id="contact-form" class="form" novalidate>
+        <div class="row">
+          <label>Name<input name="name" autocomplete="name" maxlength="100"></label>
+          <label>Email *<input name="email" type="email" autocomplete="email" required maxlength="200"></label>
+        </div>
+        <label>Topic
+          <select name="topic">
+            <option value="help">Help using the app</option>
+            <option value="bug">Report a bug</option>
+            <option value="report">Report a post or user</option>
+            <option value="feedback">Feedback or feature idea</option>
+            <option value="privacy">Privacy or data request</option>
+            <option value="other">Something else</option>
+          </select>
+        </label>
+        <label>Message *<textarea name="message" required maxlength="2000" placeholder="How can we help?"></textarea></label>
+        <label class="hp" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>
+        <button class="btn btn-primary" type="submit">Send message</button>
+        <p class="status" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+
+    <h2>Quick links</h2>
+    <ul>
+      <li><a href="/delete-account">Delete my account</a></li>
+      <li><a href="/privacy">Privacy policy</a> · <a href="/terms">Terms of use</a></li>
+      <li>Want an app like this built for you? <a href="https://k-tech.chaloone.com" rel="noopener">K. Tech Services</a></li>
+    </ul>
+  </div>
+</article>
