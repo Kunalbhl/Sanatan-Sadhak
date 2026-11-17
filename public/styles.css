@@ -401,3 +401,9 @@ footer .bottom { margin-top: 32px; padding-top: 18px; border-top: 1px solid var(
 .so-chip { flex-wrap: nowrap !important; max-width: 100%; }
 .so-chip [data-scene-names] { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .so-chip [data-scene-names] { min-width: 9em; } .so-chip { max-width: calc(100% + 30%); }
+
+/* Rounded chanting Om and Swastika rings (always present, slowly turning) */
+.bg-global .om { position: absolute; right: -110px; top: 16vh; width: 500px; height: 500px; opacity: .11; animation: spin 120s linear infinite; }
+.bg-global .sw { position: absolute; left: -120px; bottom: 6vh; width: 440px; height: 440px; opacity: .1; animation: spin 150s linear infinite reverse; }
+@media (max-width: 760px) { .bg-global .om { width: 300px; height: 300px; right: -100px; } .bg-global .sw { width: 260px; height: 260px; left: -90px; } }
+@media (prefers-reduced-motion: reduce) { .bg-global .om, .bg-global .sw { animation: spin 300s linear infinite !important; } }

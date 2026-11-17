@@ -137,6 +137,15 @@ def header(active):
     return f"""<body>
 <a class="skip" href="#main">Skip to content</a>
 <div class="bg-global" aria-hidden="true">
+  <svg class="om" viewBox="0 0 240 240"><defs><path id="ringOm" d="M120,120 m-104,0 a104,104 0 1,1 208,0 a104,104 0 1,1 -208,0"/></defs>
+    <circle cx="120" cy="120" r="116" fill="none" stroke="#f28c00" stroke-width="1.5"/><circle cx="120" cy="120" r="92" fill="none" stroke="#f5b301" stroke-width="1.2" stroke-dasharray="3 7"/>
+    <text font-size="13" font-family="Noto Sans Devanagari, sans-serif" fill="#e65100" letter-spacing="2"><textPath href="#ringOm">ॐ नमः शिवाय • ॐ नमो भगवते वासुदेवाय • जय श्री राम • हर हर महादेव •</textPath></text>
+    <text x="120" y="165" text-anchor="middle" font-size="130" font-family="Noto Sans Devanagari, sans-serif" fill="none" stroke="#e65100" stroke-width="1.6">ॐ</text></svg>
+  <svg class="sw" viewBox="0 0 240 240"><defs><path id="ringSw" d="M120,120 m-104,0 a104,104 0 1,1 208,0 a104,104 0 1,1 -208,0"/></defs>
+    <circle cx="120" cy="120" r="116" fill="none" stroke="#7a1c1c" stroke-width="1.5"/><circle cx="120" cy="120" r="92" fill="none" stroke="#f5b301" stroke-width="1.2" stroke-dasharray="3 7"/>
+    <text font-size="13" font-family="Noto Sans Devanagari, sans-serif" fill="#7a1c1c" letter-spacing="2"><textPath href="#ringSw">स्वस्ति न इन्द्रो वृद्धश्रवाः • स्वस्ति नः पूषा विश्ववेदाः • शुभ लाभ • मंगलम् •</textPath></text>
+    <g fill="none" stroke="#a8281e" stroke-width="7" stroke-linecap="square"><path d="M120,62 V178 M62,120 H178 M120,62 H166 M178,120 V166 M120,178 H74 M62,120 V74"/></g>
+    <g fill="#f5b301"><circle cx="92" cy="92" r="6"/><circle cx="148" cy="92" r="6"/><circle cx="92" cy="148" r="6"/><circle cx="148" cy="148" r="6"/></g></svg>
 </div>
 <header class="nav">
   <div class="wrap">
