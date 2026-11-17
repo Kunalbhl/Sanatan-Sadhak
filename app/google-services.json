@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "420062423164",
+    "project_id": "sanatan-sadhak",
+    "storage_bucket": "sanatan-sadhak.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:420062423164:android:fb0a9ed9a147af117dc1f9",
+        "android_client_info": {
+          "package_name": "com.aistudio.sanatansadhak.ksdfgh"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBLZIS_98K_kFFWsRJGkLeLug2a-ctNqqI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
