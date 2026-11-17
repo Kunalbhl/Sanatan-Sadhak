@@ -53,14 +53,14 @@
       it.px += (near * (dx / (d || 1)) * 60 - it.px) * 0.06;
       it.py += (near * (dy / (d || 1)) * 60 - it.py) * 0.06;
       it.glow += (near - it.glow) * 0.08;
-      if (!reduce) { it.x += it.vx; it.y += it.vy; it.rot += it.vr; }
+      const sp = reduce ? 0.5 : 1; it.x += it.vx * sp; it.y += it.vy * sp; it.rot += it.vr * sp;
       if (it.y < -it.size * 1.5 || it.x < -260 || it.x > W + 260) spawn(it, false);
       const s = 1 + it.glow * 0.25;
       it.el.style.transform = `translate(${(it.x + it.px).toFixed(1)}px,${(it.y + it.py).toFixed(1)}px) translate(-50%,-50%) rotate(${it.rot.toFixed(2)}deg) scale(${s.toFixed(3)})`;
       it.el.style.opacity = (it.base + it.glow * 0.6).toFixed(3);
       it.el.style.filter = `drop-shadow(0 0 ${(6 + it.glow * 18).toFixed(0)}px currentColor)`;
     }
-    if (!reduce || mx > -999) requestAnimationFrame(draw);
+    requestAnimationFrame(draw);
   }
   addEventListener('pointermove', (e) => { mx = e.clientX; my = e.clientY; }, { passive: true });
   addEventListener('pointerleave', () => { mx = my = -9999; });
