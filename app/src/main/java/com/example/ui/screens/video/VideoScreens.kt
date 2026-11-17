@@ -416,13 +416,11 @@ fun VideoHubScreen(viewModel: SadhakViewModel, videoViewModel: com.example.ui.vi
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 items(curatedVideos) { video ->
+                                    val curatedCtx = androidx.compose.ui.platform.LocalContext.current
                                     Card(
                                         modifier = Modifier
                                             .width(200.dp)
-                                            .clickable {
-                                                activeVideoUrl = video.videoId
-                                                activeVideoTitle = video.title
-                                            },
+                                            .clickable { openInYouTube(curatedCtx, video.videoId) },
                                         colors = CardDefaults.cardColors(
                                             containerColor = MaterialTheme.colorScheme.surface
                                         )
@@ -542,13 +540,13 @@ fun VideoHubScreen(viewModel: SadhakViewModel, videoViewModel: com.example.ui.vi
                                         )
                                     }
 
+                                    val playCtx = androidx.compose.ui.platform.LocalContext.current
                                     IconButton(
                                         onClick = {
                                             if (isLocked) {
                                                 viewModel.triggerGuestPromo()
                                             } else {
-                                                activeVideoUrl = video.videoId
-                                                activeVideoTitle = video.title
+                                                openInYouTube(playCtx, video.videoId)
                                             }
                                         },
                                         colors = IconButtonDefaults.iconButtonColors(containerColor = if (isLocked) Color.Gray else MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)),
