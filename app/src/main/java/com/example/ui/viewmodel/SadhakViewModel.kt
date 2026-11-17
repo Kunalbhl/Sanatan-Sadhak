@@ -1148,6 +1148,7 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
     val navigationHistory: StateFlow<List<String>> = _navigationHistory
 
     fun setScreen(screen: String) {
+        if (screen.startsWith("Tab:")) { navigateToBhakti(screen.removePrefix("Tab:")); return }
         com.example.ui.audio.SadhakAudioManager.stop()
         if (screen == "Bhakti" && _bhaktiTab.value !in listOf("Dashboard", "Mantras", "Timer", "My Mantras")) {
             _bhaktiTab.value = "Dashboard"
