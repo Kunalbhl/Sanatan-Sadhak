@@ -371,3 +371,18 @@ footer .bottom { margin-top: 32px; padding-top: 18px; border-top: 1px solid var(
   .so-title { font-size: 1.5rem; }
   .so-chip { font-size: .72rem; gap: 8px; flex-wrap: wrap; }
 }
+
+/* Photo hero (owner's artwork) */
+.scene-card { aspect-ratio: 2372 / 1132 !important; background: #f6c27a; }
+.scene-img, .scene-img img, .scene-grade, .scene-fx { position: absolute; inset: 0; width: 100%; height: 100%; }
+.scene-img img { object-fit: cover; transition: filter 1.2s ease; }
+.scene-grade { pointer-events: none; transition: background 1.2s ease; }
+.scene-fx { pointer-events: none; }
+.scene-card::after { background: linear-gradient(90deg, rgba(50,15,5,.45), rgba(50,15,5,.1) 55%, transparent), linear-gradient(180deg, transparent 50%, rgba(50,15,5,.35)) !important; }
+.scene-over { top: 50%; bottom: auto !important; transform: translateY(-50%); right: 36%; }
+.so-chip span { white-space: nowrap; }
+.so-chip { flex-wrap: wrap; row-gap: 2px; }
+.so-title { font-size: clamp(1.4rem, 2.6vw, 2.2rem); }
+.hero-grid { grid-template-columns: .9fr 1.1fr; }
+@media (max-width: 1000px) { .hero-grid { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { .scene-card { aspect-ratio: 4 / 3.3 !important; } .scene-img img { object-position: 100% 50%; } .scene-over { right: 38%; left: 14px !important; } .so-title { font-size: 1.15rem; } .so-chant { font-size: .62rem; } .so-date { font-size: .7rem; } .so-chip { font-size: .62rem; padding: 5px 9px; } }
