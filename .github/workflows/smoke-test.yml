@@ -6,6 +6,9 @@ on:
     branches: [fix/production-pass]
     paths-ignore: ['public/**', 'website/**', '*.md']
 
+permissions:
+  contents: write
+
 jobs:
   smoke:
     runs-on: ubuntu-latest
@@ -37,3 +40,9 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: smoke-shots, path: shots/ }
+      - name: Save screenshots to the smoke-shots branch
+        if: always()
+        run: |
+          cd shots && git init -q -b smoke-shots && git add -A
+          git -c user.name=ci -c user.email=ci@local commit -qm "shots ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" smoke-shots
