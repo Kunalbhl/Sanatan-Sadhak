@@ -107,6 +107,12 @@ service cloud.firestore {
     }
 
     // Public release notes (admin-written, readable by anyone)
+    // YouTube channels shown in the app's video library (managed in the admin panel)
+    match /youtube_channels/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
     match /app_updates/{id} {
       allow read: if true;
       allow write: if isAdmin();
