@@ -140,6 +140,11 @@
       <linearGradient id="flagG" x1="0" x2="1"><stop offset="0" stop-color="#ff9800"/><stop offset="1" stop-color="#e65100"/></linearGradient>
       <radialGradient id="fur" cx=".4" cy=".35"><stop offset="0" stop-color="#e6e4dc"/><stop offset=".7" stop-color="#b9b7ad"/><stop offset="1" stop-color="#8f8d84"/></radialGradient>
       <radialGradient id="tGlow" cx=".5" cy=".75" r=".5"><stop offset="0" stop-color="#ffcf6b" stop-opacity=".6"/><stop offset="1" stop-color="#ffcf6b" stop-opacity="0"/></radialGradient>
+      <filter id="halo" x="-30%" y="-30%" width="160%" height="160%"><feFlood id="haloC" flood-color="#ffd27a"/><feComposite in2="SourceAlpha" operator="in"/><feGaussianBlur stdDeviation="14"/></filter>
+      <filter id="tint"><feFlood id="tintC" flood-color="#2a140e" flood-opacity="0"/><feComposite in2="SourceAlpha" operator="in"/></filter>
+      <filter id="rim"><feFlood id="rimC" flood-color="#ffcf70" flood-opacity="0"/><feComposite in2="SourceAlpha" operator="in"/><feOffset dx="-2" dy="-1"/><feComposite in2="SourceAlpha" operator="in"/></filter>
+      <linearGradient id="haze" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop id="hazeC" offset="1" stop-color="#ffd9a0" stop-opacity=".55"/></linearGradient>
+      <linearGradient id="rayG" x1="0" x2="1"><stop offset="0" stop-color="#fff3c4" stop-opacity=".55"/><stop offset="1" stop-color="#fff3c4" stop-opacity="0"/></linearGradient>
       <style>.t-edge{stroke:#a35d36;stroke-width:1}.t-cut{fill:none;stroke:#9a5634;stroke-width:1}</style>
     </defs>
     <rect width="${W}" height="${H}" fill="url(#skyG)"/>
@@ -149,24 +154,36 @@
     <g opacity=".8"><g id="c1"><ellipse cx="0" cy="150" rx="70" ry="15" fill="#fff" opacity=".75"/><ellipse cx="40" cy="140" rx="40" ry="14" fill="#fff" opacity=".75"/></g>
       <g id="c2"><ellipse cx="0" cy="235" rx="90" ry="12" fill="#fff" opacity=".55"/></g></g>
     <path d="M0,540 C120,500 220,522 330,505 C460,485 560,520 690,495 C820,470 900,512 1000,492 L1000,${H} L0,${H} Z" fill="#e9c79e" opacity=".55"/>
+    <g id="farT" opacity=".55">${shikhara(140, 560, 400, 34, 7, 'stoneS')}${shikhara(205, 560, 450, 22, 5, 'stoneS')}${shikhara(860, 560, 410, 32, 7, 'stoneS')}${shikhara(795, 560, 460, 20, 5, 'stoneS')}</g>
+    <rect id="farHaze" x="0" y="380" width="${W}" height="200" fill="url(#haze)"/>
+    <g id="raysG" opacity="0"></g>
     <ellipse cx="500" cy="470" rx="440" ry="220" fill="url(#tGlow)" id="tGlowE" opacity="0"/>
+    <use href="#temple" filter="url(#halo)" id="haloUse" opacity=".9"/>
     <g id="temple">${temple()}</g>
+    <use href="#temple" filter="url(#tint)"/>
+    <rect x="0" y="440" width="${W}" height="${G - 440}" fill="url(#haze)" id="nearHaze" opacity=".6"/>
+    <g id="dustG"></g>
     <rect x="0" y="${G}" width="${W}" height="${H - G}" fill="#e6c79c" id="groundR"/>
     <path d="M0,${G + 28} C200,${G + 18} 300,${G + 40} 500,${G + 30} C700,${G + 20} 820,${G + 42} 1000,${G + 28}" stroke="#d4ae80" stroke-width="2" fill="none"/>
     <g id="birdsG"></g>
     <rect id="nightTint" width="${W}" height="${H}" fill="#0d1440" opacity="0"/>
   </svg>`);
 
+  host.insertAdjacentHTML('beforeend', `
+  <div class="scene-over">
+    <div class="so-title" data-scene-greet>Welcome Devotee</div>
+    <div class="so-chant"><span>✦</span> ॥ JAI SHREE RAM ॥ <span>✦</span></div>
+    <div class="so-date" data-scene-date></div>
+    <div class="so-chip"><span class="deva" data-scene-names>श्री राम • रामचंद्र • रघुनाथ • राघव</span><span class="so-sep"></span><span data-scene-next>⏱</span></div>
+  </div>`);
   host.insertAdjacentHTML('afterend', `
-  <div class="scene-bar">
-    <div><strong data-scene-label>—</strong> <span data-scene-place></span></div>
-    <div class="scene-time" role="group" aria-label="Preview time of day">
-      <button type="button" data-t="auto" aria-pressed="true">Live</button>
-      <button type="button" data-t="dawn" title="Sunrise" aria-label="Sunrise">🌅</button>
-      <button type="button" data-t="noon" title="Day" aria-label="Day">☀️</button>
-      <button type="button" data-t="dusk" title="Sunset" aria-label="Sunset">🌇</button>
-      <button type="button" data-t="night" title="Night" aria-label="Night">🌙</button>
-    </div>
+  <div class="scene-bar" role="group" aria-label="Preview time of day">
+    <button type="button" class="ph" data-t="auto" aria-pressed="true"><b>Live</b><small data-scene-label>—</small></button>
+    <button type="button" class="ph" data-t="brahma"><b>Brahma Muhurta</b><small data-ph="brahma"></small></button>
+    <button type="button" class="ph" data-t="dawn"><b>Morning</b><small data-ph="dawn"></small></button>
+    <button type="button" class="ph" data-t="noon"><b>Afternoon</b><small data-ph="noon"></small></button>
+    <button type="button" class="ph" data-t="dusk"><b>Sandhya</b><small data-ph="dusk"></small></button>
+    <button type="button" class="ph" data-t="night"><b>Night</b><small data-ph="night"></small></button>
   </div>`);
 
   const $ = (id) => document.getElementById(id);
@@ -196,7 +213,7 @@
   const mix = (c1, c2, t) => { const a = hex(c1), b = hex(c2); return '#' + a.map((v, i) => Math.round(lerp(v, b[i], t)).toString(16).padStart(2, '0')).join(''); };
   const sky3 = (n, tw, d, wD, wT) => mix(mix(n, tw, Math.min(1, wT + wD)), d, wD);
   const PAL = { night: ['#0b1638', '#1f2a5c', '#3a3a6e'], tw: ['#8c74c4', '#ff9e66', '#ffd89a'], day: ['#8fcdf8', '#cfe9f7', '#fdf0d8'] };
-  let forced = null, light = { night: 0 };
+  let forced = null, light = { night: 0 }, sunPos = { x: 500, y: 300 }, dustOn = true;
   const setStops = (cls, c) => document.querySelectorAll('.' + cls).forEach((e) => e.setAttribute('stop-color', c));
 
   function sky() {
@@ -204,10 +221,10 @@
     const tz = -now.getTimezoneOffset() / 60;
     const st = A.sunTimes(now, 26.79, tz * 15, tz);
     let mins = now.getHours() * 60 + now.getMinutes() + now.getSeconds() / 60;
-    if (forced === 'dawn') mins = st.sunrise + 12;
-    if (forced === 'noon') mins = (st.sunrise + st.sunset) / 2 - 60;
-    if (forced === 'dusk') mins = st.sunset - 10;
-    if (forced === 'night') mins = (st.sunset + 200) % 1440;
+    const PH = { brahma: st.sunrise - 96, dawn: st.sunrise + 80, noon: (st.sunrise + st.sunset) / 2 + 40, dusk: st.sunset - 6, night: (st.sunset + 220) % 1440 };
+    if (forced) mins = PH[forced];
+    Object.entries(PH).forEach(([k, v]) => { const e = document.querySelector(`[data-ph="${k}"]`); if (e) e.textContent = A.fmtMin(v); });
+    if (false) mins = st.sunrise + 12;
     const dayLen = st.sunset - st.sunrise;
     const fr = (mins - st.sunrise) / dayLen;
     const alt = Math.sin(Math.PI * Math.min(Math.max(fr, -0.2), 1.2));
@@ -233,12 +250,41 @@
     $('tGlowE').setAttribute('opacity', (night * .95 + wT * .25).toFixed(2));
     $('groundR').setAttribute('fill', mix('#a88a74', '#e6c79c', wD));
     document.querySelectorAll('#temple .diya').forEach((d) => d.setAttribute('opacity', (0.3 + night * .7).toFixed(2)));
+    // Backlit look: temple turns to a warm silhouette when the sun is low, glows at night
+    const low = Math.max(wT, night * .7);
+    $('tintC').setAttribute('flood-opacity', (low * .5).toFixed(2));
+    $('tintC').setAttribute('flood-color', night > .5 ? '#0e1230' : '#3a160c');
+    $('haloC').setAttribute('flood-color', night > .5 ? '#ffc56b' : wT > .3 ? '#ffb347' : '#fff1c7');
+    $('haloUse').setAttribute('opacity', (0.35 + wT * .65 + night * .5).toFixed(2));
+    $('hazeC').setAttribute('stop-color', night > .5 ? '#3b3f7a' : wT > .3 ? '#ffb070' : '#fff0d0');
+    $('farT').setAttribute('opacity', (0.35 + low * .3).toFixed(2));
+    $('raysG').setAttribute('opacity', (wT * .9 + wD * .35).toFixed(2));
+    sunPos = { x: lerp(70, 930, fr), y: 560 - Math.max(-0.3, alt) * 430 };
+    dustOn = night < .5;
+
     const hi = document.documentElement.lang === 'hi';
-    const phase = wD > .6 ? (hi ? 'दिन' : 'Day') : wT > .3 ? (fr < .5 ? (hi ? 'सूर्योदय' : 'Sunrise') : (hi ? 'सूर्यास्त' : 'Sunset')) : (hi ? 'रात्रि' : 'Night');
+    const isBrahma = mins >= st.sunrise - 96 && mins < st.sunrise - 48;
+    const phase = isBrahma ? (hi ? 'ब्रह्म मुहूर्त' : 'Brahma Muhurta') : wD > .6 ? (fr < .45 ? (hi ? 'प्रातः' : 'Morning') : (hi ? 'अपराह्न' : 'Afternoon')) : wT > .3 ? (fr < .5 ? (hi ? 'सूर्योदय' : 'Sunrise') : (hi ? 'सन्ध्या' : 'Sandhya')) : (hi ? 'रात्रि' : 'Night');
     document.querySelector('[data-scene-label]').textContent = `${phase} · ${A.fmtMin(mins)}`;
-    document.querySelector('[data-scene-place]').textContent = `· ${hi ? 'सूर्योदय' : 'Sunrise'} ${A.fmtMin(st.sunrise)} · ${hi ? 'सूर्यास्त' : 'Sunset'} ${A.fmtMin(st.sunset)}`;
+    const greet = isBrahma ? ['Shubh Brahma Muhurta', 'शुभ ब्रह्म मुहूर्त'] : wD > .6 && fr < .45 ? ['Suprabhatam, Devotee', 'सुप्रभातम्, साधक'] : wD > .6 ? ['Welcome Devotee', 'स्वागतम् साधक'] : wT > .3 && fr > .5 ? ['Shubh Sandhya', 'शुभ सन्ध्या'] : (fr > 0 && fr < .5) ? ['Suprabhatam, Devotee', 'सुप्रभातम्, साधक'] : (fr >= .5 && fr < 1.1) ? ['Shubh Sandhya', 'शुभ सन्ध्या'] : ['Shubh Ratri', 'शुभ रात्रि'];
+    document.querySelector('[data-scene-greet]').textContent = hi ? greet[1] : greet[0];
+    const d = new Date();
+    document.querySelector('[data-scene-date]').textContent = d.toLocaleDateString(hi ? 'hi-IN' : 'en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) + ' • ' + A.fmtMin(mins);
+    // countdown to the next sandhya: sunrise, midday, sunset (the three sandhya times)
+    const nowM = d.getHours() * 60 + d.getMinutes();
+    const nexts = [[st.sunrise - 96, hi ? 'ब्रह्म मुहूर्त' : 'Brahma Muhurta'], [st.sunrise, hi ? 'प्रातः सन्ध्या' : 'Pratah Sandhya'], [st.noon, hi ? 'मध्याह्न' : 'Madhyahna'], [st.sunset, hi ? 'सायं सन्ध्या' : 'Sayam Sandhya']];
+    let nx = nexts.find(([m]) => m > nowM) || [nexts[0][0] + 1440, nexts[0][1]];
+    const dm = Math.round(nx[0] - nowM);
+    document.querySelector('[data-scene-next]').textContent = `⏱ ${nx[1]} ${hi ? 'में' : 'in'} ${String(Math.floor(dm / 60)).padStart(2, '0')}:${String(dm % 60).padStart(2, '0')}`;
   }
 
+  // god rays (thin wedges from the sun) and golden dust motes
+  const rays = [];
+  for (let i = 0; i < 12; i++) { const p = document.createElementNS(NS, 'path'); p.setAttribute('fill', 'url(#rayG)'); $('raysG').appendChild(p); rays.push({ el: p, a: i * 30, w: 3 + (i % 3) * 2 }); }
+  const dust = [];
+  for (let i = 0; i < 28; i++) { const c = document.createElementNS(NS, 'circle'); c.setAttribute('fill', '#ffe08a'); $('dustG').appendChild(c); dust.push({ el: c, x: Math.random() * W, y: 200 + Math.random() * 380, r: .8 + Math.random() * 1.8, v: .1 + Math.random() * .3, p: Math.random() * 6 }); }
+  const NAMES = ['श्री राम • रामचंद्र • रघुनाथ • राघव', 'जानकीवल्लभ • दशरथनंदन • कौसल्यानंदन', 'सीताराम • रघुपति राघव राजा राम', 'मर्यादा पुरुषोत्तम • कोदंडधारी'];
+  let nameI = 0; setInterval(() => { nameI = (nameI + 1) % NAMES.length; const e = document.querySelector('[data-scene-names]'); if (e) { e.style.opacity = 0; setTimeout(() => { e.textContent = NAMES[nameI]; e.style.opacity = 1; }, 400); } }, 4000);
   const flag = $('scFlag'), tail = $('scTail'), head = $('scHead');
   let visible = true, headR = 0;
   if ('IntersectionObserver' in window) new IntersectionObserver((e) => { visible = e[0].isIntersecting; }).observe(host);
@@ -268,6 +314,18 @@
         const p = (((t - b.start) / b.dur) % 1 + 1) % 1;
         b.el.setAttribute('d', birdPath(-80 + p * 1180 + b.dx, b.y - p * 45 + Math.sin(t * 1.2 + b.phase) * 4, b.scale * 1.35, Math.sin(t * 9 + b.phase)));
       }
+      for (const r of rays) {
+        const a = (r.a + t * 2) * Math.PI / 180, L = 900;
+        const x1 = sunPos.x + Math.cos(a - r.w / 200) * L, y1 = sunPos.y + Math.sin(a - r.w / 200) * L;
+        const x2 = sunPos.x + Math.cos(a + r.w / 200) * L, y2 = sunPos.y + Math.sin(a + r.w / 200) * L;
+        r.el.setAttribute('d', `M${f(sunPos.x)},${f(sunPos.y)} L${f(x1)},${f(y1)} L${f(x2)},${f(y2)} Z`);
+        r.el.setAttribute('opacity', (0.35 + 0.35 * Math.sin(t * .7 + r.a)).toFixed(2));
+      }
+      for (const d of dust) {
+        d.y -= d.v * .4; d.x += Math.sin(t * .5 + d.p) * .25; if (d.y < 160) { d.y = 600; d.x = Math.random() * W; }
+        d.el.setAttribute('cx', f(d.x)); d.el.setAttribute('cy', f(d.y)); d.el.setAttribute('r', d.r);
+        d.el.setAttribute('opacity', dustOn ? (0.25 + 0.5 * Math.abs(Math.sin(t + d.p))).toFixed(2) : 0);
+      }
       $('c1').setAttribute('transform', `translate(${f(((t * 6) % 1300) - 150)},0)`);
       $('c2').setAttribute('transform', `translate(${f(((t * 4 + 600) % 1300) - 150)},0)`);
       if (light.night > 0.05) starEls.forEach((s, i) => s.setAttribute('opacity', (0.45 + 0.55 * Math.abs(Math.sin(t * 0.8 + i))).toFixed(2)));
@@ -276,9 +334,9 @@
   }
 
   const bar = host.nextElementSibling;
-  bar.querySelectorAll('.scene-time button').forEach((b) => b.addEventListener('click', () => {
+  bar.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
     forced = b.dataset.t === 'auto' ? null : b.dataset.t;
-    bar.querySelectorAll('.scene-time button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    bar.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
     sky();
   }));
   sky();
