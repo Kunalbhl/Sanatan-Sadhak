@@ -2,6 +2,9 @@ name: App smoke test (emulator screenshots)
 
 on:
   workflow_dispatch:
+  push:
+    branches: [fix/production-pass]
+    paths-ignore: ['public/**', 'website/**', '*.md']
 
 jobs:
   smoke:
