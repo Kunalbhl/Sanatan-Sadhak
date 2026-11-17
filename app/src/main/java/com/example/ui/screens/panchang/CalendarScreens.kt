@@ -119,53 +119,20 @@ fun CalendarScreen(
                         color = MaterialTheme.colorScheme.primary
                     )
                 )
-                Text(
-                    text = if (isEng) "Astro calculations for ${currentLocation.name}" else "${currentLocation.nameHi} के लिए पंचांग गणना",
-                    style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable { showLocationDialog = true }.padding(vertical = 2.dp)
+                ) {
+                    Icon(Icons.Default.LocationOn, contentDescription = "Location", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(14.dp))
+                    Spacer(modifier = Modifier.width(3.dp))
+                    Text(
+                        text = (if (isEng) currentLocation.name else currentLocation.nameHi) + if (isEng) " · Change" else " · बदलें",
+                        style = MaterialTheme.typography.bodySmall.copy(color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+                    )
+                }
             }
             IconButton(onClick = { panchangViewModel.refreshPanchang() }) {
                 Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = MaterialTheme.colorScheme.primary)
-            }
-        }
-
-        // --- Location Selector Strip ---
-        Card(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
-            colors = CardDefaults.cardColors(containerColor = SadhakThemeColors.sacredSurface),
-            shape = RoundedCornerShape(12.dp),
-            border = androidx.compose.foundation.BorderStroke(1.dp, SadhakThemeColors.sacredDivider)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
-                    Icon(
-                        Icons.Default.LocationOn,
-                        contentDescription = "Location",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Column {
-                        Text(
-                            text = if (isEng) currentLocation.name else currentLocation.nameHi,
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold)
-                        )
-                        Text(
-                            text = "Lat: ${currentLocation.latitude}°, Lng: ${currentLocation.longitude}°, TZ: GMT${if (currentLocation.timezone >= 0) "+" else ""}${currentLocation.timezone}",
-                            style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        )
-                    }
-                }
-                TextButton(onClick = { showLocationDialog = true }) {
-                    Text(
-                        text = if (isEng) "Change" else "स्थान बदलें",
-                        style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold)
-                    )
-                }
             }
         }
 
