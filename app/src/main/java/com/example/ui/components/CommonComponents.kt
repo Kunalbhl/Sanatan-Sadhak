@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -554,7 +556,7 @@ fun SadhakSwitch(
         enabled = enabled,
         thumbContent = {
             Icon(
-                imageVector = if (checked) androidx.compose.material.icons.filled.Check else androidx.compose.material.icons.filled.Close,
+                imageVector = if (checked) androidx.compose.material.icons.Icons.Filled.Check else androidx.compose.material.icons.Icons.Filled.Close,
                 contentDescription = if (checked) "On" else "Off",
                 modifier = Modifier.size(14.dp)
             )
