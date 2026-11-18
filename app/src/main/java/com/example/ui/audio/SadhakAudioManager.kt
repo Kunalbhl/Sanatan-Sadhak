@@ -69,6 +69,7 @@ object SadhakAudioManager {
     private var mediaPlayer: MediaPlayer? = null
     private var oneShotPlayer: MediaPlayer? = null
     private var loginAmbientPlayer: MediaPlayer? = null
+    private var bgChantPlayer: MediaPlayer? = null
     private var isInitialized = false
     private var appContext: Context? = null
     private var audioManager: AudioManager? = null
@@ -203,6 +204,7 @@ object SadhakAudioManager {
         if (!enabled) {
             stop()
             stopLoginAmbient()
+            stopBgChant()
         }
     }
 
@@ -277,6 +279,51 @@ object SadhakAudioManager {
             } catch (_: Exception) {}
             loginAmbientPlayer = null
             _isLoginAmbientPlaying.value = false
+        }
+    }
+
+    /** Background Om chant: plays on its own, with no player UI, and yields to the main media player. */
+    fun startBgChant(context: Context, volume: Float) {
+        if (!_soundEnabled.value) return
+        try {
+            val existing = bgChantPlayer
+            if (existing != null) {
+                existing.setVolume(volume, volume)
+                if (!existing.isPlaying) existing.start()
+                return
+            }
+            val ctx = context.applicationContext
+            val resId = ctx.resources.getIdentifier("om_ambient", "raw", ctx.packageName)
+            if (resId == 0) return
+            val player = createPlayerForRaw(ctx, resId, AudioAttributes.USAGE_MEDIA) { mp ->
+                if (bgChantPlayer == mp) bgChantPlayer = null
+            } ?: return
+            player.isLooping = true
+            player.setVolume(volume, volume)
+            player.start()
+            bgChantPlayer = player
+        } catch (e: Exception) {
+            Log.w(TAG, "Error starting background chant: ${e.message}")
+            stopBgChant()
+        }
+    }
+
+    fun setBgChantVolume(volume: Float) {
+        try { bgChantPlayer?.setVolume(volume, volume) } catch (_: Exception) {}
+    }
+
+    fun pauseBgChant() {
+        try { if (bgChantPlayer?.isPlaying == true) bgChantPlayer?.pause() } catch (_: Exception) {}
+    }
+
+    fun stopBgChant() {
+        try {
+            if (bgChantPlayer?.isPlaying == true) bgChantPlayer?.stop()
+            bgChantPlayer?.reset()
+            bgChantPlayer?.release()
+        } catch (_: Exception) {
+        } finally {
+            bgChantPlayer = null
         }
     }
 
