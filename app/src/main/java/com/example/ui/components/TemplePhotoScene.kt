@@ -62,7 +62,7 @@ fun TemplePhotoScene(modifier: Modifier = Modifier) {
         // Fit like "crop", anchored to the right so the main shikhara always shows
         val k = max(size.width / IMG_W, size.height / IMG_H)
         val ox = size.width - IMG_W * k
-        val oy = (size.height - IMG_H * k) / 2f
+        val oy = (size.height - IMG_H * k) * 0.12f // anchor near the top so the flag is never cut
         fun P(x: Float, y: Float) = Offset(ox + x * k, oy + y * k)
         val dst = IntSize((IMG_W * k).toInt(), (IMG_H * k).toInt())
         val dstOff = IntOffset(ox.toInt(), oy.toInt())

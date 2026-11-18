@@ -188,7 +188,7 @@ fun DivineEnvironmentBanner(
                 .matchParentSize()
                 .background(Brush.horizontalGradient(listOf(Color(0x8C320F05), Color(0x26320F05), Color.Transparent)))
         )
-        Spacer(Modifier.fillMaxWidth().height(180.dp))
+        Spacer(Modifier.fillMaxWidth().height(205.dp))
 
         // Foreground Devotee Greeting Content
         Row(
