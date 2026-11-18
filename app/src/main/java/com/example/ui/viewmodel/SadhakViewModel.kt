@@ -584,6 +584,7 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun logoutUser() {
+        prefs.edit().remove("remembered_email").apply()
         userRepository.logout()
     }
 
@@ -827,7 +828,8 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
         
         // Auto-login
         viewModelScope.launch {
-            val rememberedUserEmail = userRepository.getRememberedUserEmail()
+            val rememberedUserEmail = userRepository.getRememberedUserEmail().takeUnless { it.isNullOrEmpty() }
+                    ?: prefs.getString("remembered_email", "")
             if (!rememberedUserEmail.isNullOrEmpty()) {
                 val user = userRepository.authenticateUserByEmailOnly(rememberedUserEmail)
                 if (user != null) {
@@ -1431,8 +1433,10 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
                 userRepository.loginAsUser(finalUser)
                 if (rememberMe) {
                     userRepository.setRememberedUser(finalUser.email)
+                    prefs.edit().putString("remembered_email", finalUser.email).apply()
                 } else {
                     userRepository.clearRememberedUser()
+                    prefs.edit().remove("remembered_email").apply()
                 }
                 _showLanguagePrefDialog.value = true
                 onResult(true, "Pranam! Logged in successfully.")
