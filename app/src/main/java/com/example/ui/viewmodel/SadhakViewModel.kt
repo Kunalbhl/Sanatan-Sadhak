@@ -584,7 +584,7 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun logoutUser() {
-        prefs.edit().remove("remembered_email").apply()
+        app.getSharedPreferences("panchang_prefs", android.content.Context.MODE_PRIVATE).edit().remove("remembered_email").apply()
         userRepository.logout()
     }
 
