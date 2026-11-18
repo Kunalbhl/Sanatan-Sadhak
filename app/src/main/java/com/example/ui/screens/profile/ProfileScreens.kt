@@ -439,24 +439,10 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
                             ),
                             visualTransformation = if (isPassVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             trailingIcon = {
-                                IconButton(
-                                    onClick = {},
-                                    modifier = Modifier.pointerInput(Unit) {
-                                        detectTapGestures(
-                                            onPress = {
-                                                try {
-                                                    isPassVisible = true
-                                                    awaitRelease()
-                                                } finally {
-                                                    isPassVisible = false
-                                                }
-                                            }
-                                        )
-                                    }
-                                ) {
+                                IconButton(onClick = { isPassVisible = !isPassVisible }) {
                                     Icon(
                                         imageVector = if (isPassVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                        contentDescription = "Hold to see password",
+                                        contentDescription = "Show or hide password",
                                         tint = SadhakThemeColors.sacredPrimary
                                     )
                                 }
@@ -480,24 +466,10 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
                             ),
                             visualTransformation = if (isConfirmPassVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             trailingIcon = {
-                                IconButton(
-                                    onClick = {},
-                                    modifier = Modifier.pointerInput(Unit) {
-                                        detectTapGestures(
-                                            onPress = {
-                                                try {
-                                                    isConfirmPassVisible = true
-                                                    awaitRelease()
-                                                } finally {
-                                                    isConfirmPassVisible = false
-                                                }
-                                            }
-                                        )
-                                    }
-                                ) {
+                                IconButton(onClick = { isConfirmPassVisible = !isConfirmPassVisible }) {
                                     Icon(
                                         imageVector = if (isConfirmPassVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                        contentDescription = "Hold to see password",
+                                        contentDescription = "Show or hide password",
                                         tint = SadhakThemeColors.sacredPrimary
                                     )
                                 }
@@ -562,24 +534,10 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
                             ),
                             visualTransformation = if (isLoginPassVisible) VisualTransformation.None else PasswordVisualTransformation(),
                             trailingIcon = {
-                                IconButton(
-                                    onClick = {},
-                                    modifier = Modifier.pointerInput(Unit) {
-                                        detectTapGestures(
-                                            onPress = {
-                                                try {
-                                                    isLoginPassVisible = true
-                                                    awaitRelease()
-                                                } finally {
-                                                    isLoginPassVisible = false
-                                                }
-                                            }
-                                        )
-                                    }
-                                ) {
+                                IconButton(onClick = { isLoginPassVisible = !isLoginPassVisible }) {
                                     Icon(
                                         imageVector = if (isLoginPassVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                                        contentDescription = "Hold to see password",
+                                        contentDescription = "Show or hide password",
                                         tint = SadhakThemeColors.sacredPrimary
                                     )
                                 }

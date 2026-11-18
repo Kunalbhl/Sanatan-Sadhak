@@ -126,6 +126,7 @@ val devotionalTracks = listOf(
 
 @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class SadhakViewModel(application: Application) : AndroidViewModel(application) {
+    private fun sessionPrefs() = getApplication<Application>().getSharedPreferences("panchang_prefs", android.content.Context.MODE_PRIVATE)
 
     private val _isRefreshing = kotlinx.coroutines.flow.MutableStateFlow(false)
     val isRefreshing: kotlinx.coroutines.flow.StateFlow<Boolean> = _isRefreshing
@@ -584,6 +585,7 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun logoutUser() {
+        sessionPrefs().edit().remove("remembered_email").apply()
         userRepository.logout()
     }
 
@@ -827,7 +829,8 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
         
         // Auto-login
         viewModelScope.launch {
-            val rememberedUserEmail = userRepository.getRememberedUserEmail()
+            val rememberedUserEmail = userRepository.getRememberedUserEmail().takeUnless { it.isNullOrEmpty() }
+                    ?: prefs.getString("remembered_email", "")
             if (!rememberedUserEmail.isNullOrEmpty()) {
                 val user = userRepository.authenticateUserByEmailOnly(rememberedUserEmail)
                 if (user != null) {
@@ -1431,8 +1434,10 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
                 userRepository.loginAsUser(finalUser)
                 if (rememberMe) {
                     userRepository.setRememberedUser(finalUser.email)
+                    sessionPrefs().edit().putString("remembered_email", finalUser.email).apply()
                 } else {
                     userRepository.clearRememberedUser()
+                    sessionPrefs().edit().remove("remembered_email").apply()
                 }
                 _showLanguagePrefDialog.value = true
                 onResult(true, "Pranam! Logged in successfully.")
