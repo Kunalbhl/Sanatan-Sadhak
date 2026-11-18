@@ -19,6 +19,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -178,6 +179,7 @@ class MainActivity : ComponentActivity() {
 
                 var showNotificationDialog by remember { mutableStateOf(false) }
                 val hasNewNotifications by viewModel.hasNewNotifications.collectAsState()
+                val notificationList by viewModel.notifications.collectAsState()
 
                 Scaffold(
                     topBar = {
@@ -187,6 +189,7 @@ class MainActivity : ComponentActivity() {
                             onLogoClick = { viewModel.setScreen("Home") },
                             onCalendarClick = { viewModel.setScreen("Calendar") },
                             hasNewNotifications = hasNewNotifications,
+                            unreadCount = notificationList.size,
                             onNotificationClick = {
                                 showNotificationDialog = true
                                 viewModel.setHasNewNotifications(false)
@@ -517,6 +520,7 @@ fun SadhakTopAppBar(
     onLogoClick: () -> Unit,
     onCalendarClick: () -> Unit,
     hasNewNotifications: Boolean,
+    unreadCount: Int = 0,
     onNotificationClick: () -> Unit
 ) {
     Box(
@@ -573,17 +577,45 @@ fun SadhakTopAppBar(
                         if (hasNewNotifications) {
                             Box(
                                 modifier = Modifier
-                                    .size(8.dp)
-                                    .background(SadhakThemeColors.error, CircleShape)
                                     .align(Alignment.TopEnd)
-                            )
+                                    .offset(x = 6.dp, y = (-4).dp)
+                                    .defaultMinSize(minWidth = 16.dp, minHeight = 16.dp)
+                                    .background(SadhakThemeColors.error, CircleShape)
+                                    .padding(horizontal = 4.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = if (unreadCount > 9) "9+" else if (unreadCount > 0) unreadCount.toString() else "!",
+                                    color = Color.White,
+                                    fontSize = 9.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
                         }
                     }
                 }
 
                 // Calendar icon
                 IconButton(onClick = onCalendarClick) {
-                    Icon(imageVector = Icons.Default.DateRange, contentDescription = "Calendar", tint = SadhakThemeColors.primary)
+                    val dayOfMonth = remember { java.util.Calendar.getInstance().get(java.util.Calendar.DAY_OF_MONTH) }
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .border(1.8.dp, SadhakThemeColors.primary, RoundedCornerShape(5.dp)),
+                        contentAlignment = Alignment.BottomCenter
+                    ) {
+                        Box(
+                            Modifier.fillMaxWidth().height(6.dp).align(Alignment.TopCenter)
+                                .background(SadhakThemeColors.primary, RoundedCornerShape(topStart = 3.dp, topEnd = 3.dp))
+                        )
+                        Text(
+                            text = dayOfMonth.toString(),
+                            color = SadhakThemeColors.primary,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            modifier = Modifier.padding(bottom = 1.dp)
+                        )
+                    }
                 }
 
                 // Bilingual toggle button
@@ -597,12 +629,23 @@ fun SadhakTopAppBar(
                         .padding(horizontal = 8.dp, vertical = 4.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = if (isEnglish) "EN | हिं" else "हिं | EN",
-                        color = SadhakThemeColors.secondary,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 11.sp
-                    )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        val on = SadhakThemeColors.primary
+                        Text(
+                            text = "EN",
+                            color = if (isEnglish) Color.White else SadhakThemeColors.secondary.copy(alpha = 0.6f),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp,
+                            modifier = Modifier.background(if (isEnglish) on else Color.Transparent, RoundedCornerShape(10.dp)).padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                        Text(
+                            text = "हिं",
+                            color = if (!isEnglish) Color.White else SadhakThemeColors.secondary.copy(alpha = 0.6f),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp,
+                            modifier = Modifier.background(if (!isEnglish) on else Color.Transparent, RoundedCornerShape(10.dp)).padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(

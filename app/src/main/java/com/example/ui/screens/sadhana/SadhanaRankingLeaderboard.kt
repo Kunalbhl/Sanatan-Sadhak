@@ -484,14 +484,10 @@ fun SadhanaMandalaLeaderboardView(
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Switch(
+                com.example.ui.components.SadhakSwitch(
                     checked = currentProfile.isLeaderboardOptedIn,
                     onCheckedChange = { onToggleLeaderboardParticipation(it) },
-                    modifier = Modifier.scale(0.8f).testTag("leaderboard_privacy_toggle"),
-                    colors = SwitchDefaults.colors(
-                        checkedThumbColor = MaterialTheme.colorScheme.primary,
-                        checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.4f)
-                    )
+                    modifier = Modifier.scale(0.8f).testTag("leaderboard_privacy_toggle")
                 )
             }
 

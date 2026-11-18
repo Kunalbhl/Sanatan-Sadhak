@@ -927,7 +927,7 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
                                     color = MaterialTheme.colorScheme.secondary
                                 )
                             }
-                            Switch(
+                            com.example.ui.components.SadhakSwitch(
                                 checked = vibrateOnTap,
                                 onCheckedChange = {
                                     vibrateOnTap = it
@@ -956,7 +956,7 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
                                     color = MaterialTheme.colorScheme.secondary
                                 )
                             }
-                            Switch(
+                            com.example.ui.components.SadhakSwitch(
                                 checked = vibrateOnMala,
                                 onCheckedChange = {
                                     vibrateOnMala = it

@@ -176,18 +176,7 @@ fun SettingToggleTile(
         Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
         Spacer(modifier = Modifier.width(12.dp))
         Text(text = title, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-        androidx.compose.material3.Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            colors = androidx.compose.material3.SwitchDefaults.colors(
-                checkedThumbColor = Color.White,
-                checkedTrackColor = MaterialTheme.colorScheme.primary,
-                uncheckedThumbColor = Color.White,
-                uncheckedTrackColor = Color.Gray,
-                checkedBorderColor = MaterialTheme.colorScheme.primary,
-                uncheckedBorderColor = Color.Gray
-            )
-        )
+        SadhakSwitch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }
 
@@ -547,4 +536,38 @@ fun GoldenLotusMedallion(
             radius = r * 0.18f
         )
     }
+}
+
+
+/** App-wide on/off switch: green-ish primary track + check mark when ON, grey track + cross when OFF. */
+@Composable
+fun SadhakSwitch(
+    checked: Boolean,
+    onCheckedChange: ((Boolean) -> Unit)?,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
+) {
+    androidx.compose.material3.Switch(
+        checked = checked,
+        onCheckedChange = onCheckedChange,
+        modifier = modifier,
+        enabled = enabled,
+        thumbContent = {
+            Icon(
+                imageVector = if (checked) androidx.compose.material.icons.Icons.Default.Check else androidx.compose.material.icons.Icons.Default.Close,
+                contentDescription = if (checked) "On" else "Off",
+                modifier = Modifier.size(14.dp)
+            )
+        },
+        colors = androidx.compose.material3.SwitchDefaults.colors(
+            checkedThumbColor = Color.White,
+            checkedTrackColor = MaterialTheme.colorScheme.primary,
+            checkedIconColor = MaterialTheme.colorScheme.primary,
+            checkedBorderColor = MaterialTheme.colorScheme.primary,
+            uncheckedThumbColor = Color.White,
+            uncheckedTrackColor = Color(0xFFB8B2A8),
+            uncheckedIconColor = Color(0xFF7A7468),
+            uncheckedBorderColor = Color(0xFFB8B2A8)
+        )
+    )
 }
