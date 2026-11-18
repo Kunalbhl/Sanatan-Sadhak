@@ -554,7 +554,7 @@ fun SadhakSwitch(
         enabled = enabled,
         thumbContent = {
             Icon(
-                imageVector = if (checked) androidx.compose.material.icons.Icons.Default.Check else androidx.compose.material.icons.Icons.Default.Close,
+                imageVector = if (checked) androidx.compose.material.icons.filled.Check else androidx.compose.material.icons.filled.Close,
                 contentDescription = if (checked) "On" else "Off",
                 modifier = Modifier.size(14.dp)
             )
