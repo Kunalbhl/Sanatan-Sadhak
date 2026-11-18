@@ -1926,10 +1926,9 @@ fun AppPreferencesScreen(viewModel: SadhakViewModel, onBack: () -> Unit) {
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    Switch(
+                    com.example.ui.components.SadhakSwitch(
                         checked = notificationsEnabled,
-                        onCheckedChange = { viewModel.toggleNotifications() },
-                        colors = SwitchDefaults.colors(checkedThumbColor = MaterialTheme.colorScheme.primary)
+                        onCheckedChange = { viewModel.toggleNotifications() }
                     )
                 }
 
@@ -1952,10 +1951,9 @@ fun AppPreferencesScreen(viewModel: SadhakViewModel, onBack: () -> Unit) {
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    Switch(
+                    com.example.ui.components.SadhakSwitch(
                         checked = soundEnabled,
-                        onCheckedChange = { viewModel.toggleSound() },
-                        colors = SwitchDefaults.colors(checkedThumbColor = MaterialTheme.colorScheme.primary)
+                        onCheckedChange = { viewModel.toggleSound() }
                     )
                 }
             }
@@ -2207,10 +2205,9 @@ fun AppPreferencesScreen(viewModel: SadhakViewModel, onBack: () -> Unit) {
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    Switch(
+                    com.example.ui.components.SadhakSwitch(
                         checked = bgChantEnabled,
-                        onCheckedChange = { viewModel.toggleBgChant() },
-                        colors = SwitchDefaults.colors(checkedThumbColor = MaterialTheme.colorScheme.primary)
+                        onCheckedChange = { viewModel.toggleBgChant() }
                     )
                 }
 

@@ -687,7 +687,7 @@ fun AdminPanchangTab(adminViewModel: AdminViewModel, isEng: Boolean, adminEmail:
                     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text("Display Source Transparency Badges")
                         Spacer(modifier = Modifier.weight(1f))
-                        Switch(checked = displayTransparency, onCheckedChange = { displayTransparency = it })
+                        com.example.ui.components.SadhakSwitch(checked = displayTransparency, onCheckedChange = { displayTransparency = it })
                     }
 
                     Button(
@@ -1465,7 +1465,7 @@ fun AdminYoutubeChannelsCard(videoViewModel: VideoViewModel, isEng: Boolean, adm
                         Text(ch.title, fontWeight = FontWeight.SemiBold, fontSize = 12.sp, maxLines = 1)
                         Text(ch.channelId, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                     }
-                    Switch(checked = ch.enabled, onCheckedChange = { videoViewModel.setYoutubeChannelEnabled(ch.channelId, it) })
+                    com.example.ui.components.SadhakSwitch(checked = ch.enabled, onCheckedChange = { videoViewModel.setYoutubeChannelEnabled(ch.channelId, it) })
                     IconButton(onClick = { confirmRemove = ch }) {
                         Icon(Icons.Default.Delete, contentDescription = "Remove channel", tint = MaterialTheme.colorScheme.error)
                     }

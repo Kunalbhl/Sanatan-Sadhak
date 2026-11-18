@@ -46,7 +46,8 @@ object AppPreferences {
     }
 
     fun getOnboardingState(email: String): String {
-        if (!::prefs.isInitialized) return "NOT_STARTED"
+        // Before preferences are loaded we cannot know; never re-show the tour to a returning user
+        if (!::prefs.isInitialized) return "COMPLETED"
         val cleanEmail = email.lowercase().trim()
         val key = if (cleanEmail.isBlank() || cleanEmail == "guest@sanatan.org" || cleanEmail == "guest") "guest" else cleanEmail
         val userState = prefs.getString("onboarding_state_$key", null)
