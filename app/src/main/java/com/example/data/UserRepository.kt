@@ -223,6 +223,79 @@ class UserRepository private constructor(private val appContext: Context) {
         }
     }
 
+    private val settingFiles = listOf("app_prefs", "panchang_prefs", com.example.notifications.SadhakReminderScheduler.PREFS_NAME)
+    private val sensitiveKey = Regex("(?i)password|token|secret|api|remembered|email|auth|session")
+
+    /** Upload all non-sensitive preferences so they are never lost on reinstall. */
+    suspend fun backupSettings() {
+        if (!firebaseService.isFirebaseAvailable.value || _userEmailState.value.isBlank()) return
+        val out = HashMap<String, Any>()
+        for (file in settingFiles) {
+            context.getSharedPreferences(file, Context.MODE_PRIVATE).all.forEach { (k, v) ->
+                if (sensitiveKey.containsMatchIn(k)) return@forEach
+                val enc = when (v) {
+                    is Boolean -> "b:$v"; is Int -> "i:$v"; is Long -> "l:$v"; is Float -> "f:$v"
+                    is String -> if (v.length < 2000) "s:$v" else null
+                    else -> null
+                }
+                if (enc != null) out["$file|$k"] = enc
+            }
+        }
+        if (out.isNotEmpty()) firebaseService.saveSettings(out)
+    }
+
+    /** Fill in preferences missing on this device from the cloud backup. Returns true if anything was restored. */
+    suspend fun restoreSettings(): Boolean {
+        val cloud = firebaseService.loadSettings() ?: return false
+        var changed = false
+        for ((composite, v) in cloud) {
+            val file = composite.substringBefore("|"); val key = composite.substringAfter("|")
+            if (file !in settingFiles || sensitiveKey.containsMatchIn(key)) continue
+            val p = context.getSharedPreferences(file, Context.MODE_PRIVATE)
+            if (p.contains(key)) continue
+            val e = p.edit()
+            val raw = v as? String ?: continue
+            val body = raw.drop(2)
+            try {
+                when (raw.take(2)) {
+                    "b:" -> e.putBoolean(key, body.toBoolean())
+                    "i:" -> e.putInt(key, body.toInt())
+                    "l:" -> e.putLong(key, body.toLong())
+                    "f:" -> e.putFloat(key, body.toFloat())
+                    "s:" -> e.putString(key, body)
+                    else -> continue
+                }
+            } catch (_: NumberFormatException) { continue }
+            e.apply(); changed = true
+        }
+        return changed
+    }
+
+    /** After login: fill blank local profile fields from the cloud, or push local ones up if the cloud lacks them. */
+    suspend fun syncProfileWithCloud(email: String): User? {
+        val id = email.lowercase().trim()
+        val local = userDao.getUserByEmail(id) ?: return null
+        val p = firebaseService.loadProfile(id) ?: run {
+            firebaseService.saveProfile(local, ProfileImageStore.toBase64(context, local.email)); return local
+        }
+        fun pick(l: String, key: String) = if (l.isBlank()) (p[key] as? String).orEmpty() else l
+        var image = local.profileImageUri
+        if (image.isBlank()) {
+            val b64 = p["photoBase64"] as? String ?: ""
+            if (b64.isNotEmpty()) image = ProfileImageStore.fromBase64(context, id, b64)
+        }
+        val merged = local.copy(
+            fullName = pick(local.fullName, "fullName"),
+            mobileNumber = pick(local.mobileNumber, "mobileNumber"),
+            city = pick(local.city, "city"),
+            state = pick(local.state, "state"),
+            profileImageUri = image
+        )
+        if (merged != local) userDao.insertUser(merged)
+        firebaseService.saveProfile(merged, ProfileImageStore.toBase64(context, merged.email))
+        return merged
+    }
+
     fun loginAsUser(user: User) {
         _userEmailState.value = user.email
         _userNameState.value = user.fullName
