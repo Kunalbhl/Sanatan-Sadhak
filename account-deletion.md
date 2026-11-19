@@ -2,8 +2,8 @@
 
 **Application Name:** Sanatan Sadhak  
 **Application ID:** `com.aistudio.sanatansadhak.ksdfgh`  
-**Publisher:** Infinity Myth Studios  
-**Contact Email:** [DEVELOPER CONTACT EMAIL — REQUIRED]  
+**Publisher:** K. Tech Services  
+**Contact Email:** support@chaloone.com  
 **Last Updated:** August 14, 2026
 
 ---
@@ -45,7 +45,7 @@ When you execute an account deletion:
 
 If you have uninstalled the application or cannot access your Android device, you can request account deletion via email:
 
-1. Send an email to: **`[DEVELOPER CONTACT EMAIL — REQUIRED]`**
+1. Send an email to: **`support@chaloone.com`**
 2. Subject line: `Sanatan Sadhak — Account Deletion Request`
 3. Include the **Google email address** associated with your Sanatan Sadhak account.
 4. Our support team will verify your ownership and process the complete removal of your account within **7 business days**.
@@ -63,6 +63,6 @@ If you have uninstalled the application or cannot access your Android device, yo
 
 For any questions regarding account or data deletion, please contact:
 
-**Infinity Myth Studios Support Team**  
-**Email:** `[DEVELOPER CONTACT EMAIL — REQUIRED]`  
-**Website:** `[DEVELOPER WEBSITE URL — REQUIRED]`
+**K. Tech Services Support Team**  
+**Email:** `support@chaloone.com`  
+**Website:** `https://sanatan-sadhak.chaloone.com`

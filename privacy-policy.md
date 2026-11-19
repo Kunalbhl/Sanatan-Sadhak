@@ -3,8 +3,8 @@
 **Last Updated:** August 14, 2026  
 **Application Name:** Sanatan Sadhak  
 **Application ID:** `com.aistudio.sanatansadhak.ksdfgh`  
-**Publisher:** Infinity Myth Studios  
-**Contact Email:** [DEVELOPER CONTACT EMAIL — REQUIRED]
+**Publisher:** K. Tech Services  
+**Contact Email:** support@chaloone.com
 
 ---
 
@@ -139,7 +139,7 @@ For web-based deletion requests, please refer to our [Account Deletion Informati
 
 ## 15. Children's Privacy
 
-Sanatan Sadhak is designed for general audiences and spiritual seekers aged 13 and older. We do not knowingly collect personally identifiable information from children under 13. If you believe that a child has provided us with personal data, please contact us at `[DEVELOPER CONTACT EMAIL — REQUIRED]` so we can promptly remove it.
+Sanatan Sadhak is designed for general audiences and spiritual seekers aged 13 and older. We do not knowingly collect personally identifiable information from children under 13. If you believe that a child has provided us with personal data, please contact us at `support@chaloone.com` so we can promptly remove it.
 
 ---
 
@@ -163,6 +163,6 @@ We may update this Privacy Policy from time to time to reflect improvements in a
 
 If you have any questions, concerns, or requests regarding this Privacy Policy or data practices, please contact us at:
 
-**Infinity Myth Studios**  
-**Email:** `[DEVELOPER CONTACT EMAIL — REQUIRED]`  
-**Website:** `[DEVELOPER WEBSITE URL — REQUIRED]`
+**K. Tech Services**  
+**Email:** `support@chaloone.com`  
+**Website:** `https://sanatan-sadhak.chaloone.com`
