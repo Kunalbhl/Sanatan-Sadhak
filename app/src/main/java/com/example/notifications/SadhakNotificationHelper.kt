@@ -18,6 +18,7 @@ object SadhakNotificationHelper {
     const val CHANNEL_BRAHMA_MUHURTA = "brahma_muhurta_channel"
     const val CHANNEL_SANDHYA = "sandhya_channel"
     const val CHANNEL_JAPA = "japa_channel"
+    const val CHANNEL_FESTIVAL = "festival_channel"
 
     const val ID_SHLOKA_PANCHANG = 101
     const val ID_MORNING_PRAYER = 102
@@ -25,6 +26,8 @@ object SadhakNotificationHelper {
     const val ID_BRAHMA_MUHURTA = 104
     const val ID_SANDHYA = 105
     const val ID_JAPA = 106
+    const val ID_FESTIVAL_TODAY = 107
+    const val ID_FESTIVAL_EVE = 108
 
     fun createNotificationChannels(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -71,6 +74,14 @@ object SadhakNotificationHelper {
                     NotificationManager.IMPORTANCE_DEFAULT
                 ).apply {
                     description = if (isEng) "Commitment reminders for daily Japa Mala rounds" else "दैनिक जप माला संकल्प के अनुस्मारक"
+                },
+                NotificationChannel(
+                    CHANNEL_FESTIVAL,
+                    if (isEng) "Festivals & Vrat Days" else "पर्व एवं व्रत तिथियाँ",
+                    NotificationManager.IMPORTANCE_HIGH
+                ).apply {
+                    description = if (isEng) "Ekadashi, Pradosh, Purnima, Amavasya, Sankashti and other sacred days, the evening before and on the day" else "एकादशी, प्रदोष, पूर्णिमा, अमावस्या, संकष्टी आदि पावन तिथियाँ, एक दिन पहले और उसी दिन"
+                    enableVibration(true)
                 }
             )
 
