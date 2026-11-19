@@ -149,7 +149,7 @@ class UserRepository private constructor(private val appContext: Context) {
             }
         }
         
-        userDao.insertUser(user)
+        userDao.insertUser(user.copy(password = PasswordHasher.hash(user.password)))
         return true
     }
 
@@ -172,7 +172,7 @@ class UserRepository private constructor(private val appContext: Context) {
                 city = p?.get("city") as? String ?: "",
                 state = p?.get("state") as? String ?: "",
                 avatar = (p?.get("avatar") as? Number)?.toInt() ?: 1,
-                password = passwordText,
+                password = PasswordHasher.hash(passwordText),
                 role = p?.get("role") as? String ?: "Regular",
                 profileImageUri = ProfileImageStore.fromBase64(context, idClean, p?.get("photoBase64") as? String ?: "")
             ))
@@ -186,7 +186,7 @@ class UserRepository private constructor(private val appContext: Context) {
         // so profile backup, Community and admin rights work in the cloud too.
         // If the cloud already has this email, the cloud password is the only truth: a stale
         // local password (e.g. the one before a reset) must NOT work any more.
-        if (!cloudOk && user != null && user.password == passwordText && idClean.contains("@") &&
+        if (!cloudOk && user != null && PasswordHasher.matches(user.password, passwordText) && idClean.contains("@") &&
             firebaseService.isFirebaseAvailable.value && passwordText.length >= 6) {
             when (firebaseService.signUpResult(idClean, passwordText)) {
                 "CREATED" -> firebaseService.saveProfile(user, ProfileImageStore.toBase64(context, user.email))
@@ -198,8 +198,12 @@ class UserRepository private constructor(private val appContext: Context) {
             }
         }
 
-        if (user != null && (user.password == passwordText || cloudOk)) {
-            if (cloudOk && user.password != passwordText) userDao.insertUser(user.copy(password = passwordText))
+        if (user != null && (PasswordHasher.matches(user.password, passwordText) || cloudOk)) {
+            // Keep the local copy hashed and in step with the cloud password (also upgrades old plain entries)
+            if (!PasswordHasher.isHashed(user.password) || (cloudOk && !PasswordHasher.matches(user.password, passwordText))) {
+                user = user.copy(password = PasswordHasher.hash(passwordText))
+                userDao.insertUser(user)
+            }
             return user
         }
         return null
