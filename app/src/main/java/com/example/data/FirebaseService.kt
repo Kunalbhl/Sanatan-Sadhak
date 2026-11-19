@@ -124,7 +124,7 @@ class FirebaseService(private val context: Context) {
                     .setScopes(listOf("email", "profile"))
                     .addCustomParameter("prompt", "select_account")
                     .build()
-                a.startActivityForResult(activity, provider).await()
+                a.startActivityForSignInWithProvider(activity, provider).await()
             }
             val user = result.user ?: run { lastGoogleError = "Google sign-in did not complete."; return null }
             _currentUserState.value = user
