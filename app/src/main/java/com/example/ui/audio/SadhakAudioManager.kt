@@ -47,7 +47,7 @@ enum class AudioTrackId(
     FLUTE_AMBIENT("flute_ambient", "Divine Flute", "दिव्य बाँसुरी", AudioCategory.AMBIENT, "Meditation Melody of Shri Krishna", "श्री कृष्ण की मधुर मुरली धुन");
 
     companion object {
-        fun playableTracks(): List<AudioTrackId> = entries.filter { !it.isOneShot }
+        fun playableTracks(): List<AudioTrackId> = entries.filter { !it.isOneShot && AudioSynth.supports(it.rawName) }
         fun fromRawName(name: String): AudioTrackId? = entries.find { it.rawName == name }
         fun fromIndex(index: Int): AudioTrackId = when (index) {
             1 -> TEMPLE_BELL
@@ -210,7 +210,7 @@ object SadhakAudioManager {
 
     private fun createPlayerForRaw(
         context: Context,
-        resId: Int,
+        rawName: String,
         usage: Int = AudioAttributes.USAGE_MEDIA,
         onError: ((MediaPlayer) -> Unit)? = null
     ): MediaPlayer? {
@@ -220,7 +220,11 @@ object SadhakAudioManager {
                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                 .build()
 
-            val player = MediaPlayer.create(context, resId)
+            val file = AudioSynth.ensure(context, rawName)
+            val player = if (file == null) null else MediaPlayer().apply {
+                setDataSource(file.path)
+                prepare()
+            }
             player?.apply {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     try {
@@ -243,7 +247,7 @@ object SadhakAudioManager {
                 }
             }
         } catch (e: Throwable) {
-            Log.w(TAG, "Failed creating MediaPlayer for resId $resId: ${e.message}")
+            Log.w(TAG, "Failed creating MediaPlayer for $rawName: ${e.message}")
             null
         }
     }
@@ -255,9 +259,9 @@ object SadhakAudioManager {
         try {
             stopLoginAmbient()
             val ctx = context.applicationContext
-            val resId = ctx.resources.getIdentifier("om_ambient", "raw", ctx.packageName)
-            if (resId != 0) {
-                val player = createPlayerForRaw(ctx, resId, AudioAttributes.USAGE_MEDIA) { mp ->
+            val rawName = "om_ambient"
+            if (AudioSynth.supports(rawName)) {
+                val player = createPlayerForRaw(ctx, rawName, AudioAttributes.USAGE_MEDIA) { mp ->
                     if (loginAmbientPlayer == mp) {
                         loginAmbientPlayer = null
                     }
@@ -293,9 +297,9 @@ object SadhakAudioManager {
                 return
             }
             val ctx = context.applicationContext
-            val resId = ctx.resources.getIdentifier("om_ambient", "raw", ctx.packageName)
-            if (resId == 0) return
-            val player = createPlayerForRaw(ctx, resId, AudioAttributes.USAGE_MEDIA) { mp ->
+            val rawName = "om_ambient"
+            if (!AudioSynth.supports(rawName)) return
+            val player = createPlayerForRaw(ctx, rawName, AudioAttributes.USAGE_MEDIA) { mp ->
                 if (bgChantPlayer == mp) bgChantPlayer = null
             } ?: return
             player.isLooping = true
@@ -408,13 +412,13 @@ object SadhakAudioManager {
         val ctx = context ?: appContext ?: return
 
         try {
-            val resId = ctx.resources.getIdentifier(trackId.rawName, "raw", ctx.packageName)
-            if (resId != 0) {
+            val rawName = trackId.rawName
+            if (AudioSynth.supports(rawName)) {
                 try {
                     oneShotPlayer?.reset()
                     oneShotPlayer?.release()
                 } catch (_: Exception) {}
-                oneShotPlayer = createPlayerForRaw(ctx, resId, AudioAttributes.USAGE_ASSISTANCE_SONIFICATION) { mp ->
+                oneShotPlayer = createPlayerForRaw(ctx, rawName, AudioAttributes.USAGE_ASSISTANCE_SONIFICATION) { mp ->
                     if (oneShotPlayer == mp) {
                         oneShotPlayer = null
                     }
@@ -458,11 +462,8 @@ object SadhakAudioManager {
 
         stop()
 
-        val resId = context.resources.getIdentifier(trackId.rawName, "raw", context.packageName)
-        if (resId == 0) {
-            Log.w(TAG, "Audio asset missing: res/raw/${trackId.rawName}")
-            _currentTrack.value = trackId
-            _isPlaying.value = false
+        if (!AudioSynth.supports(trackId.rawName)) {
+            Log.w(TAG, "No audio available for ${trackId.rawName}")
             return
         }
 
@@ -475,7 +476,7 @@ object SadhakAudioManager {
 
         try {
             if (requestAudioFocus()) {
-                mediaPlayer = createPlayerForRaw(context, resId, AudioAttributes.USAGE_MEDIA) { mp ->
+                mediaPlayer = createPlayerForRaw(context, trackId.rawName, AudioAttributes.USAGE_MEDIA) { mp ->
                     if (mediaPlayer == mp) {
                         mediaPlayer = null
                     }
