@@ -68,7 +68,7 @@ fun MantraDetailScreen(
         "gayatri" -> AudioTrackId.GAYATRI_MANTRA
         "vishnu" -> AudioTrackId.VISHNU_SAHASRANAMAM
         else -> null
-    }
+    }?.takeIf { com.example.ui.audio.AudioSynth.supports(it.rawName) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(

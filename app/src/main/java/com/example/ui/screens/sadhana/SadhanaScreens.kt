@@ -1277,11 +1277,7 @@ fun MeditationTimerView(viewModel: SadhakViewModel, isEnglish: Boolean) {
                         Pair("Silent", "मौन"),
                         Pair("Temple Bells 🔔", "घंटी 🔔"),
                         Pair("Divine OM 🕉", "ॐ ध्वनि 🕉"),
-                        Pair("Cosmic Flute 🪈", "बांसुरी 🪈"),
-                        Pair("Gayatri Mantra 📿", "गायत्री मंत्र 📿"),
-                        Pair("Shiva Tandav 🔱", "शिव तांडव 🔱"),
-                        Pair("Maha Mrityunjaya 🪔", "महामृत्युंजय 🪔"),
-                        Pair("Vishnu Sahasranamam 🪷", "विष्णु सहस्रनाम 🪷")
+                        Pair("Cosmic Flute 🪈", "बांसुरी 🪈")
                     )
                     val soundName = if (isEnglish) sounds[selectedSoundIndex].first else sounds[selectedSoundIndex].second
                     Text(
@@ -1369,11 +1365,7 @@ fun MeditationTimerView(viewModel: SadhakViewModel, isEnglish: Boolean) {
                         Pair("Silent", "मौन"),
                         Pair("Temple Bells 🔔", "घंटी 🔔"),
                         Pair("Divine OM 🕉", "ॐ ध्वनि 🕉"),
-                        Pair("Cosmic Flute 🪈", "बांसुरी 🪈"),
-                        Pair("Gayatri Mantra 📿", "गायत्री मंत्र 📿"),
-                        Pair("Shiva Tandav 🔱", "शिव तांडव 🔱"),
-                        Pair("Maha Mrityunjaya 🪔", "महामृत्युंजय 🪔"),
-                        Pair("Vishnu Sahasranamam 🪷", "विष्णु सहस्रनाम 🪷")
+                        Pair("Cosmic Flute 🪈", "बांसुरी 🪈")
                     )
 
                     androidx.compose.foundation.layout.FlowRow(
