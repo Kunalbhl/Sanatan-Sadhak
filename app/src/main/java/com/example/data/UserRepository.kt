@@ -184,10 +184,17 @@ class UserRepository private constructor(private val appContext: Context) {
         }
         // Account that so far only existed on this phone: create its Firebase account now,
         // so profile backup, Community and admin rights work in the cloud too.
+        // If the cloud already has this email, the cloud password is the only truth: a stale
+        // local password (e.g. the one before a reset) must NOT work any more.
         if (!cloudOk && user != null && user.password == passwordText && idClean.contains("@") &&
             firebaseService.isFirebaseAvailable.value && passwordText.length >= 6) {
-            if (firebaseService.signUpWithEmail(idClean, passwordText)) {
-                firebaseService.saveProfile(user, ProfileImageStore.toBase64(context, user.email))
+            when (firebaseService.signUpResult(idClean, passwordText)) {
+                "CREATED" -> firebaseService.saveProfile(user, ProfileImageStore.toBase64(context, user.email))
+                "EXISTS" -> {
+                    userDao.insertUser(user.copy(password = "locked_" + java.util.UUID.randomUUID()))
+                    return null
+                }
+                else -> {} // offline: allow the local login below
             }
         }
 
@@ -196,6 +203,29 @@ class UserRepository private constructor(private val appContext: Context) {
             return user
         }
         return null
+    }
+
+    /** Real Google sign-in. Reuses the existing account for that email, or creates it. */
+    suspend fun signInWithGoogle(activity: android.app.Activity): User? {
+        val g = firebaseService.signInWithGoogle(activity) ?: return null
+        var user = userDao.getUserByEmail(g.email)
+        if (user == null) {
+            val p = firebaseService.loadProfile(g.email)
+            user = User(
+                email = g.email,
+                fullName = p?.get("fullName") as? String ?: g.name,
+                mobileNumber = p?.get("mobileNumber") as? String ?: "",
+                city = p?.get("city") as? String ?: "",
+                state = p?.get("state") as? String ?: "",
+                avatar = (p?.get("avatar") as? Number)?.toInt() ?: 1,
+                password = "google_" + java.util.UUID.randomUUID(),
+                role = p?.get("role") as? String ?: "Regular",
+                profileImageUri = ProfileImageStore.fromBase64(context, g.email, p?.get("photoBase64") as? String ?: "")
+            )
+            userDao.insertUser(user)
+            if (p == null) firebaseService.saveProfile(user, "")
+        }
+        return user
     }
 
     suspend fun authenticateUserByEmailOnly(identifier: String): User? {

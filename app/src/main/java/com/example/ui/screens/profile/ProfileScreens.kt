@@ -726,7 +726,11 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
                     .clickable {
                         statusText = ""
                         com.example.ui.audio.SadhakAudioManager.stopLoginAmbient()
-                        viewModel.login("devotee@sanatan.org", "sadhak108", true) { success, msg ->
+                        var act: android.app.Activity? = null
+                        var c: android.content.Context? = context
+                        while (c is android.content.ContextWrapper) { if (c is android.app.Activity) { act = c; break }; c = c.baseContext }
+                        if (act == null) { statusText = "Google sign-in is not available here."; return@clickable }
+                        viewModel.loginWithGoogle(act) { success, msg ->
                             if (success) {
                                 showWelcomeGreeting = true
                             } else {
@@ -1009,7 +1013,7 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Text(
                             text = if (isEng)
-                                "Enter your registered email address to receive password reset instructions."
+                                "Enter your registered email to get a link to set a new password. Signed in with Google? Use this to add a password too."
                             else
                                 "पासवर्ड रीसेट निर्देश प्राप्त करने के लिए अपना पंजीकृत ईमेल पता दर्ज करें।",
                             fontSize = 13.sp,

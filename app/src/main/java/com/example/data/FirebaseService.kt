@@ -4,7 +4,9 @@ import android.content.Context
 import android.util.Log
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.OAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -84,6 +86,59 @@ class FirebaseService(private val context: Context) {
         } catch (e: Exception) {
             Log.e(tag, "Email signin failed: ${e.message}")
             false
+        }
+    }
+
+    /** Result of creating a cloud account: CREATED, EXISTS (email already registered) or ERROR (offline etc.). */
+    suspend fun signUpResult(email: String, password: String): String {
+        if (!_isFirebaseAvailable.value || auth == null) return "ERROR"
+        return try {
+            val result = auth!!.createUserWithEmailAndPassword(email, password).await()
+            _currentUserState.value = result.user
+            "CREATED"
+        } catch (e: FirebaseAuthUserCollisionException) {
+            "EXISTS"
+        } catch (e: Exception) {
+            Log.e(tag, "Email signup failed: ${e.message}")
+            "ERROR"
+        }
+    }
+
+    data class GoogleAccount(val email: String, val name: String)
+
+    /**
+     * Real Google sign-in through Firebase Auth (browser account chooser). Firebase merges it with an
+     * existing email/password account that has the same email, so the person keeps the same account.
+     * Returns the Google account, or null with [lastGoogleError] set.
+     */
+    var lastGoogleError: String = ""
+        private set
+
+    suspend fun signInWithGoogle(activity: android.app.Activity): GoogleAccount? {
+        lastGoogleError = ""
+        if (!_isFirebaseAvailable.value || auth == null) { lastGoogleError = "Cloud sign-in is not available right now."; return null }
+        return try {
+            val a = auth!!
+            val result = a.pendingAuthResult?.await() ?: run {
+                val provider = OAuthProvider.newBuilder("google.com")
+                    .setScopes(listOf("email", "profile"))
+                    .addCustomParameter("prompt", "select_account")
+                    .build()
+                a.startActivityForResult(activity, provider).await()
+            }
+            val user = result.user ?: run { lastGoogleError = "Google sign-in did not complete."; return null }
+            _currentUserState.value = user
+            val email = (user.email ?: result.additionalUserInfo?.profile?.get("email") as? String).orEmpty().lowercase().trim()
+            if (email.isBlank()) { lastGoogleError = "Your Google account did not share an email address."; return null }
+            GoogleAccount(email, user.displayName ?: email.substringBefore("@"))
+        } catch (e: FirebaseAuthUserCollisionException) {
+            Log.e(tag, "Google sign-in collision: ${e.message}")
+            lastGoogleError = "This email already has an account. Log in once with your password, then try Google again."
+            null
+        } catch (e: Exception) {
+            Log.e(tag, "Google sign-in failed: ${e.message}")
+            lastGoogleError = "Google sign-in was cancelled or failed. Please try again."
+            null
         }
     }
 
