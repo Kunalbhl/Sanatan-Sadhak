@@ -26,6 +26,14 @@ class SadhakReminderReceiver : BroadcastReceiver() {
 
         val isEng = AppPreferences.isEnglish.value
 
+        if (reminderType == "FestivalEve" || reminderType == "FestivalToday") {
+            // Always book the next day's alarm first, then work out today's/tomorrow's festival
+            SadhakReminderScheduler.scheduleDailyAlarm(context, reminderId, hour, minute, reminderType, channelId, destination)
+            if (!prefs.getBoolean(SadhakReminderScheduler.KEY_FESTIVAL_ENABLED, true)) return
+            FestivalAlerts.notifyAsync(context, goAsync(), reminderType == "FestivalEve", reminderId, channelId, destination, isEng)
+            return
+        }
+
         val (title, text) = when (reminderType) {
             "Morning Prayer" -> {
                 if (isEng) {

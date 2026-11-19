@@ -290,6 +290,8 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
             com.example.notifications.SadhakReminderScheduler.cancelAlarm(context, com.example.notifications.SadhakNotificationHelper.ID_EVENING_PRAYER)
             com.example.notifications.SadhakReminderScheduler.cancelAlarm(context, com.example.notifications.SadhakNotificationHelper.ID_BRAHMA_MUHURTA)
             com.example.notifications.SadhakReminderScheduler.cancelAlarm(context, com.example.notifications.SadhakNotificationHelper.ID_SANDHYA)
+            com.example.notifications.SadhakReminderScheduler.cancelAlarm(context, com.example.notifications.SadhakNotificationHelper.ID_FESTIVAL_EVE)
+            com.example.notifications.SadhakReminderScheduler.cancelAlarm(context, com.example.notifications.SadhakNotificationHelper.ID_FESTIVAL_TODAY)
             com.example.notifications.SadhakReminderScheduler.cancelAlarm(context, com.example.notifications.SadhakNotificationHelper.ID_JAPA)
         }
     }

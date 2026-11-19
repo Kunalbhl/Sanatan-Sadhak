@@ -29,6 +29,7 @@ object SadhakReminderScheduler {
     const val KEY_BRAHMA_MUHURTA_ENABLED = "brahma_muhurta_enabled"
     const val KEY_SANDHYA_ENABLED = "sandhya_enabled"
     const val KEY_JAPA_ENABLED = "japa_enabled"
+    const val KEY_FESTIVAL_ENABLED = "festival_alerts_enabled"
 
     fun scheduleDailyAlarm(
         context: Context,
@@ -218,6 +219,28 @@ object SadhakReminderScheduler {
                 reminderType = "Japa",
                 channelId = SadhakNotificationHelper.CHANNEL_JAPA,
                 destination = "BhaktiTools"
+            )
+        }
+
+        // Festival / vrat alerts from the Panchang engine: evening before and morning of the day
+        if (prefs.getBoolean(KEY_FESTIVAL_ENABLED, true)) {
+            scheduleDailyAlarm(
+                context = context,
+                reminderId = SadhakNotificationHelper.ID_FESTIVAL_EVE,
+                hour = 19,
+                minute = 0,
+                reminderType = "FestivalEve",
+                channelId = SadhakNotificationHelper.CHANNEL_FESTIVAL,
+                destination = "Calendar"
+            )
+            scheduleDailyAlarm(
+                context = context,
+                reminderId = SadhakNotificationHelper.ID_FESTIVAL_TODAY,
+                hour = 6,
+                minute = 30,
+                reminderType = "FestivalToday",
+                channelId = SadhakNotificationHelper.CHANNEL_FESTIVAL,
+                destination = "Calendar"
             )
         }
     }
