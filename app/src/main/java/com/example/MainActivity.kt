@@ -116,6 +116,13 @@ class MainActivity : ComponentActivity() {
     }
 
 
+    override fun onStop() {
+        super.onStop()
+        try {
+            androidx.lifecycle.ViewModelProvider(this)[com.example.ui.viewmodel.SadhakViewModel::class.java].backupSettingsNow()
+        } catch (_: Exception) {}
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         com.example.ui.audio.SadhakAudioManager.init(this)

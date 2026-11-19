@@ -613,6 +613,7 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
     fun updateUserProfileDetails(fullName: String, mobileNumber: String, city: String, state: String, avatar: Int, imageUri: String, onResult: (Boolean) -> Unit) {
         viewModelScope.launch {
             userRepository.updateUserProfile(userEmail.value, fullName, mobileNumber, city, state, avatar, imageUri)
+            userRepository.backupSettings()
             onResult(true)
         }
     }
@@ -751,6 +752,23 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
 
+    /** Restore saved profile + settings from the cloud, then keep the backup fresh. */
+    fun syncCloudAfterLogin(email: String) {
+        viewModelScope.launch {
+            try {
+                userRepository.syncProfileWithCloud(email)?.let { userRepository.loginAsUser(it) }
+                if (userRepository.restoreSettings()) {
+                    com.example.data.AppPreferences.init(getApplication())
+                }
+                userRepository.backupSettings()
+            } catch (e: Exception) { android.util.Log.w("SadhakVM", "cloud sync failed: ${e.message}") }
+        }
+    }
+
+    fun backupSettingsNow() {
+        viewModelScope.launch { try { userRepository.backupSettings() } catch (_: Exception) {} }
+    }
+
     fun completeOnboardingForActiveUser() {
         val email = userEmail.value.lowercase().trim()
         if (email.isNotBlank()) {
@@ -837,9 +855,10 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
                     val isSuper = user.email.lowercase().trim() == "kunalpareekusa@gmail.com" || user.email.lowercase().trim() == "ashishpareekbhl@gmail.com"
                     val finalUser = user.copy(
                         role = if (isSuper) "SuperUser" else "Regular",
-                        avatar = if (isSuper) 4 else user.avatar
+                        avatar = user.avatar
                     )
                     userRepository.loginAsUser(finalUser)
+                    syncCloudAfterLogin(finalUser.email)
                 }
             }
         }
@@ -1429,9 +1448,10 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
                 val isSuper = user.email.lowercase().trim() == "kunalpareekusa@gmail.com" || user.email.lowercase().trim() == "ashishpareekbhl@gmail.com"
                 val finalUser = user.copy(
                     role = if (isSuper) "SuperUser" else "Regular",
-                    avatar = if (isSuper) 4 else user.avatar
+                    avatar = user.avatar
                 )
                 userRepository.loginAsUser(finalUser)
+                syncCloudAfterLogin(finalUser.email)
                 if (rememberMe) {
                     userRepository.setRememberedUser(finalUser.email)
                     sessionPrefs().edit().putString("remembered_email", finalUser.email).apply()

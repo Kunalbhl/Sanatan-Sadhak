@@ -152,6 +152,27 @@ class FirebaseService(private val context: Context) {
         }
     }
 
+    /** Back up non-sensitive app settings (preferences) so they survive reinstall / new phone. */
+    suspend fun saveSettings(settings: Map<String, Any>): Boolean {
+        if (!_isFirebaseAvailable.value || firestore == null) return false
+        val uid = auth?.currentUser?.uid ?: return false
+        return try {
+            firestore!!.collection("users").document(uid)
+                .set(hashMapOf("settings" to settings, "settingsUpdatedAt" to System.currentTimeMillis()),
+                    com.google.firebase.firestore.SetOptions.merge()).await()
+            true
+        } catch (e: Exception) { Log.e(tag, "Failed to save settings: ${e.message}"); false }
+    }
+
+    suspend fun loadSettings(): Map<String, Any>? {
+        if (!_isFirebaseAvailable.value || firestore == null) return null
+        val uid = auth?.currentUser?.uid ?: return null
+        return try {
+            @Suppress("UNCHECKED_CAST")
+            firestore!!.collection("users").document(uid).get().await().get("settings") as? Map<String, Any>
+        } catch (e: Exception) { Log.e(tag, "Failed to load settings: ${e.message}"); null }
+    }
+
     /** Signed-in user's cloud profile (null if none / offline). */
     suspend fun loadProfile(email: String): Map<String, Any>? {
         if (!_isFirebaseAvailable.value || firestore == null) return null
