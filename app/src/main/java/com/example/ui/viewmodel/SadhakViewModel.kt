@@ -1502,22 +1502,44 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
                 onResult(false, if (isEnglish.value) "Please enter a valid email" else "कृपया एक मान्य ईमेल दर्ज करें")
                 return@launch
             }
-            val firebaseSuccess = userRepository.firebaseService.sendPasswordResetEmail(emailClean)
-            val user = userRepository.getUserByEmail(emailClean)
-            if (firebaseSuccess || user != null || emailClean.contains("@")) {
+            val sent = userRepository.firebaseService.sendPasswordResetEmail(emailClean)
+            if (sent) {
                 onResult(
                     true,
-                    if (isEnglish.value) 
-                        "Password reset email sent to $emailClean. Please check your inbox."
-                    else 
-                        "$emailClean पर पासवर्ड रीसेट लिंक भेज दिया गया है। कृपया अपना इनबॉक्स देखें।"
+                    if (isEnglish.value)
+                        "If an account exists for $emailClean, a password reset link has been sent. Check your inbox and spam folder."
+                    else
+                        "यदि $emailClean का खाता है, तो पासवर्ड रीसेट लिंक भेज दिया गया है। इनबॉक्स और स्पैम देखें।"
                 )
             } else {
                 onResult(
                     false,
-                    if (isEnglish.value) "No registered account found with this email" else "इस ईमेल से कोई पंजीकृत खाता नहीं मिला"
+                    if (isEnglish.value) "Could not send the reset email. Check your internet connection and try again."
+                    else "रीसेट ईमेल नहीं भेजा जा सका। इंटरनेट जाँचकर फिर प्रयास करें।"
                 )
             }
+        }
+    }
+
+    /** Real Google sign-in; same account as email login when the email matches. */
+    fun loginWithGoogle(activity: android.app.Activity, onResult: (Boolean, String) -> Unit) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            val user = userRepository.signInWithGoogle(activity)
+            _isLoading.value = false
+            if (user == null) {
+                onResult(false, userRepository.firebaseService.lastGoogleError.ifBlank { "Google sign-in failed." })
+                return@launch
+            }
+            val email = user.email.lowercase().trim()
+            val isSuper = email == "kunalpareekusa@gmail.com" || email == "ashishpareekbhl@gmail.com"
+            val finalUser = user.copy(role = if (isSuper) "SuperUser" else "Regular")
+            userRepository.loginAsUser(finalUser)
+            syncCloudAfterLogin(finalUser.email)
+            userRepository.setRememberedUser(finalUser.email)
+            sessionPrefs().edit().putString("remembered_email", finalUser.email).apply()
+            _showLanguagePrefDialog.value = true
+            onResult(true, "Pranam! Logged in with Google.")
         }
     }
 
