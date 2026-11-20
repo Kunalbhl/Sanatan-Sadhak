@@ -190,7 +190,7 @@ fun MantraDetailScreen(
                             fontSize = 13.sp
                         )
                         Button(
-                            onClick = { com.example.ui.screens.video.openYouTubeSearch(context, "$displayTitle mantra") },
+                            onClick = { com.example.ui.screens.openYouTubeSearch(context, "$displayTitle mantra") },
                             colors = ButtonDefaults.buttonColors(containerColor = SadhakThemeColors.sacredPrimary)
                         ) {
                             Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White)
