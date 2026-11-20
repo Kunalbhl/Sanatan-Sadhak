@@ -220,6 +220,7 @@ object SadhakAudioManager {
                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
                 .build()
 
+            if (!AudioSynth.isReady(context, rawName)) { AudioSynth.prewarm(context); return null }
             val file = AudioSynth.ensure(context, rawName)
             val player = if (file == null) null else MediaPlayer().apply {
                 setDataSource(file.path)
@@ -299,6 +300,11 @@ object SadhakAudioManager {
             val ctx = context.applicationContext
             val rawName = "om_ambient"
             if (!AudioSynth.supports(rawName)) return
+            if (!AudioSynth.isReady(ctx, rawName)) {
+                // first run: the Om is being prepared in the background, start it the moment it is ready
+                AudioSynth.prewarm(ctx) { if (_soundEnabled.value) startBgChant(ctx, volume) }
+                return
+            }
             val player = createPlayerForRaw(ctx, rawName, AudioAttributes.USAGE_MEDIA) { mp ->
                 if (bgChantPlayer == mp) bgChantPlayer = null
             } ?: return

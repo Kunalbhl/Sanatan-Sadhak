@@ -99,9 +99,46 @@ class PanchangViewModel(application: Application) : AndroidViewModel(application
     val isCachedData = MutableStateFlow<Boolean>(false)
     val isLoading = MutableStateFlow<Boolean>(false)
 
+    /** Every change of tithi / nakshatra / yoga / karana / moon sign during the selected day, plus extra day-parts. */
+    data class DayTimeline(
+        val limbs: List<com.example.data.PanchangTimeline.Info>,
+        val dayParts: List<Pair<String, String>>,
+        val specialYogas: List<String>
+    )
+    val dayTimeline = MutableStateFlow<DayTimeline?>(null)
+
+    private fun parseMinutes(text: String): Int? {
+        val m = Regex("(\\d{1,2}):(\\d{2})\\s*(AM|PM)?", RegexOption.IGNORE_CASE).find(text) ?: return null
+        var h = m.groupValues[1].toInt()
+        val mm = m.groupValues[2].toInt()
+        when (m.groupValues[3].uppercase()) {
+            "PM" -> if (h < 12) h += 12
+            "AM" -> if (h == 12) h = 0
+        }
+        return h * 60 + mm
+    }
+
     init {
         loadSavedLocation()
         loadDailyPanchang()
+        viewModelScope.launch {
+            todayDetailedPanchang.collect { d ->
+                if (d == null) { dayTimeline.value = null; return@collect }
+                val cal = selectedCalendar.value
+                val tz = currentLocation.value.timezone
+                dayTimeline.value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                    try {
+                        val y = cal.get(Calendar.YEAR); val m = cal.get(Calendar.MONTH) + 1; val day = cal.get(Calendar.DAY_OF_MONTH)
+                        val rise = parseMinutes(d.sunrise); val set = parseMinutes(d.sunset)
+                        DayTimeline(
+                            limbs = com.example.data.PanchangTimeline.limbs(y, m, day, tz),
+                            dayParts = if (rise != null && set != null) com.example.data.PanchangTimeline.dayParts(rise, set) else emptyList(),
+                            specialYogas = com.example.data.PanchangTimeline.specialYogas(cal.get(Calendar.DAY_OF_WEEK), d.nakshatra)
+                        )
+                    } catch (e: Exception) { null }
+                }
+            }
+        }
     }
 
     private fun loadSavedLocation() {

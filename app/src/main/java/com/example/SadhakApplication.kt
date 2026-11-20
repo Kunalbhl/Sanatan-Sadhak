@@ -21,6 +21,7 @@ class SadhakApplication : Application(), ImageLoaderFactory {
             SadhakNotificationHelper.createNotificationChannels(this)
             SadhakReminderScheduler.rescheduleAllActive(this)
             com.example.widget.PanchangWidgetProvider.refreshAll(this)
+            com.example.ui.audio.AudioSynth.prewarm(this)
         } catch (e: Exception) {
             Log.e("SadhakApplication", "Initialization error in SadhakApplication", e)
         }

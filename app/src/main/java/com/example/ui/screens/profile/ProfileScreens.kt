@@ -1433,6 +1433,14 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
                         onClick = { showPrivacyPolicy = true }
                     )
                     
+                    if (!userEmail.equals("guest@sanatan.org", ignoreCase = true) && userEmail.contains("@")) {
+                        SettingActionTile(
+                            title = if (isEng) "Contribute & Review" else "योगदान और समीक्षा",
+                            icon = Icons.Default.AdminPanelSettings,
+                            onClick = { viewModel.setScreen("Contribute") }
+                        )
+                    }
+
                     if (isAdmin) {
                         SettingActionTile(
                             title = if (isEng) "Admin Control Panel" else "एडमिन कंट्रोल पैनल",

@@ -243,6 +243,10 @@ class MainActivity : ComponentActivity() {
                                 "Chat" -> ChatScreen(viewModel = viewModel)
                                 "Calendar" -> CalendarScreen(viewModel = viewModel, onBack = { if (!viewModel.navigateBack()) viewModel.setScreen("Home") }, isEng = isEng)
                                 "Profile" -> ProfileScreen(viewModel = viewModel, onNavigateAdmin = { viewModel.setScreen("Admin") })
+                                "Contribute" -> com.example.ui.screens.contribute.ContributeScreen(
+                                    viewModel = viewModel,
+                                    onBack = { viewModel.setScreen("Profile") }
+                                )
                                 "Admin" -> {
                                     val isAdmin by viewModel.isAdmin.collectAsState()
                                     if (isAdmin) {

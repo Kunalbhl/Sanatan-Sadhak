@@ -96,6 +96,7 @@ fun CalendarScreen(
     val isCachedData by panchangViewModel.isCachedData.collectAsState()
     val isLoading by panchangViewModel.isLoading.collectAsState()
     val panchangError by panchangViewModel.panchangError.collectAsState()
+    val dayTimeline by panchangViewModel.dayTimeline.collectAsState()
     val festivals by viewModel.getAllFestivals().collectAsState(initial = emptyList())
 
     val dateFormatter = remember { SimpleDateFormat("EEEE, dd MMMM yyyy", Locale.getDefault()) }
@@ -165,6 +166,7 @@ fun CalendarScreen(
                 isLoading = isLoading,
                 error = panchangError,
                 isEng = isEng,
+                dayTimeline = dayTimeline,
                 onPrevDay = { panchangViewModel.goToPreviousDay() },
                 onToday = { panchangViewModel.goToToday() },
                 onNextDay = { panchangViewModel.goToNextDay() }
@@ -206,6 +208,7 @@ fun FullPanchangView(
     isLoading: Boolean,
     error: String?,
     isEng: Boolean,
+    dayTimeline: com.example.ui.viewmodel.PanchangViewModel.DayTimeline? = null,
     onPrevDay: () -> Unit,
     onToday: () -> Unit,
     onNextDay: () -> Unit
@@ -444,6 +447,76 @@ fun FullPanchangView(
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text(if (isEng) "Sun Sign (सूर्य राशि):" else "सूर्य राशि:", style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
                                 Text(d.sunSign, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
+                            }
+                        }
+                    }
+                }
+
+                // 3b. When each limb changes today (two tithis in one day etc.)
+                dayTimeline?.let { tl ->
+                    item {
+                        SacredCard(
+                            backgroundColor = MaterialTheme.colorScheme.surface,
+                            borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp)) {
+                                Text(
+                                    text = if (isEng) "Today's Changes (timings)" else "आज के परिवर्तन (समय सहित)",
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
+                                )
+                                Text(
+                                    text = if (isEng) "Times are local for ${d.locationName}. A day can hold more than one tithi, nakshatra, yoga or karana." else "समय ${d.locationName} के स्थानीय हैं। एक दिन में एक से अधिक तिथि, नक्षत्र, योग या करण हो सकते हैं।",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontStyle = FontStyle.Italic)
+                                )
+                                tl.limbs.forEach { info ->
+                                    if (info.segments.isEmpty()) return@forEach
+                                    Divider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+                                    val label = when (info.limbLabel) {
+                                        "Tithi" -> if (isEng) "Tithi (तिथि)" else "तिथि"
+                                        "Nakshatra" -> if (isEng) "Nakshatra (नक्षत्र)" else "नक्षत्र"
+                                        "Yoga" -> if (isEng) "Yoga (योग)" else "योग"
+                                        "Karana" -> if (isEng) "Karana (करण)" else "करण"
+                                        else -> if (isEng) "Moon sign (राशि)" else "चंद्र राशि"
+                                    }
+                                    val more = info.segments.size > 1
+                                    Text(
+                                        text = if (more) "$label  ·  ${info.segments.size}" + (if (isEng) " today" else " आज") else label,
+                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = if (more) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+                                    )
+                                    info.segments.forEach { seg ->
+                                        Row(modifier = Modifier.fillMaxWidth().padding(top = 3.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                                            Text(seg.name, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold), modifier = Modifier.weight(1f))
+                                            Text(com.example.data.PanchangTimeline.describe(seg), style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.End, modifier = Modifier.weight(1.3f))
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    item {
+                        SacredCard(
+                            backgroundColor = MaterialTheme.colorScheme.surface,
+                            borderColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp)) {
+                                Text(
+                                    text = if (isEng) "More Muhurtas & Special Yogas" else "अन्य मुहूर्त एवं विशेष योग",
+                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.secondary)
+                                )
+                                Divider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
+                                if (tl.specialYogas.isNotEmpty()) {
+                                    Text(
+                                        text = tl.specialYogas.joinToString("  ·  ") + (if (isEng) "  (by nakshatra at sunrise)" else "  (सूर्योदय के नक्षत्र से)"),
+                                        style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold, color = SadhakThemeColors.success)
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                }
+                                tl.dayParts.forEach { (name, range) ->
+                                    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        Text(name, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold))
+                                        Text(range, style = MaterialTheme.typography.bodySmall.copy(fontWeight = FontWeight.Bold))
+                                    }
+                                }
                             }
                         }
                     }

@@ -124,6 +124,61 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ---- Contributor roles & approval workflow ----
+    // An admin grants Contributor/Moderator by email. Contributions stay private (author + reviewers)
+    // until a Moderator/admin sets status to 'approved'; only approved ones are readable by everyone.
+    function myEmail() {
+      return request.auth.token.email.lower();
+    }
+    function roleOf() {
+      return get(/databases/$(database)/documents/roles/$(myEmail())).data.role;
+    }
+    function hasRoleDoc() {
+      return isAuthenticated() && request.auth.token.email != null
+        && exists(/databases/$(database)/documents/roles/$(myEmail()));
+    }
+    function isModerator() {
+      return isAdmin() || (hasRoleDoc() && roleOf() == 'Moderator');
+    }
+    function isContributor() {
+      return isModerator() || (hasRoleDoc() && roleOf() == 'Contributor');
+    }
+
+    match /roles/{email} {
+      allow get: if isAdmin() || (isAuthenticated() && request.auth.token.email != null && email == myEmail());
+      allow list: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /role_requests/{email} {
+      allow create, update: if isAuthenticated() && request.auth.token.email != null && email == myEmail()
+        && request.resource.data.keys().hasOnly(['email', 'name', 'note', 'status', 'createdAt'])
+        && request.resource.data.email == myEmail()
+        && request.resource.data.status == 'pending'
+        && request.resource.data.note.size() <= 500;
+      allow read: if isAdmin() || (isAuthenticated() && request.auth.token.email != null && email == myEmail());
+      allow delete: if isAdmin() || (isAuthenticated() && request.auth.token.email != null && email == myEmail());
+    }
+
+    match /contributions/{id} {
+      allow read: if resource.data.status == 'approved'
+        || isModerator()
+        || (isAuthenticated() && request.auth.token.email != null && resource.data.authorEmail == myEmail());
+      allow create: if isContributor()
+        && request.resource.data.keys().hasOnly(['title', 'category', 'body', 'sourceUrl', 'authorEmail', 'authorName', 'status', 'createdAt'])
+        && request.resource.data.status == 'pending'
+        && request.resource.data.authorEmail == myEmail()
+        && request.resource.data.title is string && request.resource.data.title.size() >= 3 && request.resource.data.title.size() <= 150
+        && request.resource.data.body is string && request.resource.data.body.size() >= 50 && request.resource.data.body.size() <= 8000;
+      // Reviewers change only the review fields, and nobody but an admin approves their own submission.
+      allow update: if isModerator()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'reviewedBy', 'reviewNote', 'reviewedAt'])
+        && request.resource.data.status in ['approved', 'rejected', 'pending']
+        && (resource.data.authorEmail != myEmail() || isAdmin());
+      allow delete: if isModerator()
+        || (isAuthenticated() && request.auth.token.email != null && resource.data.authorEmail == myEmail() && resource.data.status == 'pending');
+    }
+
     // Default deny
     match /{document=**} {
       allow read, write: if false;

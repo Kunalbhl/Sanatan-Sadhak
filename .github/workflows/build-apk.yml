@@ -58,7 +58,7 @@ jobs:
         run: keytool -genkeypair -keystore debug.keystore -storepass android -keypass android -alias androiddebugkey -dname "CN=Android Debug,O=Android,C=US" -keyalg RSA -keysize 2048 -validity 10000
 
       - name: Festival date check (2026 published dates)
-        run: gradle :app:testDebugUnitTest --tests "com.example.FestivalDatesTest" --stacktrace
+        run: gradle :app:testDebugUnitTest --tests "com.example.FestivalDatesTest" --tests "com.example.PanchangTimelineTest" --tests "com.example.OmChantSynthTest" --stacktrace
 
       - name: Build debug APK
         run: gradle :app:assembleDebug :app:assembleRelease --stacktrace

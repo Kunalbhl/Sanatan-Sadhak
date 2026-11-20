@@ -118,6 +118,7 @@ class KnowledgeViewModel(application: Application) : AndroidViewModel(applicatio
                     "Scriptures & Granths", "GRANTHA", "धर्मग्रंथ" -> article.category.contains("Scripture", ignoreCase = true) || article.category.contains("Granth", ignoreCase = true)
                     "Stotra & Sacred Texts", "STOTRA", "स्तोत्र" -> article.category.contains("Stotra", ignoreCase = true) || article.format.contains("Stotra", ignoreCase = true)
                     "Saints & Acharyas", "Saints & Gurus", "SAINTS", "संत और आचार्य" -> article.category.contains("Saint", ignoreCase = true) || article.category.contains("Guru", ignoreCase = true)
+                    "Deities & Concepts" -> article.category.contains("Deities", ignoreCase = true)
                     "Spiritual Concepts", "Concepts", "CONCEPTS", "आध्यात्मिक विचार" -> article.category.contains("Concept", ignoreCase = true) || article.category.contains("Gyaan", ignoreCase = true)
                     "Pooja & Vidhi", "Rituals", "POOJA", "पूजा और विधि" -> article.category.contains("Pooja", ignoreCase = true) || article.category.contains("Puja", ignoreCase = true) || article.category.contains("Vidhi", ignoreCase = true)
                     "Mantras & Chanting", "Mantras", "MANTRAS", "मंत्र एवं जप" -> article.category.contains("Mantra", ignoreCase = true) || article.format.contains("Mantra", ignoreCase = true)
