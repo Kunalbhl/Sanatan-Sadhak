@@ -978,6 +978,24 @@ fun TempleFinderView(viewModel: SadhakViewModel) {
                                             Icon(Icons.Default.Share, contentDescription = "Share", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                                         }
 
+                                        // Live darshan timings / notices live on the temple's own site: open its official-site search
+                                        OutlinedButton(
+                                            onClick = {
+                                                val q = Uri.encode("${temple.nameEn} ${temple.cityEn} official website darshan timings")
+                                                try {
+                                                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=$q")))
+                                                } catch (e: Exception) {
+                                                    android.widget.Toast.makeText(context, "No browser available", android.widget.Toast.LENGTH_SHORT).show()
+                                                }
+                                            },
+                                            shape = RoundedCornerShape(8.dp),
+                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
+                                            modifier = Modifier.height(32.dp)
+                                        ) {
+                                            Text(if (isEng) "Live timings" else "लाइव समय", fontSize = 11.sp)
+                                        }
+                                        Spacer(modifier = Modifier.width(6.dp))
+
                                         // Navigation Button
                                         Button(
                                             onClick = {

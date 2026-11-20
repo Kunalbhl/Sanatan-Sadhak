@@ -20,6 +20,7 @@ class SadhakApplication : Application(), ImageLoaderFactory {
             container = AppContainer(this)
             SadhakNotificationHelper.createNotificationChannels(this)
             SadhakReminderScheduler.rescheduleAllActive(this)
+            com.example.widget.PanchangWidgetProvider.refreshAll(this)
         } catch (e: Exception) {
             Log.e("SadhakApplication", "Initialization error in SadhakApplication", e)
         }

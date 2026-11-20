@@ -265,11 +265,14 @@ object AstrologyService {
             }
 
             val festivalVal = when {
+                FestivalRules.majorFestival(isShukla, localTithiNum, amantaIndex, sunLongitude) != null ->
+                    FestivalRules.majorFestival(isShukla, localTithiNum, amantaIndex, sunLongitude)!!
                 localTithiNum == 11 -> "Ekadashi Vrata (एकादशी व्रत)"
                 localTithiNum == 14 -> "Pradosha Vrata (प्रदोष व्रत)"
                 localTithiNum == 15 && isShukla -> "Purnima Vrata & Satyanarayan Puja (पूर्णिमा व्रत)"
                 localTithiNum == 15 && !isShukla -> "Amavasya Pitru Tarpan (अमावस्या)"
-                localTithiNum == 4 -> "Sankashti Chaturthi (संकष्टी चतुर्थी)"
+                localTithiNum == 4 && !isShukla -> "Sankashti Chaturthi (संकष्टी चतुर्थी)"
+                localTithiNum == 4 && isShukla -> "Vinayaka Chaturthi (विनायक चतुर्थी)"
                 else -> "—"
             }
 
