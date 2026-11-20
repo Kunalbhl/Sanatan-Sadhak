@@ -736,3 +736,16 @@ fun openInYouTube(context: android.content.Context, videoId: String) {
         }
     }
 }
+
+
+/** Opens a YouTube search (app first, browser fallback) so the person picks a recording they trust. */
+fun openYouTubeSearch(context: android.content.Context, query: String) {
+    val q = android.net.Uri.encode(query)
+    val web = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://www.youtube.com/results?search_query=$q"))
+        .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+    try {
+        context.startActivity(web)
+    } catch (e: Exception) {
+        android.widget.Toast.makeText(context, "No app available to open YouTube", android.widget.Toast.LENGTH_LONG).show()
+    }
+}

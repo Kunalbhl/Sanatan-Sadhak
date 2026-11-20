@@ -172,6 +172,35 @@ fun MantraDetailScreen(
                 isEnglish = selectedLanguage == "EN"
             )
 
+            // Real recordings by devotional artists live on YouTube: open the search in the YouTube app
+            if (matchedAudioTrack == null) {
+                SacredCard(
+                    backgroundColor = SadhakThemeColors.sacredSurface,
+                    borderColor = SadhakThemeColors.sacredGold.copy(alpha = 0.4f)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = if (isEnglish) "Hear it chanted" else "श्रवण करें",
+                            fontWeight = FontWeight.Bold,
+                            color = SadhakThemeColors.sacredSecondary,
+                            fontSize = 13.sp
+                        )
+                        Button(
+                            onClick = { com.example.ui.screens.video.openYouTubeSearch(context, "$displayTitle mantra") },
+                            colors = ButtonDefaults.buttonColors(containerColor = SadhakThemeColors.sacredPrimary)
+                        ) {
+                            Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(if (isEnglish) "Listen on YouTube" else "YouTube पर सुनें", color = Color.White)
+                        }
+                    }
+                }
+            }
+
             // Bundled Authentic Audio Player (if dedicated audio track is available)
             if (matchedAudioTrack != null) {
                 SacredCard(
