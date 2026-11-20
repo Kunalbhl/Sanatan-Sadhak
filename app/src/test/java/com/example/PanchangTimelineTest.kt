@@ -34,7 +34,7 @@ class PanchangTimelineTest {
                 }
             }
         }
-        assertTrue("expected several days with two tithis in a month, got $daysWithTwoTithis", daysWithTwoTithis in 5..25)
+        assertTrue("a tithi lasts about 23.6 h, so almost every civil day holds two tithis, got $daysWithTwoTithis", daysWithTwoTithis in 20..30)
     }
 
     @Test fun dayPartsAreOrderedAndNamed() {
