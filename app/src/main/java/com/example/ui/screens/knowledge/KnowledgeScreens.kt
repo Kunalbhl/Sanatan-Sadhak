@@ -224,6 +224,7 @@ fun KnowledgeScreen(
         "Scriptures & Granths",
         "Stotra & Sacred Texts",
         "Saints & Acharyas",
+        "Deities & Concepts",
         "Spiritual Concepts",
         "Pooja & Vidhi",
         "Mantras & Chanting",

@@ -111,6 +111,8 @@ object ScriptureLibrary {
         if (!force && System.currentTimeMillis() - prefs.getLong("last", 0) < DAY) return@withContext
         val dao = AppDatabase.getInstance(context).knowledgeArticleDao()
 
+        syncApprovedContributions(context, dao)
+
         // Curated titles + pages discovered in Wikipedia categories
         val plan = LinkedHashMap<String, MutableList<String>>()
         for ((cat, titles) in catalog) plan.getOrPut(cat) { mutableListOf() }.addAll(titles)
@@ -151,6 +153,36 @@ object ScriptureLibrary {
         editor.putLong("last", if (pending > 0) System.currentTimeMillis() - DAY + 30L * 60 * 1000 else System.currentTimeMillis())
         editor.apply()
         Log.i(TAG, "Knowledge library synced: $saved texts, $pending waiting for the next run")
+    }
+
+    const val COMMUNITY_SOURCE = "Community contributor (approved)"
+
+    /** Mirrors contributions an admin/moderator approved; anything later withdrawn is removed again. */
+    private suspend fun syncApprovedContributions(context: Context, dao: KnowledgeArticleDao) {
+        try {
+            val fb = FirebaseService(context)
+            if (!fb.isFirebaseAvailable.value) return
+            val approved = fb.fetchApprovedContributions() ?: return
+            val local = dao.getAllArticles("en").first().filter { it.sourceName == COMMUNITY_SOURCE }
+            for (c in approved) {
+                val words = c.body.split(Regex("\\s+")).size
+                val existing = local.firstOrNull { it.textReference == "contribution:${c.id}" }
+                val article = KnowledgeArticle(
+                    id = existing?.id ?: 0, category = c.category, title = c.title,
+                    summary = c.body.substringBefore("\n\n").take(400), content = c.body, language = "en",
+                    difficulty = if (words > 1500) "Intermediate" else "Beginner", readTimeMinutes = maxOf(1, words / 200),
+                    format = "Article", sourceName = COMMUNITY_SOURCE, sourceType = "Community",
+                    textReference = "contribution:${c.id}", verificationStatus = "EDITOR_REVIEW_REQUIRED",
+                    translator = c.authorName, edition = c.sourceUrl, contentType = "ARTICLE"
+                )
+                if (existing == null) dao.insertArticle(article) else dao.updateArticle(article)
+            }
+            // Only prune when the list came back non-empty or we are sure it is genuinely empty (no error path returns here)
+            val keep = approved.map { "contribution:${it.id}" }.toSet()
+            local.filter { it.textReference !in keep }.forEach { dao.deleteArticleById(it.id) }
+        } catch (e: Exception) {
+            Log.w(TAG, "contributions: ${e.message}")
+        }
     }
 
     private data class Page(val title: String, val extract: String, val url: String, val hiTitle: String?)

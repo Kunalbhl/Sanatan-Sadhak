@@ -1132,6 +1132,7 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
 
     // 8. Favorite Mantras
     // 9. Designated Super User
+    val firebaseService get() = userRepository.firebaseService
     val designatedSuperUser: StateFlow<String> = userRepository.designatedSuperUser
 
     private val _guestActionCount = MutableStateFlow(0)

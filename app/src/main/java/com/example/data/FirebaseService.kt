@@ -529,6 +529,131 @@ class FirebaseService(private val context: Context) {
         }
     }
 
+    // --- CONTRIBUTOR ROLES & APPROVAL WORKFLOW ---
+    // roles/{email}: Contributor | Moderator (set by an admin only). contributions/{id}: nothing is public until
+    // status == "approved"; the Firestore rules enforce this, the app only mirrors it.
+
+    data class Contribution(
+        val id: String, val title: String, val category: String, val body: String, val sourceUrl: String,
+        val authorEmail: String, val authorName: String, val status: String, val createdAt: Long,
+        val reviewedBy: String = "", val reviewNote: String = ""
+    )
+
+    data class RoleEntry(val email: String, val role: String)
+    data class RoleRequest(val email: String, val name: String, val note: String)
+
+    private fun myEmailLower(): String = auth?.currentUser?.email?.lowercase().orEmpty()
+
+    private fun com.google.firebase.firestore.DocumentSnapshot.toContribution() = Contribution(
+        id = id, title = getString("title") ?: "", category = getString("category") ?: "",
+        body = getString("body") ?: "", sourceUrl = getString("sourceUrl") ?: "",
+        authorEmail = getString("authorEmail") ?: "", authorName = getString("authorName") ?: "",
+        status = getString("status") ?: "pending", createdAt = getLong("createdAt") ?: 0L,
+        reviewedBy = getString("reviewedBy") ?: "", reviewNote = getString("reviewNote") ?: ""
+    )
+
+    /** "Contributor", "Moderator" or "" when the signed-in person has no extra role. */
+    suspend fun myContributorRole(): String {
+        val email = myEmailLower()
+        if (!_isFirebaseAvailable.value || firestore == null || email.isBlank()) return ""
+        return try { firestore!!.collection("roles").document(email).get().await().getString("role") ?: "" }
+        catch (e: Exception) { Log.w(tag, "role lookup: ${e.message}"); "" }
+    }
+
+    suspend fun requestContributorAccess(name: String, note: String): Boolean {
+        val email = myEmailLower()
+        if (!_isFirebaseAvailable.value || firestore == null || email.isBlank()) return false
+        return try {
+            firestore!!.collection("role_requests").document(email).set(
+                mapOf("email" to email, "name" to name.take(100), "note" to note.take(500),
+                    "status" to "pending", "createdAt" to System.currentTimeMillis())
+            ).await(); true
+        } catch (e: Exception) { Log.w(tag, "role request: ${e.message}"); false }
+    }
+
+    suspend fun submitContribution(title: String, category: String, body: String, sourceUrl: String, authorName: String): Boolean {
+        val email = myEmailLower()
+        if (!_isFirebaseAvailable.value || firestore == null || email.isBlank()) return false
+        return try {
+            firestore!!.collection("contributions").add(
+                mapOf("title" to title.trim().take(150), "category" to category, "body" to body.trim().take(8000),
+                    "sourceUrl" to sourceUrl.trim().take(300), "authorEmail" to email, "authorName" to authorName.take(100),
+                    "status" to "pending", "createdAt" to System.currentTimeMillis())
+            ).await(); true
+        } catch (e: Exception) { Log.w(tag, "submit: ${e.message}"); false }
+    }
+
+    /** null means "could not reach the server" (never treat that as "nothing approved"). */
+    suspend fun fetchApprovedContributions(): List<Contribution>? {
+        if (!_isFirebaseAvailable.value || firestore == null) return null
+        return try {
+            firestore!!.collection("contributions").whereEqualTo("status", "approved").get().await()
+                .documents.map { it.toContribution() }
+        } catch (e: Exception) { Log.w(tag, "approved contributions: ${e.message}"); null }
+    }
+
+    suspend fun fetchMyContributions(): List<Contribution> {
+        val email = myEmailLower()
+        if (!_isFirebaseAvailable.value || firestore == null || email.isBlank()) return emptyList()
+        return try {
+            firestore!!.collection("contributions").whereEqualTo("authorEmail", email).get().await()
+                .documents.map { it.toContribution() }.sortedByDescending { it.createdAt }
+        } catch (e: Exception) { Log.w(tag, "my contributions: ${e.message}"); emptyList() }
+    }
+
+    suspend fun fetchPendingContributions(): List<Contribution> {
+        if (!_isFirebaseAvailable.value || firestore == null) return emptyList()
+        return try {
+            firestore!!.collection("contributions").whereEqualTo("status", "pending").get().await()
+                .documents.map { it.toContribution() }.sortedBy { it.createdAt }
+        } catch (e: Exception) { Log.w(tag, "pending contributions: ${e.message}"); emptyList() }
+    }
+
+    suspend fun reviewContribution(id: String, approve: Boolean, note: String): Boolean {
+        if (!_isFirebaseAvailable.value || firestore == null) return false
+        return try {
+            firestore!!.collection("contributions").document(id).update(
+                mapOf("status" to if (approve) "approved" else "rejected", "reviewedBy" to myEmailLower(),
+                    "reviewNote" to note.take(300), "reviewedAt" to System.currentTimeMillis())
+            ).await(); true
+        } catch (e: Exception) { Log.w(tag, "review: ${e.message}"); false }
+    }
+
+    suspend fun fetchRoleEntries(): List<RoleEntry> {
+        if (!_isFirebaseAvailable.value || firestore == null) return emptyList()
+        return try {
+            firestore!!.collection("roles").get().await().documents
+                .map { RoleEntry(it.id, it.getString("role") ?: "") }.sortedBy { it.email }
+        } catch (e: Exception) { Log.w(tag, "roles: ${e.message}"); emptyList() }
+    }
+
+    suspend fun fetchRoleRequests(): List<RoleRequest> {
+        if (!_isFirebaseAvailable.value || firestore == null) return emptyList()
+        return try {
+            firestore!!.collection("role_requests").get().await().documents
+                .map { RoleRequest(it.id, it.getString("name") ?: "", it.getString("note") ?: "") }
+        } catch (e: Exception) { Log.w(tag, "role requests: ${e.message}"); emptyList() }
+    }
+
+    /** Admin only (enforced by the rules). role == "" removes the role. Clears the person's pending request. */
+    suspend fun setRole(email: String, role: String): Boolean {
+        val key = email.trim().lowercase()
+        if (!_isFirebaseAvailable.value || firestore == null || key.isBlank()) return false
+        return try {
+            if (role.isBlank()) firestore!!.collection("roles").document(key).delete().await()
+            else firestore!!.collection("roles").document(key).set(
+                mapOf("role" to role, "grantedBy" to myEmailLower(), "grantedAt" to System.currentTimeMillis())).await()
+            try { firestore!!.collection("role_requests").document(key).delete().await() } catch (_: Exception) {}
+            true
+        } catch (e: Exception) { Log.w(tag, "setRole: ${e.message}"); false }
+    }
+
+    suspend fun declineRoleRequest(email: String): Boolean {
+        if (!_isFirebaseAvailable.value || firestore == null) return false
+        return try { firestore!!.collection("role_requests").document(email.lowercase()).delete().await(); true }
+        catch (e: Exception) { false }
+    }
+
     // --- ROLE AUTHORIZATION CHECKS ---
     suspend fun getUserRole(email: String): String {
         if (!_isFirebaseAvailable.value || firestore == null || email.isBlank()) {
