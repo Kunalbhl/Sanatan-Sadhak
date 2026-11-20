@@ -166,6 +166,7 @@ fun CalendarScreen(
                 isLoading = isLoading,
                 error = panchangError,
                 isEng = isEng,
+                dayTimeline = dayTimeline,
                 onPrevDay = { panchangViewModel.goToPreviousDay() },
                 onToday = { panchangViewModel.goToToday() },
                 onNextDay = { panchangViewModel.goToNextDay() }
@@ -207,6 +208,7 @@ fun FullPanchangView(
     isLoading: Boolean,
     error: String?,
     isEng: Boolean,
+    dayTimeline: com.example.ui.viewmodel.PanchangViewModel.DayTimeline? = null,
     onPrevDay: () -> Unit,
     onToday: () -> Unit,
     onNextDay: () -> Unit
