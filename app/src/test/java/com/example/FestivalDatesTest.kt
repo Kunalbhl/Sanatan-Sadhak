@@ -44,4 +44,19 @@ class FestivalDatesTest {
         check("Dussehra", 2026, 10, 20)
         check("Diwali", 2026, 11, 8)
     }
+
+    /** Ekadashi comes twice a lunar month: expect about 24 in a year, each with its own name and ~14-16 days apart. */
+    @Test fun ekadashiThroughout2026() {
+        val cal = Calendar.getInstance().apply { clear(); set(2026, 0, 1) }
+        val days = mutableListOf<Int>()
+        val names = mutableSetOf<String>()
+        for (i in 0 until 365) {
+            val f = festivalOn(cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) + 1, cal.get(Calendar.DAY_OF_MONTH))
+            if (f.contains("Ekadashi", ignoreCase = true)) { days += i; names += f }
+            cal.add(Calendar.DAY_OF_YEAR, 1)
+        }
+        assertTrue("Expected 22..27 Ekadashi days, got ${days.size}: $names", days.size in 22..27)
+        assertTrue("Expected many distinct named Ekadashis, got ${names.size}: $names", names.size >= 18)
+        for ((a, b) in days.zipWithNext()) assertTrue("Ekadashis too close: day $a and $b", b - a >= 12)
+    }
 }
