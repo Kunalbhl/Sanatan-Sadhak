@@ -266,6 +266,20 @@ fun CommunityScreen(
                     .padding(16.dp)
                     .testTag("community_screen")
             ) {
+                var showLeaderboard by remember { mutableStateOf(false) }
+                if (showLeaderboard) {
+                    ContributorLeaderboardDialog(posts = posts, isEng = isEng, onDismiss = { showLeaderboard = false })
+                }
+                TextButton(
+                    onClick = { showLeaderboard = true },
+                    modifier = Modifier.testTag("btn_top_contributors")
+                ) {
+                    Text(
+                        text = if (isEng) "Top Contributors" else "शीर्ष योगदानकर्ता",
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
                 // Category & Filtering options
                 var selectedCommunityCategory by remember { mutableStateOf("All") }
                 val communityCategories = listOf("All", "Satsang", "Knowledge Discussion", "Bhakti Experiences", "Doubts & Discussions", "Yatra Questions", "Yatra Tips & Guides", "Hidden Spiritual Treasures", "Temple Stories", "Temple Info Correction", "Daily Karma Journal")
@@ -1194,4 +1208,50 @@ fun PostAuthorLine(post: CommunityPost, isEng: Boolean) {
         Spacer(Modifier.width(6.dp))
         Text(meta, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
     }
+}
+
+
+/** Points for helping the community: sharing places and guides counts most, and every upvote you earn adds more. */
+private fun contributorPoints(post: CommunityPost): Int {
+    val base = 10 + when (post.category) {
+        "Hidden Spiritual Treasures" -> 25
+        "Temple Info Correction" -> 10
+        "Yatra Tips & Guides" -> 5
+        else -> 0
+    }
+    return base + 2 * maxOf(0, post.upvotes - 1)
+}
+
+@androidx.compose.runtime.Composable
+private fun ContributorLeaderboardDialog(posts: List<CommunityPost>, isEng: Boolean, onDismiss: () -> Unit) {
+    val ranking = posts
+        .filter { it.author.isNotBlank() }
+        .groupBy { if (it.authorEmail.isNotBlank()) it.authorEmail.lowercase() else it.author.lowercase() }
+        .map { (_, list) -> list.first().author to list.sumOf { contributorPoints(it) } }
+        .sortedByDescending { it.second }
+        .take(10)
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (isEng) "Top Contributors" else "शीर्ष योगदानकर्ता", fontWeight = FontWeight.Bold) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(
+                    if (isEng) "10 points per post, 35 for a Hidden Spiritual Treasure, 20 for a temple correction, 15 for a Yatra tip, plus 2 for every upvote you earn."
+                    else "हर पोस्ट के 10 अंक, छिपा आध्यात्मिक स्थल 35, मंदिर सुधार 20, यात्रा सुझाव 15, और हर अपवोट पर 2 अंक।",
+                    fontSize = 12.sp
+                )
+                if (ranking.isEmpty()) {
+                    Text(if (isEng) "No posts yet. Share the first one!" else "अभी कोई पोस्ट नहीं। पहली पोस्ट आप साझा करें!")
+                } else {
+                    ranking.forEachIndexed { i, (name, pts) ->
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("${i + 1}. $name", fontWeight = if (i < 3) FontWeight.Bold else FontWeight.Normal)
+                            Text("$pts", fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(if (isEng) "Close" else "बंद करें") } }
+    )
 }
