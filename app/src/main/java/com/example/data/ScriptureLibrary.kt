@@ -21,7 +21,6 @@ object ScriptureLibrary {
     private const val TAG = "ScriptureLibrary"
     const val SOURCE = "Wikipedia (CC BY-SA)"
     private const val PREFS = "scripture_library"
-    private const val WEEK = 7L * 24 * 60 * 60 * 1000
 
     /** category → English Wikipedia page titles */
     val catalog: Map<String, List<String>> = linkedMapOf(
@@ -42,33 +41,165 @@ object ScriptureLibrary {
         "Scriptures & Granths" to listOf(
             "Ramcharitmanas", "Devi Mahatmya", "Yoga Sutras of Patanjali", "Manusmriti", "Gita Govinda",
             "Vishnu Sahasranama", "Hanuman Chalisa", "Agama (Hinduism)", "Tantras (Hinduism)", "Dharmaśāstra"
+        ),
+        "Deities & Concepts" to listOf(
+            "Vishnu", "Shiva", "Brahma", "Devi", "Ganesha", "Hanuman", "Rama", "Krishna", "Durga", "Lakshmi", "Saraswati",
+            "Kartikeya", "Surya", "Kali", "Parvati", "Narasimha", "Venkateswara", "Jagannath", "Ayyappan", "Dattatreya",
+            "Radha", "Sita", "Vishvakarma", "Hindu deities", "Trimurti", "Dashavatara", "Navagraha", "Ashtavinayaka"
+        ),
+        "Spiritual Concepts" to listOf(
+            "Dharma", "Karma in Hinduism", "Moksha", "Atman (Hinduism)", "Brahman", "Maya (religion)", "Samsara", "Ahimsa",
+            "Bhakti", "Jnana yoga", "Karma yoga", "Raja yoga", "Bhakti yoga", "Guṇa", "Ashrama (stage)", "Purushartha",
+            "Reincarnation", "Hindu cosmology", "Yuga", "Avatar", "Dhyana in Hinduism", "Satsang", "Guru–shishya tradition",
+            "Sanskrit", "Hindu eschatology", "Ishvara", "Shakti", "Prana", "Chakra", "Kundalini"
+        ),
+        "Sadhana & Yoga" to listOf(
+            "Yoga", "Pranayama", "Meditation", "Japa", "Hatha yoga", "Kriya Yoga", "Ashtanga (eight limbs of yoga)",
+            "Asana", "Tantra", "Pratyahara", "Samadhi", "Ayurveda", "Jyotisha", "Vastu shastra", "Panchangam", "Hindu calendar"
+        ),
+        "Mantras & Chanting" to listOf(
+            "Om", "Gayatri Mantra", "Mantra", "Maha Mrityunjaya Mantra", "Hare Krishna (mantra)", "Namaste", "Bija mantra",
+            "Shanti Mantras", "Sanskrit prosody", "Vedic chant", "Kirtan", "Bhajan", "Aarti", "Stotra"
+        ),
+        "Pooja & Vidhi" to listOf(
+            "Puja (Hinduism)", "Yajna", "Havan", "Tilaka", "Rangoli", "Sandhyavandanam", "Samskara", "Upanayana", "Hindu wedding",
+            "Shraddha (Hinduism)", "Prasada", "Abhisheka", "Darshan (Indian religions)", "Diya (lamp)", "Tulsi"
+        ),
+        "Festivals & Fasting" to listOf(
+            "Diwali", "Holi", "Navaratri", "Maha Shivaratri", "Ganesh Chaturthi", "Raksha Bandhan", "Krishna Janmashtami",
+            "Makar Sankranti", "Rama Navami", "Dussehra", "Kumbh Mela", "Ratha Yatra", "Pongal", "Onam", "Vasant Panchami",
+            "Karva Chauth", "Ugadi", "Guru Purnima", "Hanuman Jayanti", "Ekadashi", "Pradosha", "Sankashti Chaturthi",
+            "Akshaya Tritiya", "Chhath", "Durga Puja", "Vijayadashami", "Dhanteras", "Bhai Dooj", "Fasting in Hinduism"
+        ),
+        "Temples & Sacred Sites" to listOf(
+            "Char Dham", "Kedarnath Temple", "Badrinath Temple", "Jagannath Temple, Puri", "Ram Mandir, Ayodhya", "Kashi Vishwanath Temple",
+            "Tirumala Venkateswara Temple", "Vaishno Devi", "Somnath temple", "Jyotirlinga", "Shakti Peetha", "Dwarkadhish Temple",
+            "Meenakshi Temple", "Amarnath Temple", "Kailash Mansarovar", "Varanasi", "Ayodhya", "Mathura", "Vrindavan", "Rameswaram",
+            "Haridwar", "Ujjain", "Prayagraj", "Nashik", "Pushkar", "Sabarimala", "Konark Sun Temple", "Siddhivinayak Temple, Mumbai",
+            "Mahakaleshwar Jyotirlinga", "Sapta Puri", "Hindu pilgrimage sites", "Pilgrimage in Hinduism"
+        ),
+        "Saints & Acharyas" to listOf(
+            "Adi Shankara", "Ramanuja", "Madhvacharya", "Chaitanya Mahaprabhu", "Tulsidas", "Kabir", "Meera", "Ramakrishna",
+            "Swami Vivekananda", "Sri Aurobindo", "Ramana Maharshi", "Valmiki", "Vyasa", "Patanjali", "Surdas", "Tukaram",
+            "Dnyaneshwar", "Basava", "Vallabhacharya", "Nimbarkacharya", "Paramahansa Yogananda", "Sant Mat", "Ravidas",
+            "Narsinh Mehta", "Purandara Dasa", "Annamacharya", "Namdev", "Eknath", "Ramdas", "Sri Chinmoy", "Anandamayi Ma"
         )
+    )
+
+    /** Wikipedia categories whose pages are discovered live, so newly added articles appear without an app update. */
+    private val discoveredCategories: List<Triple<String, String, Int>> = listOf(
+        Triple("Festivals & Fasting", "Hindu festivals", 40),
+        Triple("Deities & Concepts", "Hindu deities", 40),
+        Triple("Spiritual Concepts", "Hindu philosophical concepts", 40),
+        Triple("Temples & Sacred Sites", "Hindu pilgrimage sites", 40),
+        Triple("Mantras & Chanting", "Hindu mantras", 30),
+        Triple("Sadhana & Yoga", "Yoga", 20)
     )
 
     private val http = OkHttpClient.Builder().connectTimeout(15, TimeUnit.SECONDS).readTimeout(30, TimeUnit.SECONDS).build()
 
-    /** Refresh the library if it has never been fetched or is older than a week. Safe to call often. */
+    private const val DAY = 24L * 60 * 60 * 1000
+    private const val MAX_FETCH_PER_RUN = 120
+
+    /**
+     * Keeps the library in step with Wikipedia. Once a day it asks which pages changed (one cheap request
+     * per 50 titles) and downloads only new or changed ones, so edits and additions flow in without a new
+     * app version. Large first fills continue over the next few app opens.
+     */
     suspend fun syncIfStale(context: Context, force: Boolean = false) = withContext(Dispatchers.IO) {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        if (!force && System.currentTimeMillis() - prefs.getLong("last", 0) < WEEK) return@withContext
+        if (!force && System.currentTimeMillis() - prefs.getLong("last", 0) < DAY) return@withContext
         val dao = AppDatabase.getInstance(context).knowledgeArticleDao()
+
+        // Curated titles + pages discovered in Wikipedia categories
+        val plan = LinkedHashMap<String, MutableList<String>>()
+        for ((cat, titles) in catalog) plan.getOrPut(cat) { mutableListOf() }.addAll(titles)
+        for ((cat, wikiCategory, cap) in discoveredCategories) {
+            try {
+                val found = categoryMembers(wikiCategory, cap)
+                val known = plan.getOrPut(cat) { mutableListOf() }
+                for (t in found) if (known.none { it.equals(t, ignoreCase = true) }) known.add(t)
+            } catch (e: Exception) {
+                Log.w(TAG, "category $wikiCategory: ${e.message}")
+            }
+        }
+
         var saved = 0
-        for ((category, titles) in catalog) {
-            for (title in titles) {
-                try {
-                    val en = fetch("en", title) ?: continue
-                    saved += upsert(dao, en, category, "en")
-                    en.hiTitle?.let { hiTitle -> fetch("hi", hiTitle)?.let { saved += upsert(dao, it, category, "hi") } }
-                } catch (e: Exception) {
-                    Log.w(TAG, "$title: ${e.message}")
+        var pending = 0
+        val done = HashSet<String>()
+        val editor = prefs.edit()
+        for ((category, titles) in plan) {
+            for (batch in titles.distinct().chunked(50)) {
+                val revs = try { revisions("en", batch) } catch (e: Exception) { Log.w(TAG, "revisions: ${e.message}"); continue }
+                for (title in batch) {
+                    if (!done.add(title.lowercase())) continue   // already handled under another category
+                    val rev = revs[title] ?: continue            // page does not exist
+                    if (!force && prefs.getLong("rev_$title", 0L) == rev) continue // unchanged since last download
+                    if (saved >= MAX_FETCH_PER_RUN) { pending++; continue }
+                    try {
+                        val en = fetch("en", title) ?: continue
+                        saved += upsert(dao, en, category, "en")
+                        en.hiTitle?.let { hiTitle -> fetch("hi", hiTitle)?.let { saved += upsert(dao, it, category, "hi") } }
+                        editor.putLong("rev_$title", rev)
+                    } catch (e: Exception) {
+                        Log.w(TAG, "$title: ${e.message}")
+                    }
                 }
             }
         }
-        if (saved > 0) prefs.edit().putLong("last", System.currentTimeMillis()).apply()
-        Log.i(TAG, "Knowledge library synced: $saved texts")
+        // If a backlog remains, look again soon instead of waiting a full day
+        editor.putLong("last", if (pending > 0) System.currentTimeMillis() - DAY + 30L * 60 * 1000 else System.currentTimeMillis())
+        editor.apply()
+        Log.i(TAG, "Knowledge library synced: $saved texts, $pending waiting for the next run")
     }
 
     private data class Page(val title: String, val extract: String, val url: String, val hiTitle: String?)
+
+    private fun get(url: okhttp3.HttpUrl): JSONObject? {
+        val req = Request.Builder().url(url).header("User-Agent", "SanatanSadhak/1.0 (support@chaloone.com)").build()
+        http.newCall(req).execute().use { r ->
+            if (!r.isSuccessful) return null
+            return JSONObject(r.body?.string() ?: return null)
+        }
+    }
+
+    /** Pages (not sub-categories) of an English Wikipedia category; lists, stubs and meta pages are skipped later. */
+    private fun categoryMembers(category: String, limit: Int): List<String> {
+        val url = "https://en.wikipedia.org/w/api.php".toHttpUrl().newBuilder()
+            .addQueryParameter("action", "query").addQueryParameter("format", "json").addQueryParameter("formatversion", "2")
+            .addQueryParameter("list", "categorymembers").addQueryParameter("cmtitle", "Category:$category")
+            .addQueryParameter("cmtype", "page").addQueryParameter("cmlimit", limit.toString()).build()
+        val arr = get(url)?.optJSONObject("query")?.optJSONArray("categorymembers") ?: return emptyList()
+        return (0 until arr.length()).map { arr.getJSONObject(it).getString("title") }
+            .filter { !it.startsWith("List of") && !it.startsWith("Category:") && !it.contains("(disambiguation)") }
+    }
+
+    /** Latest revision id of each requested title (following redirects); missing pages are absent from the map. */
+    private fun revisions(lang: String, titles: List<String>): Map<String, Long> {
+        val url = "https://$lang.wikipedia.org/w/api.php".toHttpUrl().newBuilder()
+            .addQueryParameter("action", "query").addQueryParameter("format", "json").addQueryParameter("formatversion", "2")
+            .addQueryParameter("redirects", "1").addQueryParameter("prop", "info")
+            .addQueryParameter("titles", titles.joinToString("|")).build()
+        val q = get(url)?.optJSONObject("query") ?: return emptyMap()
+        val toFinal = HashMap<String, String>()
+        q.optJSONArray("normalized")?.let { a -> for (i in 0 until a.length()) a.getJSONObject(i).let { toFinal[it.getString("from")] = it.getString("to") } }
+        val redirected = HashMap<String, String>()
+        q.optJSONArray("redirects")?.let { a -> for (i in 0 until a.length()) a.getJSONObject(i).let { redirected[it.getString("from")] = it.getString("to") } }
+        val revByTitle = HashMap<String, Long>()
+        q.optJSONArray("pages")?.let { a ->
+            for (i in 0 until a.length()) {
+                val p = a.getJSONObject(i)
+                if (!p.optBoolean("missing")) revByTitle[p.getString("title")] = p.optLong("lastrevid")
+            }
+        }
+        val out = HashMap<String, Long>()
+        for (t in titles) {
+            val n = toFinal[t] ?: t
+            val r = redirected[n] ?: n
+            revByTitle[r]?.let { out[t] = it }
+        }
+        return out
+    }
 
     private fun fetch(lang: String, title: String): Page? {
         val url = "https://$lang.wikipedia.org/w/api.php".toHttpUrl().newBuilder()
@@ -77,16 +208,12 @@ object ScriptureLibrary {
             .addQueryParameter("prop", "extracts|langlinks|info").addQueryParameter("explaintext", "1")
             .addQueryParameter("exsectionformat", "wiki").addQueryParameter("inprop", "url")
             .addQueryParameter("lllang", "hi").build()
-        val req = Request.Builder().url(url).header("User-Agent", "SanatanSadhak/1.0 (support@chaloone.com)").build()
-        http.newCall(req).execute().use { r ->
-            if (!r.isSuccessful) return null
-            val page = JSONObject(r.body?.string() ?: return null).getJSONObject("query").getJSONArray("pages").getJSONObject(0)
-            if (page.optBoolean("missing")) return null
-            val extract = page.optString("extract").trim()
-            if (extract.length < 200) return null
-            val hi = page.optJSONArray("langlinks")?.optJSONObject(0)?.optString("title")?.ifBlank { null }
-            return Page(page.getString("title"), extract, page.optString("fullurl"), hi)
-        }
+        val page = get(url)?.getJSONObject("query")?.getJSONArray("pages")?.getJSONObject(0) ?: return null
+        if (page.optBoolean("missing")) return null
+        val extract = page.optString("extract").trim()
+        if (extract.length < 600) return null // skip stubs
+        val hi = page.optJSONArray("langlinks")?.optJSONObject(0)?.optString("title")?.ifBlank { null }
+        return Page(page.getString("title"), extract, page.optString("fullurl"), hi)
     }
 
     /** Drop reference-only tail sections; turn "== Heading ==" into readable headings. */
