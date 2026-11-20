@@ -55,8 +55,10 @@ class FestivalDatesTest {
             if (f.contains("Ekadashi", ignoreCase = true)) { days += i; names += f }
             cal.add(Calendar.DAY_OF_YEAR, 1)
         }
-        assertTrue("Expected 22..27 Ekadashi days, got ${days.size}: $names", days.size in 22..27)
+        // A long Ekadashi can be running at two consecutive sunrises: count that as one observance.
+        val groups = days.fold(mutableListOf<Int>()) { acc, d -> if (acc.isEmpty() || d - acc.last() > 1) acc.add(d); acc }
+        assertTrue("Expected 22..27 Ekadashi observances, got ${groups.size}: $names", groups.size in 22..27)
         assertTrue("Expected many distinct named Ekadashis, got ${names.size}: $names", names.size >= 18)
-        for ((a, b) in days.zipWithNext()) assertTrue("Ekadashis too close: day $a and $b", b - a >= 12)
+        for ((a, b) in groups.zipWithNext()) assertTrue("Ekadashis too close: day $a and $b", b - a >= 12)
     }
 }
