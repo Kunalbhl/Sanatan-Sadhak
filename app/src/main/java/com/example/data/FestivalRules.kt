@@ -85,4 +85,30 @@ object FestivalRules {
             else -> null
         }
     }
+
+    private val ekadashiNames = listOf(
+        // Amanta month: Krishna paksha name, Shukla paksha name
+        "Papmochani" to "Kamada",             // Chaitra
+        "Varuthini" to "Mohini",              // Vaishakha
+        "Apara" to "Nirjala",                 // Jyeshtha
+        "Yogini" to "Devshayani",             // Ashadha
+        "Kamika" to "Putrada (Shravana)",     // Shravana
+        "Aja" to "Parivartini",               // Bhadrapada
+        "Indira" to "Papankusha",             // Ashwin
+        "Rama" to "Devutthana (Prabodhini)",  // Kartika
+        "Utpanna" to "Mokshada",              // Margashirsha
+        "Saphala" to "Putrada (Pausha)",      // Pausha
+        "Shattila" to "Jaya",                 // Magha
+        "Vijaya" to "Amalaki"                 // Phalguna
+    )
+
+    /**
+     * Ekadashi observed on the day tithi 11 is running at sunrise (the Smarta rule). When it also runs at the
+     * next sunrise, Vaishnava traditions keep the second day; the app shows the sunrise day.
+     */
+    fun ekadashi(isShukla: Boolean, amantaMonth: Int): String {
+        val pair = ekadashiNames.getOrNull(amantaMonth) ?: return "Ekadashi Vrata (एकादशी व्रत)"
+        val name = if (isShukla) pair.second else pair.first
+        return "$name Ekadashi Vrata (एकादशी व्रत)"
+    }
 }
