@@ -68,8 +68,8 @@ object FestivalAlerts {
             isEng -> "Today: $name"
             else -> "आज: $name"
         }
-        val body = (if (isEng) "$detail. Tap to see timings and details in the Panchang Calendar."
-                    else "$detail। समय और विवरण पंचांग कैलेंडर में देखें।")
+        val body = (if (isEng) "$detail. Dates can differ by a day in some regions and traditions. Tap for timings in the Panchang Calendar."
+                    else "$detail। कुछ क्षेत्रों और परंपराओं में तिथि एक दिन आगे-पीछे हो सकती है। समय पंचांग कैलेंडर में देखें।")
         SadhakNotificationHelper.showNotification(context, notificationId, channelId, title, body, destination)
     }
 }
