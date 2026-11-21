@@ -27,7 +27,7 @@
   <link rel="stylesheet" href="/styles.css?v=c6f18181">
   <script defer src="/js/divine-data.js?v=fbcca8ad"></script>
   <script defer src="/js/divine.js?v=76f1c33e"></script>
-  <script defer src="/js/i18n.js?v=13ebcada"></script>
+  <script defer src="/js/i18n.js?v=c6633ff2"></script>
   <script defer src="/js/site.js?v=41fe1961"></script>
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "name": "Privacy Policy · Sanatan Sadhak", "description": "How the Sanatan Sadhak app and website collect, use, store and delete your data.", "url": "https://sanatan-sadhak.chaloone.com/privacy", "isPartOf": {"@type": "WebSite", "name": "Sanatan Sadhak", "url": "https://sanatan-sadhak.chaloone.com/"}}</script>
 </head>
@@ -85,6 +85,7 @@
     <table>
       <tr><th>Data</th><th>When</th><th>Where it is kept</th></tr>
       <tr><td>Name, email, Firebase user ID, profile photo URL</td><td>Only if you sign in with Google or email</td><td>Firebase Authentication & Cloud Firestore</td></tr>
+      <tr><td>Contributor role, article submissions (title, text, source link, your name and email) and access requests</td><td>Only if an administrator gives you a contributor role or you request one</td><td>Cloud Firestore. Visible to you and reviewers while pending; an approved article becomes public with your display name.</td></tr>
       <tr><td>Community posts, comments, likes, reports</td><td>When you post or interact in Community</td><td>Cloud Firestore (public to other users)</td></tr>
       <tr><td>Japa counts, malas, streaks, meditation sessions, sankalpa, karma & gratitude logs, journal, bookmarks, reading progress, custom mantras</td><td>As you use the tools</td><td>On your device (local database). Some profile stats sync to Firestore when signed in.</td></tr>
       <tr><td>Preferences (language, theme, sound, notifications)</td><td>When you change settings</td><td>On your device</td></tr>

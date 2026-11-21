@@ -38,6 +38,8 @@ If you choose to participate in the community section (Satsang), we store:
 
 *Devotional posts and comments you publish in the community are visible to other registered users of the app.*
 
+**Contributor submissions.** If an administrator gives you a Contributor or Moderator role (or you request one), we also store your access request, the articles you submit (title, text, source link) and your name and email. A submission is visible only to you and reviewers until it is approved. An approved article becomes public with your display name. You can ask us to remove it at support@chaloone.com.
+
 ---
 
 ## 4. Sadhana, Japa & Reading Progress Data
