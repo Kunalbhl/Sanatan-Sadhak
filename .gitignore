@@ -22,3 +22,6 @@ debug.keystore
 /tmp/
 scripts/scratch/
 website/__pycache__/
+
+__pycache__/
+*.pyc
