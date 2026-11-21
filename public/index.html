@@ -27,13 +27,13 @@
   <link rel="stylesheet" href="/styles.css?v=c6f18181">
   <script defer src="/js/divine-data.js?v=fbcca8ad"></script>
   <script defer src="/js/divine.js?v=76f1c33e"></script>
-  <script defer src="/js/i18n.js?v=13ebcada"></script>
+  <script defer src="/js/i18n.js?v=c6633ff2"></script>
   <script defer src="/js/site.js?v=41fe1961"></script>
   <script defer src="/js/astro.js?v=c70ba52d"></script>
   <script defer src="/js/scene.js?v=1e6317a6"></script>
   <script defer src="/js/panchang-ui.js?v=5704d120"></script>
   <script defer src="/js/updates.js?v=0f195ef0"></script>
-  <script type="module" src="/js/forms.js?v=8d1304e4"></script>
+  <script type="module" src="/js/forms.js?v=1dc37f91"></script>
   <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "name": "Sanatan Sadhak · Daily Sadhana, Japa, Live Panchang & AI Mitra", "description": "Sanatan Sadhak is a free Android companion for daily sadhana: japa counter, mantras, live Panchang with Lahiri ayanamsa, temples, Vedic library and the Mitra guide.", "url": "https://sanatan-sadhak.chaloone.com/", "isPartOf": {"@type": "WebSite", "name": "Sanatan Sadhak", "url": "https://sanatan-sadhak.chaloone.com/"}}</script>
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "MobileApplication", "name": "Sanatan Sadhak", "operatingSystem": "Android", "applicationCategory": "LifestyleApplication", "description": "Sanatan Sadhak is a free Android companion for daily sadhana: japa counter, mantras, live Panchang with Lahiri ayanamsa, temples, Vedic library and the Mitra guide.", "url": "https://sanatan-sadhak.chaloone.com/", "image": "https://sanatan-sadhak.chaloone.com/img/icon-512.png", "inLanguage": ["en", "hi"], "offers": {"@type": "Offer", "price": "0", "priceCurrency": "INR"}, "publisher": {"@type": "Organization", "name": "K. Tech Services", "url": "https://k-tech.chaloone.com", "email": "support@chaloone.com", "founder": {"@type": "Person", "name": "Kunal Pareek"}}, "screenshot": ["https://sanatan-sadhak.chaloone.com/img/screens/home.webp", "https://sanatan-sadhak.chaloone.com/img/screens/japa.webp", "https://sanatan-sadhak.chaloone.com/img/screens/sadhana.webp", "https://sanatan-sadhak.chaloone.com/img/screens/temples.webp", "https://sanatan-sadhak.chaloone.com/img/screens/knowledge.webp"]}</script>
 </head>
@@ -130,7 +130,7 @@
         <div class="tour-panel" role="tabpanel" id="tp-knowledge" aria-labelledby="tt-knowledge" hidden>
           <div class="phone"><img src="/img/screens/knowledge.webp" alt="Knowledge hub with deity filters and articles" width="317" height="677" loading="lazy"></div>
           <div><span class="badge" data-i18n="tag.learn">Learn</span><h3 style="margin:8px 0" data-i18n="tour.knowledge">Knowledge hub</h3>
-            <ol><li data-i18n="tour.knowledge.1">Open Knowledge from the bottom bar.</li><li data-i18n="tour.knowledge.2">Filter by category (Vedas, Upanishads, Itihasa) or by deity.</li><li data-i18n="tour.knowledge.3">Sort by difficulty, format or newest. Every article shows its source.</li><li data-i18n="tour.knowledge.4">Bookmark articles and pick up where you left off.</li></ol></div>
+            <ol><li data-i18n="tour.knowledge.1">Open Knowledge from the bottom bar.</li><li data-i18n="tour.knowledge.2">Filter by category (Vedas, deities, festivals, temples, saints) or by deity.</li><li data-i18n="tour.knowledge.3">Sort by difficulty, format or newest. Every article shows its source.</li><li data-i18n="tour.knowledge.4">Bookmark articles and pick up where you left off.</li></ol></div>
         </div>
         <div class="tour-panel" role="tabpanel" id="tp-profile" aria-labelledby="tt-profile" hidden>
           <div class="phone"><img src="/img/screens/profile.webp" alt="Profile sign-in screen" width="317" height="677" loading="lazy"></div>
@@ -152,15 +152,17 @@
     <div class="grid">
       <a class="card reveal" href="/features#japa"><div class="ic">📿</div><h3 data-i18n="f.japa">Japa & mala counter</h3><p data-i18n="f.japa.d">Count chants, finish malas, keep your streak.</p></a>
       <a class="card reveal" href="/features#mantras"><div class="ic">🎶</div><h3 data-i18n="f.mantras">Mantras & chant player</h3><p data-i18n="f.mantras.d">Library, My Mantras, background chant and audio queue.</p></a>
-      <a class="card reveal" href="/features#panchang"><div class="ic">🗓️</div><h3 data-i18n="f.panchang">Panchang & calendar</h3><p data-i18n="f.panchang.d">Muhurat, Choghadiya, festivals, Ekadashi and vrats.</p></a>
+      <a class="card reveal" href="/features#panchang"><div class="ic">🗓️</div><h3 data-i18n="f.panchang">Panchang & calendar</h3><p data-i18n="f.panchang.d">Every tithi with its start and end time, muhurats, named Ekadashis, festivals and vrats.</p></a>
       <a class="card reveal" href="/features#aarti"><div class="ic">🔔</div><h3 data-i18n="f.aarti">Aarti bell</h3><p data-i18n="f.aarti.d">Ring a temple bell during your aarti and keep a log.</p></a>
       <a class="card reveal" href="/features#dhyana"><div class="ic">🧘</div><h3 data-i18n="f.dhyana">Dhyana meditation</h3><p data-i18n="f.dhyana.d">A timer with Om, flute or bells, and daily goals.</p></a>
       <a class="card reveal" href="/features#sankalpa"><div class="ic">🙏</div><h3 data-i18n="f.sankalpa">Sankalpa & Anushthan</h3><p data-i18n="f.sankalpa.d">Set a vow, follow the Gayatri Anushthan, track the days.</p></a>
       <a class="card reveal" href="/features#karma"><div class="ic">🌱</div><h3 data-i18n="f.karma">Karma, gratitude & journal</h3><p data-i18n="f.karma.d">Log good deeds, gratitude and reflections.</p></a>
       <a class="card reveal" href="/features#pooja"><div class="ic">🪔</div><h3 data-i18n="f.pooja">Pooja vidhi & prayers</h3><p data-i18n="f.pooja.d">Step-by-step puja, samagri lists and prayer lyrics.</p></a>
       <a class="card reveal" href="/features#temples"><div class="ic">🛕</div><h3 data-i18n="f.temples">Temple finder</h3><p data-i18n="f.temples.d">Jyotirlingas, dhams and city temples with directions.</p></a>
-      <a class="card reveal" href="/features#knowledge"><div class="ic">📜</div><h3 data-i18n="f.knowledge">Knowledge hub</h3><p data-i18n="f.knowledge.d">Vedas, Upanishads, Itihasa and deities, with sources.</p></a>
+      <a class="card reveal" href="/features#knowledge"><div class="ic">📜</div><h3 data-i18n="f.knowledge">Knowledge hub</h3><p data-i18n="f.knowledge.d">Hundreds of texts on Vedas, deities, festivals, temples and saints, kept in sync with their sources.</p></a>
       <a class="card reveal" href="/features#mitra"><div class="ic">✨</div><h3 data-i18n="f.mitra">AI Mitra</h3><p data-i18n="f.mitra.d">Ask about granths, rituals or karma. Gentle, short answers.</p></a>
+      <a class="card reveal" href="/features#widget"><div class="ic">🔔</div><h3 data-i18n="f.widget">Widget & festival alerts</h3><p data-i18n="f.widget.d">Today's Panchang on your home screen, and a reminder before each festival.</p></a>
+      <a class="card reveal" href="/features#contribute"><div class="ic">✍️</div><h3 data-i18n="f.contribute">Contribute & review</h3><p data-i18n="f.contribute.d">Trusted contributors add articles; nothing goes public until it is approved.</p></a>
       <a class="card reveal" href="/features#community"><div class="ic">👥</div><h3 data-i18n="f.community">Community</h3><p data-i18n="f.community.d">Share reflections and join satsang respectfully.</p></a>
       <a class="card reveal" href="/features#videos"><div class="ic">▶️</div><h3 data-i18n="f.videos">Videos</h3><p data-i18n="f.videos.d">Darshan, aarti and katha from curated channels.</p></a>
       <a class="card reveal" href="/features#updates"><div class="ic">📣</div><h3 data-i18n="f.updates">Divine updates</h3><p data-i18n="f.updates.d">Festival posts and announcements in one feed.</p></a>

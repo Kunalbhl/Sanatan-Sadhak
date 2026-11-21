@@ -16,7 +16,7 @@ FEATURES = [
      ["Open Sadhana → Bhakti Tools → Mantra Counter.", "Choose a mantra from Select Mantra. Its Sanskrit text appears above the counter.",
       "Tap the circle for each chant. There's a soft vibration at every 108.", "Switch to Japa Timer to chant for a set time instead.", "Your mala count and day streak (🔥) update automatically."], "japa", "mala"),
     ("mantras", "🎶", "Mantra library, My Mantras & chant player", "Listen & chant",
-     "Classical chants with lyrics, meaning and audio. Add your own mantras and keep a background Om chant playing.",
+     "Classical chants with lyrics and meaning. Add your own mantras, keep a calm, seamless Om chant playing in the background, and open a mantra's recitation on YouTube.",
      ["Open Sadhana → Prayers and search for any chalisa, aarti or stotram.", "Open a chant to read its lyrics and meaning and press play.",
       "Use the audio queue to line up several tracks.", "Tap Add Personal Prayer to save your own mantra in My Mantras.", "Turn on Global Background Chant in Profile → App Preferences for ambient Om."], "sadhana", "lotus"),
     ("aarti", "🔔", "Aarti bell", "Ritual",
@@ -37,13 +37,13 @@ FEATURES = [
      "Step-by-step puja procedures with samagri lists, plus lyrics for aartis, chalisas and stotras.",
      ["Open Knowledge → Pooja & Vidhi, or a deity page.", "Read the samagri list and gather the items.", "Follow each numbered step of the vidhi.", "Open Prayer Lyrics to sing along."], "mock:pooja", "temple"),
     ("panchang", "🗓️", "Panchang & Hindi calendar", "Live",
-     "Tithi, nakshatra, yoga and karana, plus sunrise and sunset, Rahu Kaal, Abhijit, Choghadiya, festivals and Ekadashi for your location. It's calculated in the sidereal zodiac with Lahiri ayanamsa.",
+     "Every tithi, nakshatra, yoga and karana that falls in the day, each with its start and end time, plus sunrise and sunset, Rahu Kaal, Yamaganda, Gulika, Abhijit, Brahma Muhurta, special yogas, Choghadiya, festivals and named Ekadashis for your location. It's calculated in the sidereal zodiac with Lahiri ayanamsa.",
      ["Tap the calendar icon at the top, or View Full Panchang on Home.", "Set your city or use GPS (Current GPS / Custom Location).",
-      "Read the Detailed Panchang, Auspicious & Inauspicious Muhurtas and the Day Choghadiya.", "Open the Monthly Calendar for festivals and vrats such as Ekadashi.",
+      "Read the Detailed Panchang. When a day holds two tithis you see both, with from and until times.", "Check the Muhurtas, special yogas and the Day Choghadiya.", "Open the Monthly Calendar for festivals and vrats such as Ekadashi.",
       "You can also try the <a href=\"/panchang\">live Panchang on this website</a>."], "mock:panchang", "panchang"),
     ("knowledge", "📜", "Knowledge hub / Vedic library", "Learn",
-     "A library of Sanatan Dharma: Vedas, Upanishads, Itihasa, deities, temples and puja, with verified sources and reading time.",
-     ["Open Knowledge from the bottom bar.", "Filter by category or sacred deity (Shiva, Vishnu, Krishna…).", "Sort by difficulty, format or newest.",
+     "Hundreds of texts on the Vedas, Upanishads, Itihasa, deities, festivals, temples, saints, yoga and puja, in English and Hindi. New and updated pages are picked up automatically each day, and every article links to its source (Wikipedia, CC BY-SA, or an approved contributor).",
+     ["Open Knowledge from the bottom bar.", "Filter by category (including Deities, Festivals, Temples and Saints) or by sacred deity.", "Sort by difficulty, format or newest.",
       "Read an article and bookmark it. Your reading progress is saved."], "knowledge", "scripture"),
     ("temples", "🛕", "Temple finder", "Darshan",
      "A sacred mandir directory: the 12 Jyotirlingas, Char Dham and city temples, with distance, story, directions and sharing.",
@@ -59,6 +59,14 @@ FEATURES = [
     ("videos", "▶️", "Videos", "Watch",
      "A sacred video hub of darshan, aarti, katha and festival specials from curated YouTube channels, with favourites.",
      ["Open Videos from the bottom bar.", "Browse All Videos, Festival Specials or Favorites, or search.", "Tap a video to play it in the app.", "Save the ones you love to Favorites."], "videos", "krishna"),
+    ("widget", "🔔", "Home-screen widget & festival alerts", "Stay on time",
+     "A Panchang widget for your home screen and gentle reminders the evening before and the morning of Ekadashi, Pradosh, Purnima, Amavasya, Sankashti and major festivals. Dates come from the same Panchang engine as the app.",
+     ["Long-press your home screen, choose Widgets and add Sanatan Sadhak's Panchang.", "Set your city once in the app's Panchang so alerts use your sunrise.",
+      "Open Profile → Notifications to switch festival alerts on or off.", "Alerts say when a date may differ by a day in your region."], "mock:updates", "panchang"),
+    ("contribute", "✍️", "Contribute & review", "Community knowledge",
+     "Trusted devotees can add articles to the Knowledge hub. Every submission stays private until a Moderator or admin approves it, and only approved articles reach other users.",
+     ["Open Profile → Contribute & Review and request access.", "An administrator grants the Contributor or Moderator role. Roles are never self-assigned.",
+      "Contributors write an article with a source link and submit it.", "Moderators approve or reject it with a note. You cannot approve your own submission.", "Approved articles appear in Knowledge for everyone, labelled as community contributions."], "mock:community", "lotus"),
     ("updates", "📣", "Divine updates", "Stay informed",
      "Festival posts, announcements and new-content alerts in one feed, with in-app notifications.",
      ["Tap the bell icon at the top to see alerts.", "Mark alerts as read, or clear them all.", "Open Divine Updates for the full feed of posts."], "mock:updates", "hanuman"),
@@ -95,7 +103,7 @@ def main():
     nav = "".join(f'<a class="chip" href="#{fid}">{icon} {html.escape(t.split(" & ")[0].split(",")[0])}</a>' for fid, icon, t, *_ in FEATURES)
     out = [f'''<section class="page-hero">
   {{{{motif:om right}}}}
-  <div class="wrap"><span class="eyebrow">17 features · {len(FEATURES)} walkthroughs</span>
+  <div class="wrap"><span class="eyebrow">{len(FEATURES)} features · step-by-step walkthroughs</span>
     <h1 data-i18n="page.features">Every feature of Sanatan Sadhak</h1>
     <p class="lead" data-i18n="page.features.sub">Every option, screen and process, explained step by step.</p></div>
 </section>

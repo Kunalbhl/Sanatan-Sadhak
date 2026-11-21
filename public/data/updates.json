@@ -1,5 +1,21 @@
 [
   {
+    "version": "1.3",
+    "date": "2026-11-21",
+    "title": "Fuller Panchang, a calmer Om and a growing library",
+    "titleHi": "विस्तृत पंचांग, शांत ॐ और बढ़ता ज्ञान केंद्र",
+    "tag": "new",
+    "highlights": [
+      { "icon": "🗓️", "title": "Every tithi of the day, with times", "titleHi": "दिन की हर तिथि, समय सहित", "text": "When a day holds two tithis, nakshatras, yogas or karanas, the app shows each with its start and end time. It also adds Yamaganda, Gulika, Brahma Muhurta, special yogas and named Ekadashis." },
+      { "icon": "🔔", "title": "Widget and festival alerts", "titleHi": "विजेट और पर्व सूचनाएँ", "text": "A Panchang widget for your home screen, and reminders the evening before and the morning of major vrats and festivals." },
+      { "icon": "🕉️", "title": "A calmer, seamless Om chant", "titleHi": "शांत, अटूट ॐ जप", "text": "The background Om is rebuilt as one long meditative loop with a tanpura drone, without an audible restart." },
+      { "icon": "📜", "title": "Hundreds more texts, kept up to date", "titleHi": "सैकड़ों और लेख, नियमित अद्यतन", "text": "Deities, festivals, temples, saints, yoga and mantras, in English and Hindi. New and changed pages are picked up daily, each with its source." },
+      { "icon": "✍️", "title": "Contribute & review", "titleHi": "योगदान व समीक्षा", "text": "Administrators can give trusted people a Contributor or Moderator role. Submissions stay private until approved." }
+    ],
+    "more": ["Google sign-in joins an existing account with the same email", "Passwords stored on the phone are now hashed", "Temple Finder has a Live timings button", "Community has a Top Contributors board", "Mantras without a bundled recording open a YouTube search"],
+    "screens": ["home"]
+  },
+  {
     "version": "1.2",
     "date": "2026-11-17",
     "title": "Accurate Panchang & a calmer, steadier app",
