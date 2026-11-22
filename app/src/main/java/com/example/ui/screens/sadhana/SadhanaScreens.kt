@@ -337,6 +337,21 @@ fun AartiBellWidget(isEng: Boolean, viewModel: SadhakViewModel? = null) {
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            var showImmersiveBell by remember { mutableStateOf(false) }
+            if (showImmersiveBell) {
+                AartiBellImmersive(
+                    isEng = isEng,
+                    onRung = { viewModel?.incrementAartiBell() },
+                    onClose = { showImmersiveBell = false }
+                )
+            }
+            Button(
+                onClick = { showImmersiveBell = true },
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                shape = RoundedCornerShape(14.dp)
+            ) {
+                Text(if (isEng) "Enter Full-Screen Bell  ·  Auto Bell" else "पूर्ण स्क्रीन घंटी  ·  स्वचालित घंटी", fontWeight = FontWeight.Bold)
+            }
             Text(
                 text = if (isEng) "Sacred Aarti Bell" else "दिव्य आरती घंटी",
                 style = MaterialTheme.typography.titleMedium.copy(
@@ -708,7 +723,7 @@ fun BhaktiToolsScreen(viewModel: SadhakViewModel) {
                         "KarmaLog" -> if (isEng) "Karma Tracker" else "कर्म चक्र"
                         "Gratitude" -> if (isEng) "Gratitude" else "कृतज्ञता"
                         "TempleFinder" -> if (isEng) "Temple Finder" else "मंदिर खोजक"
-                        else -> if (isEng) "Mantra Counter" else "मंत्र जाप"
+                        else -> if (isEng) "Japa Counter" else "जप माला"
                     }
                     CategoryTab(
                         text = label,
@@ -845,7 +860,26 @@ fun MantraLibraryView(viewModel: SadhakViewModel, isEnglish: Boolean, onMantraCl
                             unfocusedBorderColor = MaterialTheme.colorScheme.outline
                         )
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = if (isEnglish) "Saved privately to your own list. Only you can see it." else "आपकी निजी सूची में सहेजा जाएगा। केवल आप इसे देख सकेंगे।",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    var suggestForAll by remember { mutableStateOf(false) }
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth().clickable { suggestForAll = !suggestForAll }
+                    ) {
+                        androidx.compose.material3.Checkbox(checked = suggestForAll, onCheckedChange = { suggestForAll = it })
+                        Text(
+                            text = if (isEnglish) "Also suggest it for everyone (a reviewer must approve it first)" else "इसे सबके लिए भी सुझाएँ (पहले समीक्षक की स्वीकृति आवश्यक)",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
+                    val shareScope = rememberCoroutineScope()
+                    val shareCtx = androidx.compose.ui.platform.LocalContext.current
+                    Spacer(modifier = Modifier.height(4.dp))
                     Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
                         TextButton(onClick = { showAddCustomMantra = false }) {
                             Text(if (isEnglish) "Cancel" else "रद्द करें", color = MaterialTheme.colorScheme.secondary)
@@ -858,6 +892,20 @@ fun MantraLibraryView(viewModel: SadhakViewModel, isEnglish: Boolean, onMantraCl
                                 } else {
                                     if (newTitle.isNotBlank() && newContent.isNotBlank()) {
                                         viewModel.addFavoriteMantra(newTitle, newContent, newYoutubeUrl)
+                                        if (suggestForAll) {
+                                            val t = newTitle; val c = newContent; val y = newYoutubeUrl
+                                            shareScope.launch {
+                                                val fb = viewModel.firebaseService
+                                                val msg = when {
+                                                    c.trim().length < 50 -> if (isEnglish) "Saved for you. To share with everyone the text must be at least 50 characters." else "आपके लिए सहेजा गया। सबके लिए साझा करने हेतु पाठ कम से कम 50 अक्षर का हो।"
+                                                    fb.myContributorRole().isBlank() -> if (isEnglish) "Saved for you. Sharing with everyone needs contributor access: Profile → Contribute & Review." else "आपके लिए सहेजा गया। सबके लिए साझा करने हेतु योगदानकर्ता पहुँच चाहिए: प्रोफ़ाइल → योगदान और समीक्षा।"
+                                                    fb.submitContribution(t, "Mantras & Chanting", c, y, viewModel.userName.value) ->
+                                                        if (isEnglish) "Saved for you and sent for approval." else "आपके लिए सहेजा गया और स्वीकृति के लिए भेजा गया।"
+                                                    else -> if (isEnglish) "Saved for you. Could not send for approval right now." else "आपके लिए सहेजा गया। अभी स्वीकृति के लिए भेज नहीं सके।"
+                                                }
+                                                android.widget.Toast.makeText(shareCtx, msg, android.widget.Toast.LENGTH_LONG).show()
+                                            }
+                                        }
                                         newTitle = ""
                                         newContent = ""
                                         newYoutubeUrl = ""
@@ -1725,7 +1773,7 @@ fun SadhanaDashboardView(viewModel: SadhakViewModel, isEnglish: Boolean) {
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             SadhakFeatureTile(
-                title = if (isEnglish) "Japa Counter" else "मंत्र जाप काउंटर",
+                title = if (isEnglish) "Japa Counter" else "जप काउंटर",
                 shortDescription = if (isEnglish) "Tap mala beads with haptic vibrations & targets" else "माला मनकों पर जाप करें तथा लक्ष्य ट्रैक करें",
                 icon = Icons.Default.SelfImprovement,
                 badge = if (isEnglish) "Interactive" else "सक्रिय",

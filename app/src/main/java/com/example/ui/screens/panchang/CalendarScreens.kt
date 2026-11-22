@@ -277,56 +277,6 @@ fun FullPanchangView(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 // 0. Source & Accuracy Transparency Header Card
-                item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = SadhakThemeColors.sacredSurface),
-                        shape = RoundedCornerShape(10.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, SadhakThemeColors.sacredDivider)
-                    ) {
-                        Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = if (d.sourceType == "REMOTE_SOURCE")
-                                        (if (isEng) "Source: Verified Ephemeris Source" else "स्रोत: प्रमाणित पंचांग स्रोत")
-                                    else
-                                        (if (isEng) "Source: Local Ephemeris Engine" else "स्रोत: स्थानीय खगोलीय गणना"),
-                                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                                )
-                                Box(
-                                    modifier = Modifier
-                                        .clip(CircleShape)
-                                        .background(
-                                            if (d.sourceType == "REMOTE_SOURCE") SadhakThemeColors.success.copy(alpha = 0.15f)
-                                            else MaterialTheme.colorScheme.secondaryContainer
-                                        )
-                                        .padding(horizontal = 8.dp, vertical = 2.dp)
-                                ) {
-                                    Text(
-                                        text = if (d.sourceType == "REMOTE_SOURCE")
-                                            (if (isEng) "✓ VERIFIED / Verified Ephemeris Source" else "✓ प्रमाणित पंचांग स्रोत")
-                                        else
-                                            (if (isEng) "⚙ CALCULATED / Local Ephemeris" else "⚙ स्थानीय गणना"),
-                                        style = MaterialTheme.typography.labelSmall.copy(
-                                            fontWeight = FontWeight.Bold,
-                                            color = if (d.sourceType == "REMOTE_SOURCE") SadhakThemeColors.success else MaterialTheme.colorScheme.onSecondaryContainer
-                                        )
-                                    )
-                                }
-                            }
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = "${d.conventionNote} • ${d.calculationMethod}",
-                                style = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            )
-                        }
-                    }
-                }
-
                 // 1. Core Summary Card
                 item {
                     SacredCard(
@@ -592,59 +542,6 @@ fun FullPanchangView(
                     }
                 }
 
-                // 6. Calculation & Source Transparency Card
-                item {
-                    SacredCard(
-                        backgroundColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-                        borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
-                    ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
-                            Text(
-                                text = if (isEng) "Calculation & Source" else "गणना एवं स्रोत जानकारी",
-                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                            )
-                            Divider(modifier = Modifier.padding(vertical = 8.dp), color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.15f))
-
-                            PanchangRow(
-                                label = if (isEng) "Source:" else "स्रोत:",
-                                value = if (d.sourceType == "REMOTE_SOURCE")
-                                    (if (isEng) "Verified Ephemeris Source" else "प्रमाणित पंचांग स्रोत")
-                                else
-                                    (if (isEng) "Local Astronomical Engine" else "स्थानीय खगोलीय गणना")
-                            )
-                            PanchangRow(
-                                label = if (isEng) "Location:" else "स्थान:",
-                                value = d.locationName
-                            )
-                            PanchangRow(
-                                label = if (isEng) "Timezone:" else "समय क्षेत्र:",
-                                value = "UTC+05:30 (IST)"
-                            )
-                            PanchangRow(
-                                label = if (isEng) "Convention:" else "पद्धति:",
-                                value = d.conventionNote
-                            )
-                            PanchangRow(
-                                label = if (isEng) "Accuracy Status:" else "सटीकता स्थिति:",
-                                value = if (d.sourceType == "REMOTE_SOURCE")
-                                    (if (isEng) "Verified" else "प्रमाणित")
-                                else
-                                    (if (isEng) "Calculated (Approximate)" else "गणना (अनुमानित)")
-                            )
-
-                            Spacer(modifier = Modifier.height(10.dp))
-                            Text(
-                                text = if (isEng) "Offline calculation based on astronomical approximations. For authoritative Panchang observances, compare with the configured trusted source."
-                                else "खगोलीय अनुमानों पर आधारित ऑफ़लाइन गणना। प्रामाणिक पंचांग अनुष्ठानों के लिए, कॉन्फ़िगर किए गए विश्वसनीय स्रोत से तुलना करें।",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    fontStyle = FontStyle.Italic,
-                                    fontSize = 12.sp
-                                )
-                            )
-                        }
-                    }
-                }
             }
         }
     }

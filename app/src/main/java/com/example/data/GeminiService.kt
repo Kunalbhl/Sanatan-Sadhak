@@ -21,7 +21,64 @@ object GeminiService {
         .writeTimeout(30, TimeUnit.SECONDS)
         .build()
 
-    private const val MODEL_NAME = "gemini-3.5-flash"
+    /** Tried in order; the first one this API key can use wins and is remembered. */
+    private val MODELS = listOf("gemini-flash-latest", "gemini-2.5-flash", "gemini-2.0-flash")
+    @Volatile private var workingModel: String? = null
+    private const val MODEL_NAME = "gemini-flash-latest"
+
+    /** Set once from MainActivity; lets requests identify the app when the API key is restricted to it. */
+    @Volatile var appContext: android.content.Context? = null
+
+    @Volatile var lastError: String = ""
+
+    private fun signatureSha1(): String? = try {
+        val ctx = appContext ?: return null
+        val pm = ctx.packageManager
+        @Suppress("DEPRECATION")
+        val sig = if (android.os.Build.VERSION.SDK_INT >= 28) {
+            pm.getPackageInfo(ctx.packageName, android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES)
+                .signingInfo?.apkContentsSigners?.firstOrNull()
+        } else {
+            pm.getPackageInfo(ctx.packageName, android.content.pm.PackageManager.GET_SIGNATURES).signatures?.firstOrNull()
+        }
+        sig?.let {
+            java.security.MessageDigest.getInstance("SHA-1").digest(it.toByteArray())
+                .joinToString("") { b -> "%02X".format(b) }
+        }
+    } catch (_: Exception) { null }
+
+    /** POSTs [root] to the first Gemini model that accepts it. Returns the response body, or null (reason in lastError). */
+    private fun postToGemini(root: JSONObject, apiKey: String): String? {
+        val models = workingModel?.let { listOf(it) + MODELS.filter { m -> m != it } } ?: MODELS
+        val body = root.toString()
+        for (model in models) {
+            val url = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent"
+            val builder = Request.Builder().url(url)
+                .header("x-goog-api-key", apiKey)
+                .post(body.toRequestBody("application/json".toMediaType()))
+            appContext?.let { builder.header("X-Android-Package", it.packageName) }
+            signatureSha1()?.let { builder.header("X-Android-Cert", it) }
+            try {
+                client.newCall(builder.build()).execute().use { resp ->
+                    val text = resp.body?.string()
+                    if (resp.isSuccessful && text != null) {
+                        workingModel = model
+                        lastError = ""
+                        return text
+                    }
+                    lastError = "HTTP ${resp.code} on $model: ${text?.take(200)}"
+                    Log.e(TAG, lastError)
+                    // 400/401/403 mean the key itself is refused; another model will not help
+                    if (resp.code == 401 || resp.code == 403) return null
+                }
+            } catch (e: Exception) {
+                lastError = "${e.javaClass.simpleName}: ${e.message}"
+                Log.e(TAG, lastError)
+                return null
+            }
+        }
+        return null
+    }
 
     suspend fun generateResponse(chatHistory: List<ChatMessage>, prompt: String, isEnglish: Boolean): String = withContext(Dispatchers.IO) {
         val apiKey = BuildConfig.GEMINI_API_KEY
@@ -33,8 +90,6 @@ object GeminiService {
                 return@withContext "प्रणाम! मैं 'साधक मित्र' हूं, आपका आध्यात्मिक मार्गदर्शक। लाइव AI मार्गदर्शन अभी उपलब्ध नहीं है। तब तक, मैं आपके साथ यह पवित्र ज्ञान साझा करता हूँ: 'अपने कर्म पर ध्यान लगाओ, उसके फल पर नहीं। ईश्वर के लिए निस्वार्थ भाव से कार्य करो, और तुम्हें सच्ची, शाश्वत प्रसन्नता प्राप्त होगी (निष्काम कर्म)।'"
             }
         }
-
-        val url = "https://generativelanguage.googleapis.com/v1beta/models/$MODEL_NAME:generateContent?key=$apiKey"
 
         try {
             val root = JSONObject()
@@ -75,34 +130,31 @@ object GeminiService {
 
             root.put("contents", contentsArray)
 
-            val jsonStr = root.toString()
-            Log.d(TAG, "Request payload length: ${jsonStr.length}")
-
-            val requestBody = jsonStr.toRequestBody("application/json".toMediaType())
-            val request = Request.Builder()
-                .url(url)
-                .post(requestBody)
-                .build()
-
-            client.newCall(request).execute().use { response ->
-                val bodyStr = response.body?.string()
-                if (!response.isSuccessful || bodyStr == null) {
-                    Log.e(TAG, "Request failed code: ${response.code}")
-                    return@withContext if (isEnglish) "Apologies, dear Sadhak. I was unable to connect to the divine knowledge network at this moment. Let us chant 'Om Namah Shivaya' together with peace in our hearts." else "क्षमा करें, प्रिय साधक। मैं इस समय ज्ञान नेटवर्क से जुड़ने में असमर्थ हूँ। आइए हम शांतिपूर्वक 'ॐ नमः शिवाय' का जाप करें।"
+            val bodyStr = postToGemini(root, apiKey)
+            if (bodyStr == null) {
+                val code = lastError.substringAfter("HTTP ", "").take(3)
+                val hint = when {
+                    code == "403" || code == "401" -> if (isEnglish) " (the AI key was refused — the app owner needs to check it)" else " (एआई कुंजी अस्वीकृत — ऐप स्वामी को जाँचनी होगी)"
+                    code == "429" -> if (isEnglish) " (too many requests right now, please try again in a minute)" else " (अभी बहुत अनुरोध हैं, एक मिनट बाद पुनः प्रयास करें)"
+                    lastError.isNotBlank() && !lastError.startsWith("HTTP") -> if (isEnglish) " (please check your internet)" else " (कृपया इंटरनेट जाँचें)"
+                    else -> ""
                 }
-
-                val responseJson = JSONObject(bodyStr)
-                val candidates = responseJson.optJSONArray("candidates")
-                if (candidates != null && candidates.length() > 0) {
-                    val firstCandidate = candidates.getJSONObject(0)
-                    val contentObj = firstCandidate.optJSONObject("content")
-                    val partsArray = contentObj?.optJSONArray("parts")
-                    if (partsArray != null && partsArray.length() > 0) {
-                        return@withContext partsArray.getJSONObject(0).optString("text", "Empty response text")
-                    }
-                }
-                "I am silent, contemplating your words. Please try asking in a different way, dear Sadhak."
+                return@withContext if (isEnglish) "Apologies, dear Sadhak. AI Mitra could not answer just now$hint. Please try again shortly." else "क्षमा करें, प्रिय साधक। एआई मित्र अभी उत्तर नहीं दे सका$hint। कृपया थोड़ी देर में पुनः प्रयास करें।"
             }
+
+            val responseJson = JSONObject(bodyStr)
+            val candidates = responseJson.optJSONArray("candidates")
+            if (candidates != null && candidates.length() > 0) {
+                val firstCandidate = candidates.getJSONObject(0)
+                val contentObj = firstCandidate.optJSONObject("content")
+                val partsArray = contentObj?.optJSONArray("parts")
+                if (partsArray != null && partsArray.length() > 0) {
+                    val sb = StringBuilder()
+                    for (i in 0 until partsArray.length()) sb.append(partsArray.getJSONObject(i).optString("text", ""))
+                    if (sb.isNotBlank()) return@withContext sb.toString()
+                }
+            }
+            "I am silent, contemplating your words. Please try asking in a different way, dear Sadhak."
         } catch (e: Exception) {
             Log.e(TAG, "Exception during Gemini generation: ${e.message}", e)
             "Pranam, dear Sadhak. I faced a connection issue while loading the spiritual response. Please ensure you are connected to the internet. Chanting 'Har Har Mahadev' for your well-being!"

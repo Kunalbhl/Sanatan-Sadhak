@@ -61,7 +61,8 @@ data class HinduTemple(
     val cityEn: String,
     val cityHi: String,
     val imageUrl: String? = null,
-    val distanceKm: Double = 0.0
+    val distanceKm: Double = 0.0,
+    val website: String? = null
 )
 
 data class PilgrimageCity(
@@ -577,10 +578,45 @@ fun TempleFinderView(viewModel: SadhakViewModel) {
     }
 
     // Filter and compute distance
-    val processedTemples = remember(searchQuery, selectedCityName, selectedDeityFilter, currentLatitude, currentLongitude) {
-        famousTemples.filter { temple ->
+    // Live temples from OpenStreetMap around the active point (GPS, chosen city or searched place)
+    var liveTemples by remember { mutableStateOf<List<HinduTemple>>(emptyList()) }
+    var isLoadingLive by remember { mutableStateOf(false) }
+    var liveFailed by remember { mutableStateOf(false) }
+    LaunchedEffect(currentLatitude, currentLongitude) {
+        isLoadingLive = true
+        liveFailed = false
+        val found = com.example.data.NearbyTemples.around(currentLatitude, currentLongitude)
+        liveTemples = found
+        liveFailed = found.isEmpty()
+        isLoadingLive = false
+    }
+    // Search a temple or place anywhere in the world when typing
+    var searchHits by remember { mutableStateOf<List<com.example.data.NearbyTemples.Place>>(emptyList()) }
+    LaunchedEffect(searchQuery) {
+        searchHits = emptyList()
+        if (searchQuery.trim().length >= 3) {
+            kotlinx.coroutines.delay(900)
+            searchHits = com.example.data.NearbyTemples.search(searchQuery.trim())
+        }
+    }
+
+    val allTemples = remember(liveTemples, searchHits) {
+        val curated = famousTemples
+        val fromSearch = searchHits.mapNotNull { it.temple }
+        val extra = (fromSearch + liveTemples).filter { lt ->
+            curated.none { c ->
+                val r = FloatArray(1)
+                Location.distanceBetween(c.lat, c.lon, lt.lat, lt.lon, r)
+                r[0] < 400f
+            }
+        }
+        (curated + extra).distinctBy { it.id }
+    }
+
+    val processedTemples = remember(searchQuery, selectedCityName, selectedDeityFilter, currentLatitude, currentLongitude, allTemples) {
+        allTemples.filter { temple ->
             // Filter by search query
-            val queryMatch = if (searchQuery.isBlank()) true else {
+            val queryMatch = if (searchQuery.isBlank()) true else if (searchHits.any { h -> h.temple?.id == temple.id }) true else {
                 temple.nameEn.contains(searchQuery, ignoreCase = true) ||
                 temple.nameHi.contains(searchQuery, ignoreCase = true) ||
                 temple.deityEn.contains(searchQuery, ignoreCase = true) ||
@@ -713,7 +749,7 @@ fun TempleFinderView(viewModel: SadhakViewModel) {
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text(if (isEng) "Search temples by name or deity..." else "मंदिर या देवता के नाम से खोजें...") },
+                    placeholder = { Text(if (isEng) "Search any temple or place in the world..." else "विश्व का कोई भी मंदिर या स्थान खोजें...") },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
@@ -725,6 +761,27 @@ fun TempleFinderView(viewModel: SadhakViewModel) {
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
+
+                // Places found by the worldwide search: tap to see temples around that place
+                if (searchHits.isNotEmpty()) {
+                    androidx.compose.foundation.lazy.LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        items(searchHits.take(5)) { hit ->
+                            SuggestionChip(
+                                onClick = {
+                                    currentLatitude = hit.lat
+                                    currentLongitude = hit.lon
+                                    selectedCityName = hit.name
+                                    searchQuery = ""
+                                },
+                                label = { Text((if (isEng) "Temples near " else "मंदिर: ") + hit.name, fontSize = 11.sp, maxLines = 1) }
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
 
                 // Deity Category Chips
                 androidx.compose.foundation.lazy.LazyRow(
@@ -765,11 +822,16 @@ fun TempleFinderView(viewModel: SadhakViewModel) {
                         style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.secondary
                     )
+                    if (isLoadingLive) {
+                        androidx.compose.material3.CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp)
+                    }
+                }
+                if (liveFailed && !isLoadingLive) {
                     Text(
-                        text = if (isEng) "Calculated from: $selectedCityName" else "गणना केंद्र: ${if (selectedCityName == "Varanasi") "वाराणसी" else if (selectedCityName == "Vrindavan") "वृंदावन" else if (selectedCityName == "Ayodhya") "अयोध्या" else if (selectedCityName == "Haridwar") "हरिद्वार" else if (selectedCityName == "Rameshwaram") "रामेश्वरम" else if (selectedCityName == "Kedarnath") "केदारनाथ" else if (selectedCityName == "Current GPS") "वर्तमान स्थान" else selectedCityName}",
+                        text = if (isEng) "Live temple data is unavailable right now (check your internet). Showing featured temples." else "लाइव मंदिर डेटा अभी उपलब्ध नहीं है (इंटरनेट जाँचें)। प्रमुख मंदिर दिखाए जा रहे हैं।",
                         fontSize = 10.sp,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.SemiBold
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 4.dp)
                     )
                 }
 
@@ -842,13 +904,13 @@ fun TempleFinderView(viewModel: SadhakViewModel) {
                                             fontWeight = FontWeight.SemiBold
                                         )
                                         Text(
-                                            text = "📍 " + (if (isEng) "${temple.cityEn} • " else "${temple.cityHi} • ") + String.format("%.2f km away", temple.distanceKm),
+                                            text = "📍 " + (if (isEng) temple.cityEn else temple.cityHi).let { if (it.isBlank()) "" else "$it • " } + String.format("%.1f km away", temple.distanceKm),
                                             fontSize = 11.sp,
                                             color = MaterialTheme.colorScheme.primary,
                                             fontWeight = FontWeight.SemiBold
                                         )
                                         Spacer(modifier = Modifier.height(4.dp))
-                                        Text(
+                                        if ((if (isEng) temple.descEn else temple.descHi).isNotBlank()) Text(
                                             text = if (isEng) temple.descEn else temple.descHi,
                                             fontSize = 11.sp,
                                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -872,7 +934,7 @@ fun TempleFinderView(viewModel: SadhakViewModel) {
                                         verticalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
                                         // Significance
-                                        Column {
+                                        if ((if (isEng) temple.significanceEn else temple.significanceHi).isNotBlank()) Column {
                                             Text(
                                                 text = if (isEng) "📜 Significance" else "📜 आध्यात्मिक महत्व",
                                                 fontWeight = FontWeight.Bold,
@@ -887,7 +949,7 @@ fun TempleFinderView(viewModel: SadhakViewModel) {
                                         }
 
                                         // Opening Hours
-                                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        if ((if (isEng) temple.openingHoursEn else temple.openingHoursHi).isNotBlank()) Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                             Column(modifier = Modifier.weight(1f)) {
                                                 Text(
                                                     text = if (isEng) "⏰ Darshan Timings" else "⏰ दर्शन का समय",
@@ -904,7 +966,7 @@ fun TempleFinderView(viewModel: SadhakViewModel) {
                                         }
 
                                         // Dress Code & Festivals
-                                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                        if ((if (isEng) temple.dressCodeEn else temple.dressCodeHi).isNotBlank()) Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                             Column(modifier = Modifier.weight(1f)) {
                                                 Text(
                                                     text = if (isEng) "👕 Dress Guidelines" else "👕 वस्त्र नियमावली",
@@ -920,7 +982,7 @@ fun TempleFinderView(viewModel: SadhakViewModel) {
                                             }
                                         }
 
-                                        Column {
+                                        if ((if (isEng) temple.majorFestivalsEn else temple.majorFestivalsHi).isNotBlank()) Column {
                                             Text(
                                                 text = if (isEng) "🎉 Major Festivals" else "🎉 प्रमुख उत्सव",
                                                 fontWeight = FontWeight.Bold,
@@ -983,7 +1045,8 @@ fun TempleFinderView(viewModel: SadhakViewModel) {
                                             onClick = {
                                                 val q = Uri.encode("${temple.nameEn} ${temple.cityEn} official website darshan timings")
                                                 try {
-                                                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.google.com/search?q=$q")))
+                                                    val target = temple.website?.takeIf { it.startsWith("http") } ?: "https://www.google.com/search?q=$q"
+                                                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(target)))
                                                 } catch (e: Exception) {
                                                     android.widget.Toast.makeText(context, "No browser available", android.widget.Toast.LENGTH_SHORT).show()
                                                 }

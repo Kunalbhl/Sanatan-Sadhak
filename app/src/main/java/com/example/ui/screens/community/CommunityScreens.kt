@@ -512,7 +512,7 @@ fun CommunityScreen(
                                     // Title
                                     if (post.sourceType.isNotBlank()) {
                                         androidx.compose.material3.AssistChip(
-                                            onClick = { if (post.sourceType == "article") viewModel.openArticle(post.sourceId) },
+                                            onClick = { when (post.sourceType) { "article" -> viewModel.openArticle(post.sourceId); "video" -> viewModel.setScreen("Videos") } },
                                             label = { Text((if (isEng) "Written in: " else "यहाँ लिखा: ") + post.sourceTitle, fontSize = 11.sp, maxLines = 1) },
                                             leadingIcon = { Icon(Icons.Default.MenuBook, contentDescription = null, modifier = Modifier.size(14.dp)) },
                                             modifier = Modifier.padding(vertical = 2.dp)
