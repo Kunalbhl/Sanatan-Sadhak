@@ -22,9 +22,11 @@ import java.util.concurrent.TimeUnit
 object NearbyTemples {
     private const val TAG = "NearbyTemples"
     private const val UA = "SanatanSadhak/1.3 (support@chaloone.com)"
+    // Backup only: the main Overpass server often answers 406, so Nominatim is the primary source.
     private val OVERPASS = listOf(
-        "https://overpass-api.de/api/interpreter",
-        "https://overpass.kumi.systems/api/interpreter"
+        "https://overpass.private.coffee/api/interpreter",
+        "https://overpass.kumi.systems/api/interpreter",
+        "https://overpass-api.de/api/interpreter"
     )
 
     private val client = OkHttpClient.Builder()
@@ -38,18 +40,31 @@ object NearbyTemples {
 
     data class Place(val name: String, val lat: Double, val lon: Double, val temple: HinduTemple?)
 
-    /** Hindu temples within [radiusM] metres of the point. Empty list when offline or none found. */
+    /**
+     * Hindu temples near the point, nearest first. Uses Nominatim's "place of worship near lat,lon",
+     * which returns the nearest 40 with their religion tag, then drops other faiths. Overpass is only a backup.
+     */
     suspend fun around(lat: Double, lon: Double, radiusM: Int = 20000): List<HinduTemple> = withContext(Dispatchers.IO) {
-        val key = "%.2f,%.2f,%d".format(lat, lon, radiusM)
+        val key = "%.2f,%.2f".format(lat, lon)
         cache[key]?.let { if (System.currentTimeMillis() - it.at < CACHE_MS) return@withContext it.temples }
 
+        var list = nominatim("place of worship near $lat,$lon", 40).mapNotNull { it.temple }
+        if (list.size < 5) {
+            val extra = overpass(lat, lon, radiusM)
+            list = (list + extra).distinctBy { it.id }
+        }
+        if (list.isNotEmpty()) cache[key] = CacheEntry(System.currentTimeMillis(), list)
+        list
+    }
+
+    private fun overpass(lat: Double, lon: Double, radiusM: Int): List<HinduTemple> {
         val q = "[out:json][timeout:25];(" +
             "node[\"amenity\"=\"place_of_worship\"][\"religion\"=\"hindu\"][\"name\"](around:$radiusM,$lat,$lon);" +
             "way[\"amenity\"=\"place_of_worship\"][\"religion\"=\"hindu\"][\"name\"](around:$radiusM,$lat,$lon);" +
             ");out center tags 150;"
         for (endpoint in OVERPASS) {
             try {
-                val req = Request.Builder().url(endpoint).header("User-Agent", UA)
+                val req = Request.Builder().url(endpoint).header("User-Agent", UA).header("Accept", "application/json")
                     .post(FormBody.Builder().add("data", q).build()).build()
                 client.newCall(req).execute().use { resp ->
                     if (!resp.isSuccessful) return@use
@@ -63,50 +78,78 @@ object NearbyTemples {
                         else e.optJSONObject("center")?.let { it.getDouble("lat") to it.getDouble("lon") } ?: continue
                         toTemple(e.optLong("id"), tags, tLat, tLon)?.let { list.add(it) }
                     }
-                    cache[key] = CacheEntry(System.currentTimeMillis(), list)
-                    return@withContext list
+                    return list
                 }
             } catch (e: Exception) {
                 Log.w(TAG, "Overpass $endpoint failed: ${e.message}")
             }
         }
-        emptyList()
+        return emptyList()
     }
 
-    /** Search any temple or place name worldwide. */
+    /**
+     * Search any temple or place on earth. Runs the text as typed (finds a named temple or a city) and
+     * "place of worship in <text>" (lists the temples of that place); other faiths are filtered out.
+     */
     suspend fun search(query: String): List<Place> = withContext(Dispatchers.IO) {
+        val first = nominatim(query, 8)
+        kotlinx.coroutines.delay(1100) // Nominatim asks for at most one request per second
+        val second = nominatim("place of worship in $query", 40)
+        (first + second).distinctBy { "%.4f,%.4f".format(it.lat, it.lon) + it.name }
+    }
+
+    /** One Nominatim request, mapped to places; a place carries a temple only when it is a Hindu place of worship. */
+    private fun nominatim(q: String, limit: Int): List<Place> {
         try {
-            val url = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=6&addressdetails=1&extratags=1&namedetails=1&q=" +
-                URLEncoder.encode(query, "UTF-8")
-            val req = Request.Builder().url(url).header("User-Agent", UA).build()
+            val url = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=$limit&addressdetails=1&extratags=1&namedetails=1&q=" +
+                URLEncoder.encode(q, "UTF-8")
+            val req = Request.Builder().url(url).header("User-Agent", UA).header("Accept", "application/json").build()
             client.newCall(req).execute().use { resp ->
-                if (!resp.isSuccessful) return@withContext emptyList()
-                val arr = JSONArray(resp.body?.string() ?: return@withContext emptyList())
+                if (!resp.isSuccessful) { Log.w(TAG, "Nominatim HTTP ${resp.code}"); return emptyList() }
+                val arr = JSONArray(resp.body?.string() ?: return emptyList())
                 val out = ArrayList<Place>()
                 for (i in 0 until arr.length()) {
                     val o = arr.getJSONObject(i)
                     val lat = o.optString("lat").toDoubleOrNull() ?: continue
                     val lon = o.optString("lon").toDoubleOrNull() ?: continue
-                    val display = o.optString("name").ifBlank { o.optString("display_name").substringBefore(",") }
+                    val rawName = o.optString("name")
+                    val display = rawName.ifBlank { o.optString("display_name").substringBefore(",") }
                     val extra = o.optJSONObject("extratags") ?: JSONObject()
-                    val isHindu = extra.optString("religion") == "hindu" || o.optString("type") == "hindu_temple"
+                    val isWorship = o.optString("type") == "place_of_worship" || o.optString("type") == "hindu_temple"
                     val tags = JSONObject(extra.toString()).apply {
-                        put("name", display)
-                        o.optJSONObject("namedetails")?.optString("name:hi")?.takeIf { it.isNotBlank() }?.let { put("name:hi", it) }
+                        put("name", rawName)
+                        o.optJSONObject("namedetails")?.let { nd ->
+                            nd.optString("name:en").takeIf { it.isNotBlank() }?.let { put("name:en", it) }
+                            nd.optString("name:hi").takeIf { it.isNotBlank() }?.let { put("name:hi", it) }
+                        }
                         o.optJSONObject("address")?.let { a ->
-                            for (k in listOf("city", "town", "village", "suburb", "state", "country")) {
+                            for (k in listOf("road", "suburb", "city", "town", "village", "state", "country")) {
                                 if (a.has(k)) put("addr:$k", a.getString(k))
                             }
                         }
                     }
-                    out.add(Place(display, lat, lon, if (isHindu) toTemple(o.optLong("osm_id"), tags, lat, lon) else null))
+                    val temple = if (isWorship && rawName.isNotBlank() && isHindu(extra, rawName)) toTemple(o.optLong("osm_id"), tags, lat, lon) else null
+                    // A worship place of another faith is neither a temple nor a "place" to centre on
+                    if (isWorship && temple == null) continue
+                    out.add(Place(display, lat, lon, temple))
                 }
-                out
+                return out
             }
         } catch (e: Exception) {
-            Log.w(TAG, "Nominatim search failed: ${e.message}")
-            emptyList()
+            Log.w(TAG, "Nominatim failed: ${e.message}")
+            return emptyList()
         }
+    }
+
+    private val otherFaith = listOf("church", "masjid", "mosque", "gurudwara", "gurdwara", "monastery", "dargah", "buddh", "jain", "cathedral", "chapel", "synagogue")
+    private val templeWords = listOf("mandir", "temple", "devi", "shiv", "hanuman", "krishna", "ram", "ganesh", "durga", "kali", "mata", "dham", "vishnu", "balaji", "sai", "iskcon", "ashram")
+
+    private fun isHindu(extra: JSONObject, name: String): Boolean {
+        val religion = extra.optString("religion")
+        if (religion.isNotBlank()) return religion == "hindu"
+        val n = name.lowercase()
+        if (otherFaith.any { n.contains(it) }) return false
+        return templeWords.any { n.contains(it) }
     }
 
     // ---- mapping ----
@@ -123,7 +166,7 @@ object NearbyTemples {
     )
 
     private fun deityOf(tags: JSONObject): String {
-        val tagged = tags.optString("deity").ifBlank { tags.optString("deity:en") }
+        val tagged = tags.optString("deity").ifBlank { tags.optString("hindu:deity") }.ifBlank { tags.optString("deity:en") }
         if (tagged.isNotBlank()) return tagged.split(";").joinToString(", ") { it.trim().replaceFirstChar { c -> c.uppercase() } }
         val n = (tags.optString("name:en").ifBlank { tags.optString("name") }).lowercase()
         deityByName.firstOrNull { n.contains(it.first) }?.let { return it.second }
@@ -139,9 +182,12 @@ object NearbyTemples {
         val addr = listOf("addr:housename", "addr:street", "addr:suburb", "addr:city", "addr:state")
             .map { tags.optString(it) }.filter { it.isNotBlank() }.distinct().joinToString(", ")
         val deity = deityOf(tags)
+        val wiki = tags.optString("wikipedia") // like "en:Mahakaleshwar Jyotirlinga"
+        val wikiUrl = if (wiki.contains(":")) "https://${wiki.substringBefore(":")}.wikipedia.org/wiki/" + wiki.substringAfter(":").replace(' ', '_') else ""
         val desc = tags.optString("description:en").ifBlank { tags.optString("description") }.ifBlank { addr }
-        val hours = tags.optString("opening_hours")
-        val website = tags.optString("website").ifBlank { tags.optString("contact:website") }
+            .let { if (wikiUrl.isNotBlank() && it.isNotBlank()) "$it. Tap Live timings for the Wikipedia page." else it }
+        val hours = tags.optString("opening_hours").ifBlank { tags.optString("service_times") }
+        val website = tags.optString("website").ifBlank { tags.optString("contact:website") }.ifBlank { wikiUrl }
         return HinduTemple(
             id = 5_000_000_000L + osmId,
             nameEn = name, nameHi = nameHi,

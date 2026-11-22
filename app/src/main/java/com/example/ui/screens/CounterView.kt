@@ -63,7 +63,8 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
     var vibrateOnMala by remember(prefsKey) { mutableStateOf(prefs.getBoolean("vibrate_on_mala", true)) }
     var showCelebrationDialog by remember { mutableStateOf(false) }
     var showResetConfirmDialog by remember { mutableStateOf(false) }
-    var showImmersive by remember { mutableStateOf(false) }
+    var showImmersive by remember { mutableStateOf(true) }
+    var malaTypeId by remember(prefsKey) { mutableStateOf(prefs.getString("mala_type", "rudraksha") ?: "rudraksha") }
 
     // Tap Debounce & Protection
     var lastTapTimestamp by remember { mutableStateOf(0L) }
@@ -1002,6 +1003,12 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
     if (showImmersive) {
         JapaImmersive(
             isEng = isEng,
+            malaTypeId = malaTypeId,
+            onMalaType = { malaTypeId = it; saveString("mala_type", it) },
+            mantraOptions = mantras.map { JapaMantraOption(it.id, if (it.id == "custom") (if (isEng) "Custom Mantra" else "व्यक्तिगत मंत्र") else (if (isEng) it.nameEn else it.nameHi), it.verse) },
+            selectedMantraId = selectedMantraId,
+            onMantra = { selectedMantraId = it; saveString("selected_mantra_id", it) },
+            customMantraText = customMantraText,
             mantraTitle = if (activeMantra.id == "custom") (if (isEng) "Custom Mantra" else "व्यक्तिगत मंत्र") else (if (isEng) activeMantra.nameEn else activeMantra.nameHi),
             mantraVerse = if (activeMantra.id == "custom") customMantraText else activeMantra.verse,
             count = count,
