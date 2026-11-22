@@ -763,12 +763,12 @@ fun TempleFinderView(viewModel: SadhakViewModel) {
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Places found by the worldwide search: tap to see temples around that place
-                if (searchHits.isNotEmpty()) {
+                if (searchHits.any { it.temple == null }) {
                     androidx.compose.foundation.lazy.LazyRow(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        items(searchHits.take(5)) { hit ->
+                        items(searchHits.filter { it.temple == null }.distinctBy { it.name }.take(4)) { hit ->
                             SuggestionChip(
                                 onClick = {
                                     currentLatitude = hit.lat

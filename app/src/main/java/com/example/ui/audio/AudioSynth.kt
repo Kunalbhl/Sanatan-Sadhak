@@ -18,7 +18,7 @@ import kotlin.math.sin
 object AudioSynth {
     private const val SR = 22050
     private const val VERSION = "v3"
-    val supported = setOf("om_ambient", "temple_bell", "sadhana_success", "flute_ambient")
+    val supported = setOf("om_ambient", "temple_bell", "sadhana_success", "flute_ambient", "bead_click")
 
     fun supports(rawName: String) = rawName in supported
 
@@ -65,6 +65,7 @@ object AudioSynth {
             "om_ambient" -> om()
             "temple_bell" -> bell()
             "sadhana_success" -> chime()
+            "bead_click" -> beadClick()
             else -> flute()
         }
         writeWav(file, samples)
@@ -308,6 +309,17 @@ object AudioSynth {
             out[i] = (dry[i] + wet * 0.16) * fade
         }
         return out
+    }
+
+    /** One wooden mala bead knocking against its neighbour: a dry click plus a short hollow wooden ring. */
+    private fun beadClick(): DoubleArray {
+        val rnd = java.util.Random(11)
+        return DoubleArray((SR * 0.16).toInt()) { i ->
+            val t = i.toDouble() / SR
+            val click = rnd.nextGaussian() * exp(-t / 0.0035) * 0.55
+            val wood = exp(-t / 0.028) * (0.7 * sin(2 * PI * 640.0 * t) + 0.55 * sin(2 * PI * 1480.0 * t) + 0.3 * sin(2 * PI * 2380.0 * t))
+            (click + wood) * min(1.0, t / 0.0008)
+        }
     }
 
     private fun chime(): DoubleArray {

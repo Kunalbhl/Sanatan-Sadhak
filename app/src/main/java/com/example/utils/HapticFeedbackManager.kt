@@ -91,9 +91,9 @@ object HapticFeedbackManager {
                         VibrationEffect.createWaveform(timings, amplitudes, -1)
                     }
                     FeedbackType.MALA_COMPLETE -> {
-                        // Triumphant 3-pulse cadence for 108 bead Mala completion
-                        val timings = longArrayOf(0, 40, 50, 50, 50, 80)
-                        val amplitudes = intArrayOf(0, 200, 0, 220, 0, 255)
+                        // About one second of rising pulses when a 108-bead Mala is completed
+                        val timings = longArrayOf(0, 220, 80, 260, 80, 360)
+                        val amplitudes = intArrayOf(0, 140, 0, 200, 0, 255)
                         VibrationEffect.createWaveform(timings, amplitudes, -1)
                     }
                     FeedbackType.SUCCESS -> {
@@ -114,7 +114,7 @@ object HapticFeedbackManager {
                     FeedbackType.DEVOTIONAL_TAP -> vibrator.vibrate(15)
                     FeedbackType.JAPA_BEAD -> vibrator.vibrate(30)
                     FeedbackType.BELL_RING -> vibrator.vibrate(longArrayOf(0, 25, 40, 35), -1)
-                    FeedbackType.MALA_COMPLETE -> vibrator.vibrate(longArrayOf(0, 40, 50, 50, 50, 80), -1)
+                    FeedbackType.MALA_COMPLETE -> vibrator.vibrate(longArrayOf(0, 220, 80, 260, 80, 360), -1)
                     FeedbackType.SUCCESS -> vibrator.vibrate(longArrayOf(0, 25, 40, 30), -1)
                 }
             }
