@@ -126,6 +126,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         com.example.ui.audio.SadhakAudioManager.init(this)
+        com.example.data.GeminiService.appContext = applicationContext
         enableEdgeToEdge()
 
         // Pre-create WebView cache directories to prevent Chromium opendir errors on startup

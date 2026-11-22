@@ -750,17 +750,7 @@ private fun HomePanchangSection(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = if (sourceType == "REMOTE_SOURCE")
-                                (if (isEng) "✓ VERIFIED / Verified Ephemeris Source" else "✓ प्रमाणित पंचांग स्रोत")
-                            else
-                                (if (isEng) "⚙ CALCULATED / Local Ephemeris" else "⚙ स्थानीय गणना"),
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 10.sp,
-                                color = SadhakThemeColors.sacredPrimary,
-                                fontWeight = FontWeight.Medium
-                            )
-                        )
+                        Spacer(modifier = Modifier.weight(1f))
 
                         Row(
                             verticalAlignment = Alignment.CenterVertically,

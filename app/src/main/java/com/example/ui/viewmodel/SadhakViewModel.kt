@@ -490,9 +490,9 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
         androidx.work.WorkManager.getInstance(app).cancelUniqueWork("daily_spiritual_reminder")
     }
 
-    fun scheduleDailyPrayerReminder(hour: Int, minute: Int) {
+    fun scheduleDailyPrayerReminder(hour: Int, minute: Int, forceMorning: Boolean? = null) {
         val app = getApplication<android.app.Application>()
-        val isMorning = hour < 12
+        val isMorning = forceMorning ?: (hour < 12)
         val reminderId = if (isMorning) com.example.notifications.SadhakNotificationHelper.ID_MORNING_PRAYER else com.example.notifications.SadhakNotificationHelper.ID_EVENING_PRAYER
         val reminderType = if (isMorning) "Morning Prayer" else "Evening Prayer"
         val channelId = com.example.notifications.SadhakNotificationHelper.CHANNEL_DAILY_SADHANA
@@ -543,10 +543,42 @@ class SadhakViewModel(application: Application) : AndroidViewModel(application) 
             .build()
             
         androidx.work.WorkManager.getInstance(app).enqueueUniquePeriodicWork(
-            "daily_prayer_$hour:$minute",
+            if (isMorning) "daily_prayer_morning" else "daily_prayer_evening",
             androidx.work.ExistingPeriodicWorkPolicy.UPDATE,
             workRequest
         )
+        refreshPrayerReminderState()
+    }
+
+    /** Turns a morning/evening prayer reminder off and removes its alarm and backup job. */
+    fun cancelPrayerReminder(isMorning: Boolean) {
+        val app = getApplication<android.app.Application>()
+        val S = com.example.notifications.SadhakReminderScheduler
+        val id = if (isMorning) com.example.notifications.SadhakNotificationHelper.ID_MORNING_PRAYER else com.example.notifications.SadhakNotificationHelper.ID_EVENING_PRAYER
+        app.getSharedPreferences(S.PREFS_NAME, android.content.Context.MODE_PRIVATE).edit()
+            .putBoolean(if (isMorning) S.KEY_MORNING_PRAYER_ENABLED else S.KEY_EVENING_PRAYER_ENABLED, false).apply()
+        S.cancelAlarm(app, id)
+        androidx.work.WorkManager.getInstance(app).cancelUniqueWork(if (isMorning) "daily_prayer_morning" else "daily_prayer_evening")
+        refreshPrayerReminderState()
+    }
+
+    /** Saved prayer reminders: enabled flag + time, for the Profile screen. */
+    data class PrayerReminder(val enabled: Boolean, val hour: Int, val minute: Int)
+
+    private fun readPrayerReminder(isMorning: Boolean): PrayerReminder {
+        val S = com.example.notifications.SadhakReminderScheduler
+        val p = getApplication<android.app.Application>().getSharedPreferences(S.PREFS_NAME, android.content.Context.MODE_PRIVATE)
+        return if (isMorning) PrayerReminder(p.getBoolean(S.KEY_MORNING_PRAYER_ENABLED, false), p.getInt(S.KEY_MORNING_PRAYER_HOUR, 6), p.getInt(S.KEY_MORNING_PRAYER_MINUTE, 0))
+        else PrayerReminder(p.getBoolean(S.KEY_EVENING_PRAYER_ENABLED, false), p.getInt(S.KEY_EVENING_PRAYER_HOUR, 19), p.getInt(S.KEY_EVENING_PRAYER_MINUTE, 0))
+    }
+
+    private val _morningPrayer = MutableStateFlow(readPrayerReminder(true))
+    val morningPrayer: StateFlow<PrayerReminder> = _morningPrayer
+    private val _eveningPrayer = MutableStateFlow(readPrayerReminder(false))
+    val eveningPrayer: StateFlow<PrayerReminder> = _eveningPrayer
+    private fun refreshPrayerReminderState() {
+        _morningPrayer.value = readPrayerReminder(true)
+        _eveningPrayer.value = readPrayerReminder(false)
     }
 
 
@@ -1192,6 +1224,7 @@ data class FilterParams(val eng: Boolean, val cat: String, val sort: String, val
         "calendar", "panchang" -> "Calendar"
         "profile", "settings" -> "Profile"
         "admin" -> "Admin"
+        "contribute", "contributions", "review" -> "Contribute"
         else -> null
     }
 

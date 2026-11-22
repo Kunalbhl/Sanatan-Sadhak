@@ -63,6 +63,7 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
     var vibrateOnMala by remember(prefsKey) { mutableStateOf(prefs.getBoolean("vibrate_on_mala", true)) }
     var showCelebrationDialog by remember { mutableStateOf(false) }
     var showResetConfirmDialog by remember { mutableStateOf(false) }
+    var showImmersive by remember { mutableStateOf(false) }
 
     // Tap Debounce & Protection
     var lastTapTimestamp by remember { mutableStateOf(0L) }
@@ -227,6 +228,21 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
             verticalArrangement = Arrangement.spacedBy(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Full-screen mala: nothing but the beads, the mantra and the count
+            item {
+                Button(
+                    onClick = { showImmersive = true },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    contentPadding = PaddingValues(vertical = 14.dp)
+                ) {
+                    Text(
+                        if (isEng) "Begin Japa  ·  Full-Screen Mala" else "जप आरंभ करें  ·  पूर्ण स्क्रीन माला",
+                        fontWeight = FontWeight.Bold, fontSize = 15.sp
+                    )
+                }
+            }
+
             // 1. Streak & Target Header
             item {
                 Row(
@@ -316,7 +332,7 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
             // 5. Options: Japa Customization Options (SHIFTED UPPER SIDE)
             item {
                 Text(
-                    text = if (isEng) "Mantra Sadhana Options" else "जाप साधना विकल्प",
+                    text = if (isEng) "Japa Options" else "जप विकल्प",
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.secondary,
                     fontSize = 14.sp,
@@ -983,6 +999,21 @@ fun CounterView(isEng: Boolean, viewModel: SadhakViewModel) {
     }
 
     // Celebratory Success Target Dialogue
+    if (showImmersive) {
+        JapaImmersive(
+            isEng = isEng,
+            mantraTitle = if (activeMantra.id == "custom") (if (isEng) "Custom Mantra" else "व्यक्तिगत मंत्र") else (if (isEng) activeMantra.nameEn else activeMantra.nameHi),
+            mantraVerse = if (activeMantra.id == "custom") customMantraText else activeMantra.verse,
+            count = count,
+            beadsPerMala = beadsPerMala,
+            targetMalas = targetMalas,
+            onTap = { incrementCount() },
+            onUndo = { if (count > 0) { count -= 1; saveInt("current_count", count) } },
+            onReset = { showResetConfirmDialog = true },
+            onClose = { showImmersive = false }
+        )
+    }
+
     if (showCelebrationDialog) {
         AlertDialog(
             onDismissRequest = { showCelebrationDialog = false },

@@ -22,8 +22,11 @@ object AudioSynth {
 
     fun supports(rawName: String) = rawName in supported
 
+    /** The bell was re-synthesised (v4); a new file name makes it regenerate without rebuilding the Om. */
+    private fun fileName(rawName: String) = if (rawName == "temple_bell") "temple_bell_v4.wav" else "$rawName.wav"
+
     private fun fileFor(context: Context, rawName: String) =
-        File(File(context.cacheDir, "synth_audio_$VERSION"), "$rawName.wav")
+        File(File(context.cacheDir, "synth_audio_$VERSION"), fileName(rawName))
 
     fun isReady(context: Context, rawName: String): Boolean =
         fileFor(context, rawName).let { it.exists() && it.length() > 1000 }
@@ -56,7 +59,7 @@ object AudioSynth {
     fun ensure(context: Context, rawName: String): File? {
         if (!supports(rawName)) return null
         val dir = File(context.cacheDir, "synth_audio_$VERSION").apply { mkdirs() }
-        val file = File(dir, "$rawName.wav")
+        val file = File(dir, fileName(rawName))
         if (file.exists() && file.length() > 1000) return file
         val samples = when (rawName) {
             "om_ambient" -> om()
@@ -258,15 +261,53 @@ object AudioSynth {
         return DoubleArray(n) { dry[it] * 0.75 + wet[it] * 0.9 }
     }
 
+    /**
+     * A bronze temple ghanti struck once. Modal partials of a real cast bell (hum, prime, minor third, fifth,
+     * nominal and the upper partials), each as a slightly detuned pair so the tail shimmers and beats the way
+     * a real bell does. The strike adds a short metallic clang, then a small stone-room reverb carries the ring.
+     */
     private fun bell(): DoubleArray {
-        val partials = listOf(Triple(520.0, 1.0, 1.8), Triple(1040.0, 0.6, 1.2), Triple(1560.0, 0.35, 0.9),
-            Triple(2180.0, 0.25, 0.6), Triple(2790.0, 0.15, 0.4), Triple(528.0, 0.5, 2.4))
-        return DoubleArray(SR * 5) { i ->
+        val f0 = 540.0
+        // ratio, amplitude, decay seconds
+        val modes = listOf(
+            Triple(0.5, 0.55, 7.0), Triple(1.0, 0.75, 5.5), Triple(1.183, 0.55, 4.6), Triple(1.506, 0.42, 3.8),
+            Triple(2.0, 1.0, 4.2), Triple(2.514, 0.38, 2.8), Triple(3.011, 0.32, 2.3), Triple(4.166, 0.22, 1.5),
+            Triple(5.433, 0.15, 1.0), Triple(6.796, 0.10, 0.65)
+        )
+        val rnd = java.util.Random(7)
+        val phases = DoubleArray(modes.size * 2) { rnd.nextDouble() * 2 * PI }
+        val n = SR * 9
+        val dry = DoubleArray(n)
+        for (i in 0 until n) {
             val t = i.toDouble() / SR
             var x = 0.0
-            for ((f, a, d) in partials) x += a * exp(-t / d) * sin(2 * PI * f * t)
-            x * min(1.0, t / 0.004)
+            for ((k, m) in modes.withIndex()) {
+                val f = f0 * m.first
+                val env = m.second * exp(-t / m.third)
+                val beat = 0.5 + 0.35 * (k % 4)          // Hz of beating between the pair
+                x += env * 0.5 * (sin(2 * PI * f * t + phases[2 * k]) + sin(2 * PI * (f + beat) * t + phases[2 * k + 1]))
+            }
+            // strike: noisy clang + clapper click
+            val strike = (rnd.nextGaussian() * exp(-t / 0.006) * 0.55) + sin(2 * PI * 3150.0 * t) * exp(-t / 0.012) * 0.35
+            dry[i] = (x + strike) * min(1.0, t / 0.0015)
         }
+        // small stone-room reverb (four feedback combs)
+        val delays = intArrayOf((0.0297 * SR).toInt(), (0.0371 * SR).toInt(), (0.0411 * SR).toInt(), (0.0533 * SR).toInt())
+        val bufs = Array(delays.size) { DoubleArray(delays[it]) }
+        val pos = IntArray(delays.size)
+        val out = DoubleArray(n)
+        for (i in 0 until n) {
+            var wet = 0.0
+            for (c in delays.indices) {
+                val y = bufs[c][pos[c]]
+                bufs[c][pos[c]] = dry[i] + y * 0.8
+                pos[c] = (pos[c] + 1) % delays[c]
+                wet += y
+            }
+            val fade = if (i > n - SR) (n - i).toDouble() / SR else 1.0
+            out[i] = (dry[i] + wet * 0.16) * fade
+        }
+        return out
     }
 
     private fun chime(): DoubleArray {

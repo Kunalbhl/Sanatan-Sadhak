@@ -1421,11 +1421,18 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
                         onClick = { showAppPreferences = true }
                     )
 
-                    SettingActionTile(
-                        title = if (isEng) "Guided App Tour & Features" else "ऐप परिचयात्मक मार्गदर्शिका",
-                        icon = Icons.Default.AutoAwesome,
-                        onClick = { showOnboardingTour = true }
-                    )
+                    // One-time tour: once a user has finished or skipped it, the tile disappears.
+                    val tourAutoPending by viewModel.shouldShowAutomaticOnboarding.collectAsState()
+                    val tourDone = remember(userEmail, tourAutoPending, showOnboardingTour) {
+                        com.example.data.AppPreferences.hasUserCompletedOnboarding(userEmail)
+                    }
+                    if (!tourDone) {
+                        SettingActionTile(
+                            title = if (isEng) "Guided App Tour & Features" else "ऐप परिचयात्मक मार्गदर्शिका",
+                            icon = Icons.Default.AutoAwesome,
+                            onClick = { showOnboardingTour = true }
+                        )
+                    }
 
                     SettingActionTile(
                         title = if (isEng) "Privacy Policy & Data Safety" else "गोपनीयता नीति और डेटा सुरक्षा",
@@ -1558,7 +1565,8 @@ fun ProfileScreen(viewModel: SadhakViewModel, onNavigateAdmin: () -> Unit) {
     if (showOnboardingTour) {
         com.example.ui.screens.onboarding.DevoteeOnboardingDialog(
             isEnglish = isEng,
-            onComplete = { showOnboardingTour = false }
+            onComplete = { viewModel.completeOnboardingForActiveUser(); showOnboardingTour = false },
+            onSkip = { viewModel.skipOnboardingForActiveUser(); showOnboardingTour = false }
         )
     }
 
@@ -2174,14 +2182,42 @@ fun AppPreferencesScreen(viewModel: SadhakViewModel, onBack: () -> Unit) {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Button(onClick = { viewModel.scheduleDailyPrayerReminder(6, 0) }, modifier = Modifier.weight(1f)) {
-                        Text(if (isEng) "Morning (6 AM)" else "सुबह (6 AM)")
+                val ctx = androidx.compose.ui.platform.LocalContext.current
+                val morning by viewModel.morningPrayer.collectAsState()
+                val evening by viewModel.eveningPrayer.collectAsState()
+                @Composable
+                fun PrayerRow(label: String, state: SadhakViewModel.PrayerReminder, isMorning: Boolean) {
+                    val timeText = String.format("%02d:%02d", state.hour, state.minute)
+                    fun pickTime() {
+                        android.app.TimePickerDialog(ctx, { _, h, m ->
+                            viewModel.scheduleDailyPrayerReminder(h, m, isMorning)
+                        }, state.hour, state.minute, false).show()
                     }
-                    Button(onClick = { viewModel.scheduleDailyPrayerReminder(19, 0) }, modifier = Modifier.weight(1f)) {
-                        Text(if (isEng) "Evening (7 PM)" else "शाम (7 PM)")
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(label, style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold))
+                            Text(
+                                text = if (state.enabled) (if (isEng) "On, daily at $timeText" else "चालू, प्रतिदिन $timeText") else (if (isEng) "Off" else "बंद"),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (state.enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                        TextButton(onClick = { pickTime() }) { Text(if (isEng) "Change time" else "समय बदलें") }
+                        androidx.compose.material3.Switch(
+                            checked = state.enabled,
+                            onCheckedChange = { on ->
+                                if (on) viewModel.scheduleDailyPrayerReminder(state.hour, state.minute, isMorning)
+                                else viewModel.cancelPrayerReminder(isMorning)
+                            }
+                        )
                     }
                 }
+                PrayerRow(if (isEng) "Morning prayer" else "प्रातः प्रार्थना", morning, true)
+                PrayerRow(if (isEng) "Evening prayer" else "सायं प्रार्थना", evening, false)
             }
         }
 

@@ -584,6 +584,22 @@ fun VideoHubScreen(viewModel: SadhakViewModel, videoViewModel: com.example.ui.vi
                                     )
                                 )
                                 Spacer(modifier = Modifier.height(4.dp))
+                                if (!isLocked) {
+                                    val infoCtx = androidx.compose.ui.platform.LocalContext.current
+                                    val channel = remember { com.example.data.YoutubeChannelStore.get(infoCtx).channels.value.firstOrNull { it.enabled } ?: com.example.data.YoutubeChannelStore.DEFAULT }
+                                    val uploaded = remember(video.publishDate) { formatUploadTime(video.publishDate, isEng) }
+                                    Text(
+                                        text = (if (video.isCustom) (if (isEng) "Curated by Sanatan Sadhak" else "सनातन साधक द्वारा चयनित") else "📺 ${channel.title}") +
+                                            (if (uploaded.isNotBlank()) "  ·  $uploaded" else ""),
+                                        style = MaterialTheme.typography.labelMedium.copy(
+                                            color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.SemiBold
+                                        ),
+                                        modifier = Modifier.clickable(enabled = !video.isCustom) {
+                                            try { infoCtx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(channel.url))) } catch (_: Exception) {}
+                                        }
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                }
                                 Text(
                                     text = video.description,
                                     style = MaterialTheme.typography.bodySmall.copy(
@@ -591,6 +607,21 @@ fun VideoHubScreen(viewModel: SadhakViewModel, videoViewModel: com.example.ui.vi
                                         lineHeight = 16.sp
                                     )
                                 )
+                                if (!isLocked) {
+                                    var showDiscussion by remember(video.videoId) { mutableStateOf(false) }
+                                    TextButton(onClick = {
+                                        if (userRole == "Guest") viewModel.triggerGuestPromo() else showDiscussion = !showDiscussion
+                                    }) {
+                                        Text(
+                                            if (showDiscussion) (if (isEng) "Hide discussion ▲" else "चर्चा छिपाएं ▲")
+                                            else (if (isEng) "💬 Discuss this video — ask a question or share your thoughts" else "💬 इस वीडियो पर चर्चा करें — प्रश्न पूछें या विचार साझा करें"),
+                                            fontSize = 12.sp, fontWeight = FontWeight.SemiBold
+                                        )
+                                    }
+                                    if (showDiscussion) {
+                                        com.example.ui.screens.SourceDiscussion(viewModel, "video", video.videoId, video.title)
+                                    }
+                                }
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.End,
@@ -748,4 +779,17 @@ fun openYouTubeSearch(context: android.content.Context, query: String) {
     } catch (e: Exception) {
         android.widget.Toast.makeText(context, "No app available to open YouTube", android.widget.Toast.LENGTH_LONG).show()
     }
+}
+
+
+/** "20 Nov 2026, 8:00 PM" in the user's own time zone, from a YouTube ISO-8601 timestamp. Blank if unknown. */
+private fun formatUploadTime(iso: String, isEng: Boolean): String {
+    if (iso.isBlank()) return ""
+    return try {
+        val parser = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", java.util.Locale.US).apply {
+            timeZone = java.util.TimeZone.getTimeZone("UTC")
+        }
+        val date = parser.parse(iso.take(19)) ?: return ""
+        java.text.SimpleDateFormat("d MMM yyyy, h:mm a", if (isEng) java.util.Locale.ENGLISH else java.util.Locale("hi", "IN")).format(date)
+    } catch (_: Exception) { "" }
 }
