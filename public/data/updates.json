@@ -1,19 +1,103 @@
 [
   {
+    "version": "1.4",
+    "date": "2026-11-22",
+    "title": "Immersive Japa and bell, temples anywhere in the world",
+    "titleHi": "पूर्ण स्क्रीन जप व घंटी, विश्व भर के मंदिर",
+    "tag": "new",
+    "highlights": [
+      {
+        "icon": "📿",
+        "title": "Full-screen Japa mala",
+        "titleHi": "पूर्ण स्क्रीन जप माला",
+        "text": "A ring of 108 beads that turns with every tap, with only your mantra and count on screen. Tap anywhere, feel each bead through haptics."
+      },
+      {
+        "icon": "🔔",
+        "title": "A temple bell that swings and rings for real",
+        "titleHi": "सचमुच झूलती और बजती घंटी",
+        "text": "Tap or swipe the bell and it swings like a real one, with a deep bronze sound that overlaps when you ring again. Auto Bell rings it for you until you stop it or a timer ends."
+      },
+      {
+        "icon": "🛕",
+        "title": "Find temples anywhere",
+        "titleHi": "कहीं भी मंदिर खोजें",
+        "text": "Temples near you, or near any place or temple you search for, from OpenStreetMap's open data. Famous temples keep their detailed write-ups."
+      },
+      {
+        "icon": "🎬",
+        "title": "Video details and discussion",
+        "titleHi": "वीडियो विवरण व चर्चा",
+        "text": "Each video shows its channel, category and upload date and time, with a discussion thread for questions and thoughts."
+      },
+      {
+        "icon": "⏰",
+        "title": "Clear prayer reminders",
+        "titleHi": "स्पष्ट प्रार्थना अनुस्मारक",
+        "text": "Morning and evening prayer reminders now have an on/off switch and a time you can change."
+      }
+    ],
+    "more": [
+      "Japa tab renamed Japa Counter",
+      "Guided tour tile disappears once finished",
+      "Add Personal Prayer stays private; sharing with everyone needs approval",
+      "Contribute & Review opens correctly",
+      "AI Mitra tries more models and explains failures",
+      "Internal source labels removed from Panchang and Temple Finder"
+    ],
+    "screens": [
+      "home",
+      "japa"
+    ]
+  },
+  {
     "version": "1.3",
     "date": "2026-11-21",
     "title": "Fuller Panchang, a calmer Om and a growing library",
     "titleHi": "विस्तृत पंचांग, शांत ॐ और बढ़ता ज्ञान केंद्र",
     "tag": "new",
     "highlights": [
-      { "icon": "🗓️", "title": "Every tithi of the day, with times", "titleHi": "दिन की हर तिथि, समय सहित", "text": "When a day holds two tithis, nakshatras, yogas or karanas, the app shows each with its start and end time. It also adds Yamaganda, Gulika, Brahma Muhurta, special yogas and named Ekadashis." },
-      { "icon": "🔔", "title": "Widget and festival alerts", "titleHi": "विजेट और पर्व सूचनाएँ", "text": "A Panchang widget for your home screen, and reminders the evening before and the morning of major vrats and festivals." },
-      { "icon": "🕉️", "title": "A calmer, seamless Om chant", "titleHi": "शांत, अटूट ॐ जप", "text": "The background Om is rebuilt as one long meditative loop with a tanpura drone, without an audible restart." },
-      { "icon": "📜", "title": "Hundreds more texts, kept up to date", "titleHi": "सैकड़ों और लेख, नियमित अद्यतन", "text": "Deities, festivals, temples, saints, yoga and mantras, in English and Hindi. New and changed pages are picked up daily, each with its source." },
-      { "icon": "✍️", "title": "Contribute & review", "titleHi": "योगदान व समीक्षा", "text": "Administrators can give trusted people a Contributor or Moderator role. Submissions stay private until approved." }
+      {
+        "icon": "🗓️",
+        "title": "Every tithi of the day, with times",
+        "titleHi": "दिन की हर तिथि, समय सहित",
+        "text": "When a day holds two tithis, nakshatras, yogas or karanas, the app shows each with its start and end time. It also adds Yamaganda, Gulika, Brahma Muhurta, special yogas and named Ekadashis."
+      },
+      {
+        "icon": "🔔",
+        "title": "Widget and festival alerts",
+        "titleHi": "विजेट और पर्व सूचनाएँ",
+        "text": "A Panchang widget for your home screen, and reminders the evening before and the morning of major vrats and festivals."
+      },
+      {
+        "icon": "🕉️",
+        "title": "A calmer, seamless Om chant",
+        "titleHi": "शांत, अटूट ॐ जप",
+        "text": "The background Om is rebuilt as one long meditative loop with a tanpura drone, without an audible restart."
+      },
+      {
+        "icon": "📜",
+        "title": "Hundreds more texts, kept up to date",
+        "titleHi": "सैकड़ों और लेख, नियमित अद्यतन",
+        "text": "Deities, festivals, temples, saints, yoga and mantras, in English and Hindi. New and changed pages are picked up daily, each with its source."
+      },
+      {
+        "icon": "✍️",
+        "title": "Contribute & review",
+        "titleHi": "योगदान व समीक्षा",
+        "text": "Administrators can give trusted people a Contributor or Moderator role. Submissions stay private until approved."
+      }
     ],
-    "more": ["Google sign-in joins an existing account with the same email", "Passwords stored on the phone are now hashed", "Temple Finder has a Live timings button", "Community has a Top Contributors board", "Mantras without a bundled recording open a YouTube search"],
-    "screens": ["home"]
+    "more": [
+      "Google sign-in joins an existing account with the same email",
+      "Passwords stored on the phone are now hashed",
+      "Temple Finder has a Live timings button",
+      "Community has a Top Contributors board",
+      "Mantras without a bundled recording open a YouTube search"
+    ],
+    "screens": [
+      "home"
+    ]
   },
   {
     "version": "1.2",
@@ -22,12 +106,35 @@
     "titleHi": "सटीक पंचांग और अधिक स्थिर ऐप",
     "tag": "new",
     "highlights": [
-      { "icon": "🗓️", "title": "Panchang now uses true Sun & Moon positions", "titleHi": "पंचांग अब वास्तविक सूर्य-चंद्र स्थिति से", "text": "Sidereal zodiac with Lahiri ayanamsa, so nakshatra, yoga and rashi now match traditional panchangs (for example, Shravana on 16 Nov 2026)." },
-      { "icon": "🕉️", "title": "Background Om chant keeps playing", "titleHi": "पृष्ठभूमि ॐ जप चलता रहता है", "text": "The ambient chant no longer stops when you switch screens. It resumes after a mantra ends, and changing the volume doesn't restart it." },
-      { "icon": "🧭", "title": "Smoother navigation", "titleHi": "बेहतर नेविगेशन", "text": "Screens fade in, Back works correctly across tool tabs, and the Japa and Mala tiles on Home open the counter directly." }
+      {
+        "icon": "🗓️",
+        "title": "Panchang now uses true Sun & Moon positions",
+        "titleHi": "पंचांग अब वास्तविक सूर्य-चंद्र स्थिति से",
+        "text": "Sidereal zodiac with Lahiri ayanamsa, so nakshatra, yoga and rashi now match traditional panchangs (for example, Shravana on 16 Nov 2026)."
+      },
+      {
+        "icon": "🕉️",
+        "title": "Background Om chant keeps playing",
+        "titleHi": "पृष्ठभूमि ॐ जप चलता रहता है",
+        "text": "The ambient chant no longer stops when you switch screens. It resumes after a mantra ends, and changing the volume doesn't restart it."
+      },
+      {
+        "icon": "🧭",
+        "title": "Smoother navigation",
+        "titleHi": "बेहतर नेविगेशन",
+        "text": "Screens fade in, Back works correctly across tool tabs, and the Japa and Mala tiles on Home open the counter directly."
+      }
     ],
-    "more": ["Mitra links like 'View Daily Panchang' now open the right screen", "YouTube links work with bare video IDs", "Clearer messages when a link can't open", "Safer database upgrades (no crash on update)"],
-    "screens": ["home", "japa"]
+    "more": [
+      "Mitra links like 'View Daily Panchang' now open the right screen",
+      "YouTube links work with bare video IDs",
+      "Clearer messages when a link can't open",
+      "Safer database upgrades (no crash on update)"
+    ],
+    "screens": [
+      "home",
+      "japa"
+    ]
   },
   {
     "version": "1.1",
@@ -36,11 +143,33 @@
     "titleHi": "वीडियो हब, मंदिर खोज और अतिथि मोड",
     "tag": "",
     "highlights": [
-      { "icon": "▶️", "title": "Sacred Video Hub", "titleHi": "पवित्र वीडियो हब", "text": "Darshan, aarti and katha from curated YouTube channels, with festival specials and favourites." },
-      { "icon": "🛕", "title": "Temple Finder", "titleHi": "मंदिर खोज", "text": "A directory of sacred mandirs by city and deity, with distance, story and directions." },
-      { "icon": "🕊️", "title": "Guest mode", "titleHi": "अतिथि मोड", "text": "Use japa, Panchang, meditation and the library without an account." }
+      {
+        "icon": "▶️",
+        "title": "Sacred Video Hub",
+        "titleHi": "पवित्र वीडियो हब",
+        "text": "Darshan, aarti and katha from curated YouTube channels, with festival specials and favourites."
+      },
+      {
+        "icon": "🛕",
+        "title": "Temple Finder",
+        "titleHi": "मंदिर खोज",
+        "text": "A directory of sacred mandirs by city and deity, with distance, story and directions."
+      },
+      {
+        "icon": "🕊️",
+        "title": "Guest mode",
+        "titleHi": "अतिथि मोड",
+        "text": "Use japa, Panchang, meditation and the library without an account."
+      }
     ],
-    "more": ["Knowledge Hub filters by deity, difficulty and format", "Gratitude log and Karma tracker", "Dark mode and Hindi language"],
-    "screens": ["temples", "knowledge"]
+    "more": [
+      "Knowledge Hub filters by deity, difficulty and format",
+      "Gratitude log and Karma tracker",
+      "Dark mode and Hindi language"
+    ],
+    "screens": [
+      "temples",
+      "knowledge"
+    ]
   }
 ]
