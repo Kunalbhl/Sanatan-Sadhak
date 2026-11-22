@@ -182,11 +182,11 @@ object NearbyTemples {
         val addr = listOf("addr:housename", "addr:street", "addr:suburb", "addr:city", "addr:state")
             .map { tags.optString(it) }.filter { it.isNotBlank() }.distinct().joinToString(", ")
         val deity = deityOf(tags)
+        val wiki = tags.optString("wikipedia") // like "en:Mahakaleshwar Jyotirlinga"
+        val wikiUrl = if (wiki.contains(":")) "https://${wiki.substringBefore(":")}.wikipedia.org/wiki/" + wiki.substringAfter(":").replace(' ', '_') else ""
         val desc = tags.optString("description:en").ifBlank { tags.optString("description") }.ifBlank { addr }
             .let { if (wikiUrl.isNotBlank() && it.isNotBlank()) "$it. Tap Live timings for the Wikipedia page." else it }
         val hours = tags.optString("opening_hours").ifBlank { tags.optString("service_times") }
-        val wiki = tags.optString("wikipedia") // like "en:Mahakaleshwar Jyotirlinga"
-        val wikiUrl = if (wiki.contains(":")) "https://${wiki.substringBefore(":")}.wikipedia.org/wiki/" + wiki.substringAfter(":").replace(' ', '_') else ""
         val website = tags.optString("website").ifBlank { tags.optString("contact:website") }.ifBlank { wikiUrl }
         return HinduTemple(
             id = 5_000_000_000L + osmId,
